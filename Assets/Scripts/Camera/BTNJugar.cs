@@ -6,6 +6,6 @@ using UnityEngine.SceneManagement;
 public class BTNJugar : MonoBehaviour {
     
     private void OnMouseDown() {
-        SceneManager.LoadScene("Scene_1");
+        SceneManager.LoadScene("1_1Gauntlet");
     }
 }

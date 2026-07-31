@@ -18,8 +18,13 @@ public class Enemy : MonoBehaviour {
     public int maxHearts = 3;
     public int maxSwords = 2;
     public int maxShields = 2;
+    private bool isDying;
 
     public void TakeDamage(int damage) {
+        if (isDying) {
+            return;
+        }
+
         this.health -= damage;
 
         // Play animacion de herida
@@ -31,7 +36,17 @@ public class Enemy : MonoBehaviour {
     }
 
     void Die() {
-        gameObject.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezePositionY;
+        if (isDying) {
+            return;
+        }
+
+        isDying = true;
+        Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
+        if (rb != null) {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
 
         // Dropear items
         dropItems();
@@ -42,12 +57,17 @@ public class Enemy : MonoBehaviour {
         // Añadir puntuacion 
         ScoreManager.instance.ChangeScore(100);
 
-        // Destruir al enemigo
-        GetComponent<Collider2D>().enabled = false;
+        // Stop enemy logic/collisions across the whole hierarchy while the death animation finishes.
+        foreach (Collider2D enemyCollider in GetComponentsInChildren<Collider2D>()) {
+            enemyCollider.enabled = false;
+        }
+
         this.enabled = false;
 
         // Sonido
-        Instantiate(sonidoMuerte);
+        if (sonidoMuerte != null) {
+            Instantiate(sonidoMuerte);
+        }
         Object.Destroy(gameObject, timeDestroy);
     }
 

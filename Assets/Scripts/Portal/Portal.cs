@@ -5,9 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class Portal : MonoBehaviour {
 
+    public string nextSceneName;
+
     private void OnTriggerEnter2D(Collider2D plyr) {
         if (plyr.gameObject.tag == "Player") {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            if (!string.IsNullOrEmpty(nextSceneName)) {
+                SceneManager.LoadScene(nextSceneName);
+            } else {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            }
         }
     }
         

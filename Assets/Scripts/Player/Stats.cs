@@ -65,30 +65,35 @@ public class Stats : MonoBehaviour {
         }
         this.defense = (int)PlayerPrefs.GetInt("Defense", 0);
         // Actualiza los contadores 
-        this.textDamage.text = "+" + attackDamage.ToString();
-        this.textDefense.text = "+" + defense.ToString();
+        UpdateStatText();
     }
 
     // Update is called once per frame
     void Update() {
         // Actualiza los contadores 
-        this.textDamage.text = "+" + attackDamage.ToString();
-        this.textDefense.text = "+" + defense.ToString();
+        UpdateStatText();
 
         if (health <= 0) {
             gameObject.GetComponent<Animator>().SetBool("die", true);
             //gameObject.GetComponentInParent<PlayerController>().destroy();
             gameObject.GetComponentInParent<PlayerController>().isDead();
-            camera.SetActive(true);
-            stats.SetActive(false);
+            if (camera != null) {
+                camera.SetActive(true);
+            }
+            if (stats != null) {
+                stats.SetActive(false);
+            }
             if (!once) {
-                Instantiate(sonidoMuerte);
+                if (sonidoMuerte != null) {
+                    Instantiate(sonidoMuerte);
+                }
                 once = true;
             }
         }
 
 
-        switch (health) {
+        if (hearts != null) {
+            switch (health) {
             case int n when (n >= 200):            hearts.sprite = fullHeart; break;
             case int n when (n >= 190 && n < 200): hearts.sprite = heart190; break;
             case int n when (n >= 180 && n < 190): hearts.sprite = heart180; break;
@@ -110,23 +115,37 @@ public class Stats : MonoBehaviour {
             case int n when (n >= 20 && n < 30):   hearts.sprite = heart20; break;
             case int n when (n >= 10 && n < 20):   hearts.sprite = heart10; break;
             case int n when (n < 10):              hearts.sprite = emptyHeart; break;
+            }
         }
 
-        switch (power) {
+        if (powers != null) {
+            switch (power) {
             case 4: powers.sprite = fullPower; break;
             case 3: powers.sprite = power75; break;
             case 2: powers.sprite = power50; break;
             case 1: powers.sprite = power25; break;
             case 0: powers.sprite = emptyPower; break;
+            }
         }
 
+    }
+
+    private void UpdateStatText() {
+        if (textDamage != null) {
+            textDamage.text = "+" + attackDamage.ToString();
+        }
+        if (textDefense != null) {
+            textDefense.text = "+" + defense.ToString();
+        }
     }
 
     public void takeDamage(int value) {
         if((value-defense) > 0) { 
             this.health -= (value-defense);
         }
-        Instantiate(sonidoDaño);
+        if (sonidoDaño != null) {
+            Instantiate(sonidoDaño);
+        }
     }
 
     public void takeTrueDamage(int value) {

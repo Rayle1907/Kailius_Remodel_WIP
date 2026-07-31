@@ -30,37 +30,50 @@ public class ScoreManager : MonoBehaviour {
         this.scoreStars = (int)PlayerPrefs.GetInt("ScoreStars", 0);
 
        
-        Score.text = "" + score.ToString();
-        textScore.text = "" + score.ToString();
-        textCoins.text = "150/" + scoreCoins.ToString();
-        textGems.text = "60/" + scoreGems.ToString();
-        textStars.text = "3/" + scoreStars.ToString();
+        UpdateScoreText();
     }
 
     public void ChangeScore(int scoreValue) {
         score += scoreValue;
-        textScore.text = "" + score.ToString();
-        Score.text = "" + score.ToString();
+        UpdateScoreText();
 
         PlayerPrefs.SetInt("Score", score);
     }
 
     public void ChangeScoreCoin(int coinValue) {
         scoreCoins += coinValue;
-        textCoins.text = "150/" + scoreCoins.ToString();
+        UpdateScoreText();
         PlayerPrefs.SetInt("ScoreCoins", scoreCoins);
     }
 
     public void ChangeScoreGem(int gemValue) {
         scoreGems += gemValue;
-        textGems.text = "60/" + scoreGems.ToString();
+        UpdateScoreText();
         PlayerPrefs.SetInt("ScoreGems", scoreGems);
     }
 
     public void ChangeScoreStar(int starsValue) {
         scoreStars += starsValue;
-        textStars.text = "3/" + scoreStars.ToString();
+        UpdateScoreText();
         PlayerPrefs.SetInt("ScoreStars", scoreStars);
+    }
+
+    private void UpdateScoreText() {
+        if (Score != null) {
+            Score.text = "" + score.ToString();
+        }
+        if (textScore != null) {
+            textScore.text = "" + score.ToString();
+        }
+        if (textCoins != null) {
+            textCoins.text = "150/" + scoreCoins.ToString();
+        }
+        if (textGems != null) {
+            textGems.text = "60/" + scoreGems.ToString();
+        }
+        if (textStars != null) {
+            textStars.text = "3/" + scoreStars.ToString();
+        }
     }
 
     public int getScoreTotal() {

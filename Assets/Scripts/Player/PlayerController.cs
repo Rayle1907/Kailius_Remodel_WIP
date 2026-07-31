@@ -19,7 +19,12 @@ public class PlayerController : MonoBehaviour {
     private bool dead = false;
     private float attactRate = 0.6f;
     private float nextAttactTime = 0.5f;
+    private Transform currentRespawn;
     public ParticleSystem dust;
+
+    void Start() {
+        currentRespawn = FindClosestRespawn();
+    }
 
     void Update() {
 
@@ -128,10 +133,38 @@ public class PlayerController : MonoBehaviour {
         if (collision.gameObject.CompareTag("Shield")) {
             Destroy(collision.gameObject);
         }
+
+        if (collision.gameObject.CompareTag("ReSpawn")) {
+            currentRespawn = collision.transform;
+        }
     }
 
     public void reSpawn() {
-        transform.position = GameObject.FindWithTag("ReSpawn").transform.position;
+        if(currentRespawn == null) {
+            currentRespawn = FindClosestRespawn();
+            if(currentRespawn == null) {
+                return;
+            }
+        }
+
+        transform.position = new Vector3(currentRespawn.position.x, currentRespawn.position.y, transform.position.z);
+
+    }
+
+    private Transform FindClosestRespawn() {
+        GameObject[] respawns = GameObject.FindGameObjectsWithTag("ReSpawn");
+        Transform closest = null;
+        float closestDistance = float.MaxValue;
+
+        foreach(GameObject respawn in respawns) {
+            float distance = (respawn.transform.position - transform.position).sqrMagnitude;
+            if(distance < closestDistance) {
+                closestDistance = distance;
+                closest = respawn.transform;
+            }
+        }
+
+        return closest;
     }
 
     public void destroy() {
