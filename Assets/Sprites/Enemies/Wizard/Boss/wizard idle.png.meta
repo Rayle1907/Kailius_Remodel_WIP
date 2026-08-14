@@ -45,7 +45,7 @@ TextureImporter:
       213: 6693806144588621477
     second: wizard idle_13
   externalObjects: {}
-  serializedVersion: 10
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -65,6 +65,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -74,8 +76,8 @@ TextureImporter:
   textureSettings:
     serializedVersion: 2
     filterMode: 0
-    aniso: -1
-    mipBias: -100
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -96,9 +98,14 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -443,6 +450,21 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      wizard idle_0: -411378906735354078
+      wizard idle_1: 717200642054035583
+      wizard idle_10: -2829097028798438315
+      wizard idle_11: -5750580355278595868
+      wizard idle_12: 4170662835300820087
+      wizard idle_13: 6693806144588621477
+      wizard idle_2: 5587558168079916414
+      wizard idle_3: -3017976019093261647
+      wizard idle_4: -4685753079546987741
+      wizard idle_5: -871163624212703264
+      wizard idle_6: -1263592034645169598
+      wizard idle_7: 7633645795209085125
+      wizard idle_8: 589515544322245959
+      wizard idle_9: -7588273252042548576
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

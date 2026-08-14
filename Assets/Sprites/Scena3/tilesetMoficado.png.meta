@@ -237,7 +237,7 @@ TextureImporter:
       213: -4972599464997613474
     second: tilesetMoficado_77
   externalObjects: {}
-  serializedVersion: 10
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -257,6 +257,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -266,8 +268,8 @@ TextureImporter:
   textureSettings:
     serializedVersion: 2
     filterMode: 0
-    aniso: -1
-    mipBias: -100
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -288,9 +290,14 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -1979,6 +1986,85 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      tilesetMoficado_0: -8938147561158431758
+      tilesetMoficado_1: -2673099470763813842
+      tilesetMoficado_10: 6640840336635272380
+      tilesetMoficado_11: -7401150949968899769
+      tilesetMoficado_12: 9062559772231955387
+      tilesetMoficado_13: 7387031874823263865
+      tilesetMoficado_14: -9144354844629677870
+      tilesetMoficado_15: 2356746079815063690
+      tilesetMoficado_16: -4670541910000718931
+      tilesetMoficado_17: 6803837913010776951
+      tilesetMoficado_18: -2479387900694546366
+      tilesetMoficado_19: -5213102288623469242
+      tilesetMoficado_2: 6186492687606022000
+      tilesetMoficado_20: 1083466197568457165
+      tilesetMoficado_21: 243522008739522102
+      tilesetMoficado_22: 869720045153261776
+      tilesetMoficado_23: 6515539421543710093
+      tilesetMoficado_24: 4046377454792273839
+      tilesetMoficado_25: 9096292988161081726
+      tilesetMoficado_26: 3267960023121405253
+      tilesetMoficado_27: 3134005944016386078
+      tilesetMoficado_28: 8236467347181502956
+      tilesetMoficado_29: 345754761183605152
+      tilesetMoficado_3: -7428811358411451775
+      tilesetMoficado_30: 4059975430815438741
+      tilesetMoficado_31: 2834523094004768250
+      tilesetMoficado_32: 7115790280307422472
+      tilesetMoficado_33: 1503697214531725983
+      tilesetMoficado_34: 4140063455696184233
+      tilesetMoficado_35: -2268213316048586245
+      tilesetMoficado_36: -1613786738784518208
+      tilesetMoficado_37: -758597033812766549
+      tilesetMoficado_38: 530346619457763513
+      tilesetMoficado_39: 328793144489004331
+      tilesetMoficado_4: 5309382860669458493
+      tilesetMoficado_40: -737612670024109638
+      tilesetMoficado_41: 988627647699916879
+      tilesetMoficado_42: 3732623932163366008
+      tilesetMoficado_43: 8344624592636604355
+      tilesetMoficado_44: 7020998836316678359
+      tilesetMoficado_45: -2338288123316553531
+      tilesetMoficado_46: 7356463322068866006
+      tilesetMoficado_47: 1944920790135773507
+      tilesetMoficado_48: -7683298467446619610
+      tilesetMoficado_49: 640057928553474427
+      tilesetMoficado_5: 5029107545510203640
+      tilesetMoficado_50: 641767253411894406
+      tilesetMoficado_51: -1728488338443871516
+      tilesetMoficado_52: 1859084681194100826
+      tilesetMoficado_53: 6291855235459415967
+      tilesetMoficado_54: -3010364730017906417
+      tilesetMoficado_55: -6071144779227313564
+      tilesetMoficado_56: -450431648121380849
+      tilesetMoficado_57: 4771750973936398128
+      tilesetMoficado_58: -8695484740077919316
+      tilesetMoficado_59: -2171464451797334000
+      tilesetMoficado_6: -6023475753309537077
+      tilesetMoficado_60: 6277887693063269165
+      tilesetMoficado_61: -8427763349058711533
+      tilesetMoficado_62: 431300336669155558
+      tilesetMoficado_63: -477842652159369598
+      tilesetMoficado_64: 2016148755894911503
+      tilesetMoficado_65: -7784942217655355230
+      tilesetMoficado_66: 892194202201783814
+      tilesetMoficado_67: 4101566790849464413
+      tilesetMoficado_68: -836037395378802769
+      tilesetMoficado_69: 5671909383182045267
+      tilesetMoficado_7: 7032841706925699671
+      tilesetMoficado_70: 7797263652722918265
+      tilesetMoficado_71: -4097723658622545599
+      tilesetMoficado_72: 6970638200045629587
+      tilesetMoficado_73: 9086637758661900624
+      tilesetMoficado_74: 2215647720420698605
+      tilesetMoficado_75: -6920864783397614411
+      tilesetMoficado_76: 8375204860685846130
+      tilesetMoficado_77: -4972599464997613474
+      tilesetMoficado_8: -1486124253977748096
+      tilesetMoficado_9: -277106534745659181
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

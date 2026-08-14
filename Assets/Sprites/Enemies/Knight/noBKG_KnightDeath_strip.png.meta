@@ -48,7 +48,7 @@ TextureImporter:
       213: 9069958394531976135
     second: noBKG_KnightDeath_strip_14
   externalObjects: {}
-  serializedVersion: 10
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -68,6 +68,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -77,8 +79,8 @@ TextureImporter:
   textureSettings:
     serializedVersion: 2
     filterMode: 0
-    aniso: -1
-    mipBias: -100
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -99,9 +101,14 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -467,6 +474,22 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      noBKG_KnightDeath_strip_0: -2462726258303309692
+      noBKG_KnightDeath_strip_1: 800447926069038329
+      noBKG_KnightDeath_strip_10: 4431850097328097444
+      noBKG_KnightDeath_strip_11: 4835687150137037479
+      noBKG_KnightDeath_strip_12: -7371909421828567154
+      noBKG_KnightDeath_strip_13: -2056779964345312378
+      noBKG_KnightDeath_strip_14: 9069958394531976135
+      noBKG_KnightDeath_strip_2: -946747365951844226
+      noBKG_KnightDeath_strip_3: -6628401973600079656
+      noBKG_KnightDeath_strip_4: 4434692913647792918
+      noBKG_KnightDeath_strip_5: -2310986920892945031
+      noBKG_KnightDeath_strip_6: -9019668959965462625
+      noBKG_KnightDeath_strip_7: -8498603672155398073
+      noBKG_KnightDeath_strip_8: 4445640418960089077
+      noBKG_KnightDeath_strip_9: -467494461951899089
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

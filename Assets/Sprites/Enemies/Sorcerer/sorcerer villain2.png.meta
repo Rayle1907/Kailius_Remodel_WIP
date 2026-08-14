@@ -132,7 +132,7 @@ TextureImporter:
       213: 6948677605119460495
     second: sorcerer villain2_42
   externalObjects: {}
-  serializedVersion: 10
+  serializedVersion: 12
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -152,6 +152,8 @@ TextureImporter:
   isReadable: 0
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -161,8 +163,8 @@ TextureImporter:
   textureSettings:
     serializedVersion: 2
     filterMode: 0
-    aniso: -1
-    mipBias: -100
+    aniso: 1
+    mipBias: 0
     wrapU: 1
     wrapV: 1
     wrapW: 1
@@ -183,9 +185,14 @@ TextureImporter:
   textureType: 8
   textureShape: 1
   singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 1
+  cookieLightType: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -446,6 +453,17 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      sorcerer villain2_0: -1414230556053704575
+      sorcerer villain2_1: -3201778942076685472
+      sorcerer villain2_17: -4287258982565987363
+      sorcerer villain2_2: -2537485243865851645
+      sorcerer villain2_3: -270988471159240662
+      sorcerer villain2_4: 6349617977688704954
+      sorcerer villain2_5: -3199478325068188425
+      sorcerer villain2_6: 7718333607927992661
+      sorcerer villain2_8: -4050194805409733180
+      sorcerer villain2_9: 4010438175721430449
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
