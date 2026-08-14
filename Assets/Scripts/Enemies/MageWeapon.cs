@@ -14,6 +14,6 @@ public class MageWeapon : MonoBehaviour {
         Instantiate(ballPrefab, boss.transform.position, boss.transform.rotation);
 
         //Sonido
-        Instantiate(sonido);
+        OneShotAudioPool.Play(sonido, boss.transform.position);
     }
 }

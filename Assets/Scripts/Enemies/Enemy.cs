@@ -43,7 +43,7 @@ public class Enemy : MonoBehaviour {
         isDying = true;
         Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
         if (rb != null) {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
         }
@@ -66,7 +66,7 @@ public class Enemy : MonoBehaviour {
 
         // Sonido
         if (sonidoMuerte != null) {
-            Instantiate(sonidoMuerte);
+            OneShotAudioPool.Play(sonidoMuerte, transform.position);
         }
         Object.Destroy(gameObject, timeDestroy);
     }

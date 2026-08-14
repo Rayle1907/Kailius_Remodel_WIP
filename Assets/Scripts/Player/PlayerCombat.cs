@@ -12,6 +12,16 @@ public class PlayerCombat : MonoBehaviour {
     public float attactRate = 0.6f;
     public float attackRange = 1f;
     private float nextAttactTime = 0.5f;
+    private readonly Collider2D[] hitEnemies = new Collider2D[8];
+    private ContactFilter2D enemyFilter;
+    private Stats playerStats;
+
+    void Awake() {
+        playerStats = GetComponent<Stats>();
+        enemyFilter = new ContactFilter2D();
+        enemyFilter.SetLayerMask(enemyLayers);
+        enemyFilter.useTriggers = true;
+    }
 
     // Update is called once per frame
     void Update() {
@@ -31,17 +41,23 @@ public class PlayerCombat : MonoBehaviour {
         animator.SetTrigger("attack");
 
         // Sonido
-        Instantiate(sonido);
+        OneShotAudioPool.Play(sonido, transform.position);
 
         // Detectar enemigos
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, enemyLayers);
-        
+        int hitCount = Physics2D.OverlapCircle(
+            attackPoint.position,
+            attackRange,
+            enemyFilter,
+            hitEnemies
+        );
+
         // Resta el daño
-        foreach(Collider2D enemy in hitEnemies) {
+        for (int i = 0; i < hitCount; i++) {
+            Collider2D enemy = hitEnemies[i];
             enemy.GetComponent<Enemy>().TakeDamage(Stats.instance.getAttackDamage());
 
-            if(GetComponent<Stats>().getPower() != 4)
-                GetComponent<Stats>().takePower(1);
+            if(playerStats.getPower() != 4)
+                playerStats.takePower(1);
 
             break;
         }

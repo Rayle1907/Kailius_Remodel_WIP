@@ -29,13 +29,13 @@ public class MoveByTouch : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if (ControlesMoviles.active) {
+        if (ControlesMoviles.activeSelf) {
             canJump = GetComponentInChildren<PlayerControllerUP>().getJump();
             canDoubleJump = GetComponentInChildren<PlayerControllerUP>().getDoubleJump();
 
             if (joystick.Horizontal < -0.1) {
                 CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(-moveSpeed * (-joystick.Horizontal), GetComponent<Rigidbody2D>().velocity.y);
+                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(-moveSpeed * (-joystick.Horizontal), GetComponent<Rigidbody2D>().linearVelocity.y);
                 gameObject.GetComponent<Animator>().SetBool("moving", true);
                 gameObject.GetComponent<SpriteRenderer>().flipX = true;
 
@@ -49,7 +49,7 @@ public class MoveByTouch : MonoBehaviour {
 
             if (joystick.Horizontal > 0.1) {
                 CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(moveSpeed * (joystick.Horizontal), GetComponent<Rigidbody2D>().velocity.y);
+                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(moveSpeed * (joystick.Horizontal), GetComponent<Rigidbody2D>().linearVelocity.y);
                 gameObject.GetComponent<Animator>().SetBool("moving", true);
                 gameObject.GetComponent<SpriteRenderer>().flipX = false;
 
@@ -68,14 +68,14 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     public void saltar() {
-        if (ControlesMoviles.active) {
+        if (ControlesMoviles.activeSelf) {
             if (canJump) {
                 CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(GetComponent<Rigidbody2D>().velocity.x, jumpHeight);
+                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(GetComponent<Rigidbody2D>().linearVelocity.x, jumpHeight);
                 GetComponentInChildren<PlayerControllerUP>().setJump(false);
             } else if (canDoubleJump) {
                 CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(GetComponent<Rigidbody2D>().velocity.x, jumpHeight);
+                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(GetComponent<Rigidbody2D>().linearVelocity.x, jumpHeight);
                 GetComponentInChildren<PlayerControllerUP>().setDoubleJump(false);
                 canDoubleJump = false;
             }
@@ -83,8 +83,8 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     public void settings() {
-        if (ControlesMoviles.active) {
-            if (!menu.active) {
+        if (ControlesMoviles.activeSelf) {
+            if (!menu.activeSelf) {
                 stats.SetActive(false);
                 menu.SetActive(true);
                 Time.timeScale = 0;
@@ -97,7 +97,7 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
-        if (ControlesMoviles.active) {
+        if (ControlesMoviles.activeSelf) {
             if (collision.gameObject.CompareTag("Chest")) {
                 collision.gameObject.GetComponent<Chest>().openChest();
             }
@@ -105,7 +105,7 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     private void OnTriggerStay2D(Collider2D collision) {
-        if (ControlesMoviles.active) {
+        if (ControlesMoviles.activeSelf) {
             if (collision.gameObject.CompareTag("Instructor")) {
                 collision.gameObject.GetComponent<DialogueManager>().DialogueMobile();
             }

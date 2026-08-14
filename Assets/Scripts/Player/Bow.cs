@@ -29,7 +29,7 @@ public class Bow : MonoBehaviour {
         Instantiate(arrowPrefab, bow.position, bow.rotation);
 
         //Sonido
-        Instantiate(sonido);
+        OneShotAudioPool.Play(sonido, bow.position);
     }
 
     public void AttackButton() {

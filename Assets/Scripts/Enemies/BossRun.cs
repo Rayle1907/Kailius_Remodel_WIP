@@ -46,7 +46,7 @@ public class BossRun : StateMachineBehaviour {
 
 			} else
             {
-				rb.velocity = Vector2.zero;
+				rb.linearVelocity = Vector2.zero;
 				animator.SetTrigger("idle");
 			}
 

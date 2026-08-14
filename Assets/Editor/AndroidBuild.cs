@@ -363,6 +363,43 @@ public static class CodexAndroidBuild
         }
     }
 
+    public static void BuildScene1Only()
+    {
+        const string outputDir = "Builds/Android";
+        const string outputPath = outputDir + "/Scene1Only.apk";
+        string[] scenes =
+        {
+            "Assets/Scenes/Scene_1.unity"
+        };
+
+        Directory.CreateDirectory(outputDir);
+
+        EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+        EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
+
+        PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.kailius.gauntlet11");
+        PlayerSettings.productName = "Kailius Scene 1 Test";
+        PlayerSettings.Android.useCustomKeystore = false;
+        PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
+        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+
+        var options = new BuildPlayerOptions
+        {
+            scenes = scenes,
+            locationPathName = outputPath,
+            target = BuildTarget.Android,
+            targetGroup = BuildTargetGroup.Android,
+            options = BuildOptions.None
+        };
+
+        var report = BuildPipeline.BuildPlayer(options);
+        if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
+        {
+            throw new Exception("Scene 1 Android build failed: " + report.summary.result);
+        }
+    }
+
     private static string RefName(UnityEngine.Object obj)
     {
         return obj == null ? "NULL" : obj.name;

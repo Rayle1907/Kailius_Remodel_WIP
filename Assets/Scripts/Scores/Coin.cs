@@ -11,7 +11,7 @@ public class Coin : MonoBehaviour {
         if(collision.gameObject.CompareTag("Player")) {
             ScoreManager.instance.ChangeScore(scoreValue);
             ScoreManager.instance.ChangeScoreCoin(coinValue);
-            Instantiate(sonido);
+            OneShotAudioPool.Play(sonido, transform.position);
         }
 
         if(collision.gameObject.CompareTag("Water")) {

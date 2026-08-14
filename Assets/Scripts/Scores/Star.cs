@@ -11,7 +11,7 @@ public class Star : MonoBehaviour {
         if (collision.gameObject.CompareTag("Player")) {
             ScoreManager.instance.ChangeScore(scoreValue);
             ScoreManager.instance.ChangeScoreStar(starValue);
-            Instantiate(sonido);
+            OneShotAudioPool.Play(sonido, transform.position);
         }
     }
 }

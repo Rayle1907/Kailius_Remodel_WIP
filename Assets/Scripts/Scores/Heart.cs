@@ -11,7 +11,7 @@ public class Heart : MonoBehaviour {
         if(collision.gameObject.CompareTag("Player")) {
             ScoreManager.instance.ChangeScore(scoreValue);
             Stats.instance.setHealth(heartValue);
-            Instantiate(sonido);
+            OneShotAudioPool.Play(sonido, transform.position);
         }
 
         if (collision.gameObject.CompareTag("Water")) {

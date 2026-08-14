@@ -14,14 +14,12 @@ public class VolumenController: MonoBehaviour {
         } else {
             PlayerPrefs.SetFloat("AudioVolume", AudioVolume);
         }
-    }
- 
-    void Update () {
         AudioSrc.volume = AudioVolume;
     }
  
     public void SetVolume(float vol) {
         AudioVolume = vol;
+        AudioSrc.volume = AudioVolume;
         PlayerPrefs.SetFloat("AudioVolume", AudioVolume);
     }
 }

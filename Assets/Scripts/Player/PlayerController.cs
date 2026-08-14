@@ -22,16 +22,33 @@ public class PlayerController : MonoBehaviour {
     private Transform currentRespawn;
     public ParticleSystem dust;
 
+    private Rigidbody2D body;
+    private Animator playerAnimator;
+    private SpriteRenderer playerSprite;
+    private PlayerControllerUP jumpController;
+    private Stats playerStats;
+    private Transform rowTransform;
+    private bool isMoving;
+
+    void Awake() {
+        body = GetComponent<Rigidbody2D>();
+        playerAnimator = GetComponent<Animator>();
+        playerSprite = GetComponent<SpriteRenderer>();
+        jumpController = GetComponentInChildren<PlayerControllerUP>();
+        playerStats = GetComponentInChildren<Stats>();
+        rowTransform = row.transform;
+    }
+
     void Start() {
         currentRespawn = FindClosestRespawn();
     }
 
     void Update() {
 
-        if(!dead && !controllerMobile.active) {
+        if(!dead && !controllerMobile.activeSelf) {
 
             if(Input.GetKeyDown(KeyCode.Escape)) {
-                if(!menu.active) {
+                if(!menu.activeSelf) {
                     stats.SetActive(false);
                     menu.SetActive(true);
                     Time.timeScale = 0;
@@ -42,20 +59,18 @@ public class PlayerController : MonoBehaviour {
                 }
             }
 
-            canJump = GetComponentInChildren<PlayerControllerUP>().getJump();
-            canDoubleJump = GetComponentInChildren<PlayerControllerUP>().getDoubleJump();
+            canJump = jumpController.getJump();
+            canDoubleJump = jumpController.getDoubleJump();
 
             if (Input.GetKeyDown(KeyCode.Space)) {
                 if(canJump) {
                     CreateDust();
-                    gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(GetComponent<Rigidbody2D>().velocity.x, jumpHeight);
-                    //gameObject.GetComponent<Animator>().SetBool("jumping", true);
-                    GetComponentInChildren<PlayerControllerUP>().setJump(false);
+                    body.linearVelocity = new Vector2(body.linearVelocity.x, jumpHeight);
+                    jumpController.setJump(false);
                 } else if(canDoubleJump) {
                     CreateDust();
-                    gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(GetComponent<Rigidbody2D>().velocity.x, jumpHeight);
-                    //gameObject.GetComponent<Animator>().SetBool("jumping", true);
-                    GetComponentInChildren<PlayerControllerUP>().setDoubleJump(false);
+                    body.linearVelocity = new Vector2(body.linearVelocity.x, jumpHeight);
+                    jumpController.setDoubleJump(false);
                     canDoubleJump = false;
                 }
 
@@ -63,26 +78,25 @@ public class PlayerController : MonoBehaviour {
 
             if (Input.GetKey(KeyCode.A)) {
                 CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(-moveSpeed, GetComponent<Rigidbody2D>().velocity.y);
-                gameObject.GetComponent<Animator>().SetBool("moving", true);
-                gameObject.GetComponent<SpriteRenderer>().flipX = true;
+                body.linearVelocity = new Vector2(-moveSpeed, body.linearVelocity.y);
+                SetMoving(true);
+                playerSprite.flipX = true;
                 
                 rotacionA = true;
                 if (rotacionD == true) {
-                    row.transform.Rotate(0f, 180f, 0f);
+                    rowTransform.Rotate(0f, 180f, 0f);
                     rotacionD = false;
                 }
             }
 
             if (Input.GetKey(KeyCode.D)) {
                 CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().velocity = new Vector2(moveSpeed, GetComponent<Rigidbody2D>().velocity.y);
-                gameObject.GetComponent<Animator>().SetBool("moving", true);
-                gameObject.GetComponent<SpriteRenderer>().flipX = false;
-
+                body.linearVelocity = new Vector2(moveSpeed, body.linearVelocity.y);
+                SetMoving(true);
+                playerSprite.flipX = false;
                 rotacionD = true;
                 if(rotacionA == true) {
-                    row.transform.Rotate(0f, 180f, 0f);
+                    rowTransform.Rotate(0f, 180f, 0f);
                     rotacionA = false;
                 }
             }
@@ -90,7 +104,7 @@ public class PlayerController : MonoBehaviour {
 
             // Voltear sprites del character
             if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D)) {
-                gameObject.GetComponent<Animator>().SetBool("moving", false);
+                SetMoving(false);
             }
         }
     }
@@ -100,11 +114,11 @@ public class PlayerController : MonoBehaviour {
 
         if (collision.transform.tag == "Patrols") {
             if (Time.time >= nextAttactTime) {
-                GetComponentInChildren<Stats>().takeDamage(damagePatrols);
+                playerStats.takeDamage(damagePatrols);
                 nextAttactTime = Time.time + attactRate;
 
             }
-            GetComponent<Rigidbody2D>().AddForce(new Vector2(5, 5) * 2, ForceMode2D.Impulse);
+            body.AddForce(new Vector2(5, 5) * 2, ForceMode2D.Impulse);
         }
     }
 
@@ -177,6 +191,17 @@ public class PlayerController : MonoBehaviour {
     }
 
     void CreateDust() {
-        dust.Play();
+        if (!dust.isPlaying) {
+            dust.Play();
+        }
+    }
+
+    void SetMoving(bool moving) {
+        if (isMoving == moving) {
+            return;
+        }
+
+        isMoving = moving;
+        playerAnimator.SetBool("moving", moving);
     }
 }

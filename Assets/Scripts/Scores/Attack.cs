@@ -9,7 +9,7 @@ public class Attack : MonoBehaviour {
     public void OnTriggerEnter2D(Collider2D collision) {
         if (collision.gameObject.CompareTag("Player")) {
             Stats.instance.addAttackDamage(attackValue);
-            Instantiate(sonido);
+            OneShotAudioPool.Play(sonido, transform.position);
         }
 
         if (collision.gameObject.CompareTag("Water")) {

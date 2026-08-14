@@ -11,7 +11,7 @@ public class Gem : MonoBehaviour {
         if (collision.gameObject.CompareTag("Player")) {
             ScoreManager.instance.ChangeScore(scoreValue);
             ScoreManager.instance.ChangeScoreGem(gemValue);
-            Instantiate(sonido);
+            OneShotAudioPool.Play(sonido, transform.position);
         }
 
         if (collision.gameObject.CompareTag("Water")) {

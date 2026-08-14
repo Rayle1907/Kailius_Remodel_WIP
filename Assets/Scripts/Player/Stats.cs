@@ -85,7 +85,7 @@ public class Stats : MonoBehaviour {
             }
             if (!once) {
                 if (sonidoMuerte != null) {
-                    Instantiate(sonidoMuerte);
+                    OneShotAudioPool.Play(sonidoMuerte, transform.position);
                 }
                 once = true;
             }
@@ -144,7 +144,7 @@ public class Stats : MonoBehaviour {
             this.health -= (value-defense);
         }
         if (sonidoDaño != null) {
-            Instantiate(sonidoDaño);
+            OneShotAudioPool.Play(sonidoDaño, transform.position);
         }
     }
 
