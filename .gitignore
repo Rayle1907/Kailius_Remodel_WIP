@@ -43,3 +43,9 @@ desktop.ini
 *.aab
 *.unitypackage
 *.app
+
+# Local working files
+.utmp/
+Assets/_Recovery/
+Assets/_Recovery.meta
+Assets/Resources.meta
