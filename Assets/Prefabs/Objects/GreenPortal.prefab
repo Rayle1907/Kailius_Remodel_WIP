@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3416059587224869375
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7344303397969823528}
+  - component: {fileID: 4281284342330822430}
+  - component: {fileID: 1392251059135453043}
+  - component: {fileID: 5982280478519516135}
+  - component: {fileID: 6132865271515353127}
+  m_Layer: 10
+  m_Name: GreenPortal
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &7344303397969823528
+Transform:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 3416059587224869375}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
+  m_Children: []
+  m_Father: {fileID: 0}
+--- !u!95 &4281284342330822430
+Animator:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 3416059587224869375}
+  m_Enabled: 1
+  m_Controller: {fileID: 9100000, guid: 8e0a4c6d2f7193b5c7d9e1f3a5b7c9d1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+--- !u!212 &1392251059135453043
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 2
+  m_GameObject: {fileID: 3416059587224869375}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_SortingLayerID: 204041973
+  m_SortingLayer: 2
+  m_SortingOrder: 4
+  m_Sprite: {fileID: -1010000001, guid: 2664497413a5f3840879f5df44b2f12b, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 7, y: 18.5}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
+--- !u!70 &5982280478519516135
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 3416059587224869375}
+  m_Enabled: 1
+  m_IsTrigger: 1
+  m_Offset: {x: 0, y: 0.5847962}
+  m_Size: {x: 2.24, y: 4.75041}
+  m_Direction: 0
+--- !u!114 &6132865271515353127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 3416059587224869375}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: c1128254f7ba37b7caaddfa79272c19c, type: 3}
+  nextSceneName: 

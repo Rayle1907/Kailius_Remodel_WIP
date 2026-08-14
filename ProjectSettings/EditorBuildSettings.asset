@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Scene_1.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 1
+    path: Assets/Scenes/1_1Gauntlet.unity
+    guid: 607c3628a03a5f24198115eca195301e
+  - enabled: 1
     path: Assets/Scenes/Scene_2.unity
     guid: 05ca57ea913cebb4eae6663b64606c0a
   - enabled: 1
