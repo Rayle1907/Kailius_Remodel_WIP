@@ -52,6 +52,7 @@ public class Stats : MonoBehaviour {
     public GameObject sonidoDaño;
 
     private bool once = false;
+    private bool deathAnalyticsRecorded = false;
 
     // Start is called before the first frame update
     void Start() {
@@ -139,17 +140,21 @@ public class Stats : MonoBehaviour {
         }
     }
 
-    public void takeDamage(int value) {
-        if((value-defense) > 0) { 
-            this.health -= (value-defense);
+    public void takeDamage(int value, string causeOfDeath = "enemy_contact") {
+        int healthBeforeDamage = this.health;
+        if((value-defense) > 0) {
+            this.health = Mathf.Max(0, this.health - (value-defense));
         }
+        RecordLethalDamageIfNeeded(healthBeforeDamage, causeOfDeath);
         if (sonidoDaño != null) {
             OneShotAudioPool.Play(sonidoDaño, transform.position);
         }
     }
 
-    public void takeTrueDamage(int value) {
-        this.health -= value;
+    public void takeTrueDamage(int value, string causeOfDeath = "environmental") {
+        int healthBeforeDamage = this.health;
+        this.health = Mathf.Max(0, this.health - value);
+        RecordLethalDamageIfNeeded(healthBeforeDamage, causeOfDeath);
     }
 
     public void takePower(int value) {
@@ -169,6 +174,9 @@ public class Stats : MonoBehaviour {
         if(this.health >= 200) {
             this.health = 200;
         }
+        if(this.health > 0) {
+            deathAnalyticsRecorded = false;
+        }
     }
 
     public void addAttackDamage(int value) {
@@ -183,5 +191,16 @@ public class Stats : MonoBehaviour {
     public void addDefense(int value) {
         this.defense += value;
         PlayerPrefs.SetInt("Defense", defense);
+    }
+
+    private void RecordLethalDamageIfNeeded(int healthBeforeDamage, string causeOfDeath) {
+        if(deathAnalyticsRecorded || healthBeforeDamage <= 0 || this.health > 0) {
+            return;
+        }
+
+        deathAnalyticsRecorded = true;
+        if(GauntletRunTracker.Instance != null) {
+            GauntletRunTracker.Instance.RecordPlayerDeath(causeOfDeath, healthBeforeDamage);
+        }
     }
 }

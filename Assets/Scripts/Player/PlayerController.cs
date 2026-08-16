@@ -114,7 +114,7 @@ public class PlayerController : MonoBehaviour {
 
         if (collision.transform.tag == "Patrols") {
             if (Time.time >= nextAttactTime) {
-                playerStats.takeDamage(damagePatrols);
+                playerStats.takeDamage(damagePatrols, "enemy_contact");
                 nextAttactTime = Time.time + attactRate;
 
             }
