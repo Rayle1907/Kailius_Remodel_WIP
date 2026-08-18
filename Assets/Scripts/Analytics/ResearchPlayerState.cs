@@ -9,6 +9,9 @@ public static class ResearchPlayerState
     private const string TotalDeathsKey = "research_total_deaths";
 
     public const int InitialPremiumCurrency = 100;
+    public const string PremiumCurrencyDisplayName = "Embers";
+
+    public static event Action<int> PremiumCurrencyBalanceChanged;
 
     public static string PlayerId { get; private set; }
     public static string OfferVariant { get; private set; }
@@ -61,6 +64,7 @@ public static class ResearchPlayerState
         PremiumCurrencyBalance -= amount;
         PlayerPrefs.SetInt(BalanceKey, PremiumCurrencyBalance);
         PlayerPrefs.Save();
+        PremiumCurrencyBalanceChanged?.Invoke(PremiumCurrencyBalance);
         return true;
     }
 }
