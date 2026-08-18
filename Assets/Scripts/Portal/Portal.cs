@@ -9,6 +9,11 @@ public class Portal : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D plyr) {
         if (plyr.gameObject.tag == "Player") {
+            if (GauntletRunTracker.Instance != null
+                && GauntletRunTracker.Instance.IsCurrentSceneGauntlet) {
+                GauntletRunTracker.Instance.EndCurrentRun("completed");
+            }
+
             if (!string.IsNullOrEmpty(nextSceneName)) {
                 SceneManager.LoadScene(nextSceneName);
             } else {

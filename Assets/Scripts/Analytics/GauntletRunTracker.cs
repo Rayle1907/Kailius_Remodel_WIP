@@ -1,5 +1,4 @@
 using System;
-using Unity.Services.Analytics;
 using Unity.Services.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -62,6 +61,10 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+#if UNITY_EDITOR
+        // Stopping Play Mode tears down Analytics before quit callbacks complete.
+        ResearchAnalyticsBootstrap.BeginShutdown();
+#endif
         if (pendingOffer != null && !pendingOffer.Resolved)
         {
             TryRecordDuringShutdown(() => ResolveOffer("quit"));
@@ -121,8 +124,8 @@ public sealed class GauntletRunTracker : MonoBehaviour
             SegmentId = CurrentSegmentId,
             DeathTotal = totalDeaths,
             DeathInSegment = deathsInSegment,
-            SessionSeconds = ResearchAnalyticsBootstrap.SessionElapsedSeconds,
-            SinceLastDeath = sinceLastDeath,
+            SessionSeconds = (float)ResearchAnalyticsBootstrap.SessionElapsedSeconds,
+            SinceLastDeath = (float)sinceLastDeath,
             Cause = string.IsNullOrWhiteSpace(causeOfDeath) ? "unknown" : causeOfDeath,
             HealthBefore = healthBeforeDeath,
             Balance = ResearchPlayerState.PremiumCurrencyBalance,
@@ -131,7 +134,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             Variant = ResearchPlayerState.OfferVariant,
             ExperimentVersion = ExperimentVersion
         };
-        AnalyticsService.Instance.RecordEvent(deathEvent);
+        ResearchAnalytics.RecordDeath(deathEvent);
     }
 
     public static bool ShouldShowOffer(int deathNumberInGauntlet)
@@ -181,7 +184,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 Variant = ResearchPlayerState.OfferVariant,
                 ExperimentVersion = ExperimentVersion
             };
-            AnalyticsService.Instance.RecordEvent(shownEvent);
+            ResearchAnalytics.RecordOfferShown(shownEvent);
         }
 
         return pendingOffer.OfferId;
@@ -213,14 +216,14 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 RunId = CurrentRunId,
                 OfferId = pendingOffer.OfferId,
                 Response = response,
-                DecisionSeconds = pendingOffer.ResolvedAt - pendingOffer.ShownAt,
+                DecisionSeconds = (float)(pendingOffer.ResolvedAt - pendingOffer.ShownAt),
                 RevivePrice = pendingOffer.Price,
                 BalanceBefore = pendingOffer.BalanceBefore,
                 BalanceAfter = ResearchPlayerState.PremiumCurrencyBalance,
                 Variant = ResearchPlayerState.OfferVariant,
                 ExperimentVersion = ExperimentVersion
             };
-            AnalyticsService.Instance.RecordEvent(resolvedEvent);
+            ResearchAnalytics.RecordOfferResolved(resolvedEvent);
         }
 
         return true;
@@ -240,13 +243,13 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 RunId = CurrentRunId,
                 OfferId = pendingOffer.OfferId,
                 Outcome = outcome,
-                SecondsAfterDecision = Time.realtimeSinceStartupAsDouble - pendingOffer.ResolvedAt,
+                SecondsAfterDecision = (float)(Time.realtimeSinceStartupAsDouble - pendingOffer.ResolvedAt),
                 SceneName = currentSceneName,
                 SegmentId = CurrentSegmentId,
                 Variant = ResearchPlayerState.OfferVariant,
                 ExperimentVersion = ExperimentVersion
             };
-            AnalyticsService.Instance.RecordEvent(outcomeEvent);
+            ResearchAnalytics.RecordOutcome(outcomeEvent);
         }
 
         pendingOffer = null;
@@ -266,24 +269,36 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 RunId = CurrentRunId,
                 GauntletId = currentGauntletId,
                 EndReason = string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
-                RunDuration = Time.realtimeSinceStartupAsDouble - runStartedAt,
+                RunDuration = (float)(Time.realtimeSinceStartupAsDouble - runStartedAt),
                 RunDeaths = deathsInRun,
                 AcceptedRevives = acceptedRevives,
                 FinalBalance = ResearchPlayerState.PremiumCurrencyBalance,
                 Variant = ResearchPlayerState.OfferVariant,
                 ExperimentVersion = ExperimentVersion
             };
-            AnalyticsService.Instance.RecordEvent(endedEvent);
+            ResearchAnalytics.RecordRunEnded(endedEvent);
         }
 
         CurrentRunId = null;
+    }
+
+    public void RestartCurrentRun()
+    {
+        EndCurrentRun("restarted");
     }
 
     private void OnActiveSceneChanged(Scene previous, Scene next)
     {
         if (IsCurrentSceneGauntlet)
         {
-            EndCurrentRun("scene_changed");
+            string endReason = previous.name == next.name
+                ? "restarted"
+                : next.name.Equals("Menu", StringComparison.OrdinalIgnoreCase)
+                    ? "returned_to_menu"
+                    : IsGauntletSceneName(next.name)
+                        ? "gauntlet_changed"
+                        : "returned_to_outer_world";
+            EndCurrentRun(endReason);
         }
         StartRunForScene(next);
     }
@@ -292,7 +307,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
     {
         currentSceneName = scene.name;
         CurrentSegmentId = string.IsNullOrWhiteSpace(scene.name) ? "unknown" : scene.name;
-        IsCurrentSceneGauntlet = scene.name.IndexOf("Gauntlet", StringComparison.OrdinalIgnoreCase) >= 0;
+        IsCurrentSceneGauntlet = IsGauntletSceneName(scene.name);
         currentGauntletId = IsCurrentSceneGauntlet ? scene.name : string.Empty;
         CurrentRunId = Guid.NewGuid().ToString("N");
         deathsInSegment = 0;
@@ -305,6 +320,12 @@ public sealed class GauntletRunTracker : MonoBehaviour
         startEventRecorded = false;
 
         TryRecordRunStarted();
+    }
+
+    private static bool IsGauntletSceneName(string sceneName)
+    {
+        return !string.IsNullOrEmpty(sceneName)
+            && sceneName.IndexOf("Gauntlet", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private void OnAnalyticsReady()
@@ -329,8 +350,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             Variant = ResearchPlayerState.OfferVariant,
             ExperimentVersion = ExperimentVersion
         };
-        AnalyticsService.Instance.RecordEvent(startedEvent);
-        startEventRecorded = true;
+        startEventRecorded = ResearchAnalytics.RecordRunStarted(startedEvent);
     }
 
     private static bool IsValidResponse(string response)

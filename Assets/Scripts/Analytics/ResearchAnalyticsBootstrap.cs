@@ -11,6 +11,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
     private static ResearchAnalyticsBootstrap instance;
 
     public static bool IsReady { get; private set; }
+    public static bool IsShuttingDown { get; private set; }
     public static double SessionElapsedSeconds => Time.realtimeSinceStartupAsDouble - sessionStartedAt;
     public static event Action AnalyticsReady;
 
@@ -21,6 +22,9 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void CreateAutomatically()
     {
+        IsReady = false;
+        IsShuttingDown = false;
+
         if (instance != null)
         {
             return;
@@ -30,6 +34,17 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         DontDestroyOnLoad(bootstrapObject);
         instance = bootstrapObject.AddComponent<ResearchAnalyticsBootstrap>();
         bootstrapObject.AddComponent<GauntletRunTracker>();
+    }
+
+    public static void BeginShutdown()
+    {
+        IsShuttingDown = true;
+        IsReady = false;
+    }
+
+    private void OnApplicationQuit()
+    {
+        BeginShutdown();
     }
 
     private async void Awake()
@@ -69,6 +84,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         }
         catch (Exception exception)
         {
+            IsReady = false;
             Debug.LogError($"Research Analytics initialization failed: {exception}");
         }
     }

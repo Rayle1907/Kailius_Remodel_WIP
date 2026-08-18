@@ -114,7 +114,7 @@ public class PlayerController : MonoBehaviour {
 
         if (collision.transform.tag == "Patrols") {
             if (Time.time >= nextAttactTime) {
-                playerStats.takeDamage(damagePatrols, "enemy_contact");
+                playerStats.ApplyDamage(damagePatrols, "enemy_contact");
                 nextAttactTime = Time.time + attactRate;
 
             }
@@ -188,6 +188,10 @@ public class PlayerController : MonoBehaviour {
 
     public bool isDead() {
         return this.dead = true;
+    }
+
+    public void Revive() {
+        dead = false;
     }
 
     void CreateDust() {

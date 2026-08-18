@@ -33,7 +33,7 @@ public class MageBall : MonoBehaviour {
     void OnTriggerEnter2D(Collider2D collision) {
 
         if (collision.gameObject.CompareTag("Player")) {
-            collision.gameObject.GetComponentInParent<Stats>().takeDamage(damage);
+            collision.gameObject.GetComponentInParent<Stats>().ApplyDamage(damage, "enemy_projectile");
             Destroy(gameObject);
         }
     }

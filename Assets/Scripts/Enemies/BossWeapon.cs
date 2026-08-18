@@ -16,7 +16,7 @@ public class BossWeapon : MonoBehaviour {
 
 		Collider2D colInfo = Physics2D.OverlapCircle(pos, attackRange, attackMask);
 		if (colInfo != null) {
-			colInfo.gameObject.GetComponentInParent<Stats>().takeDamage(attackDamage);
+			colInfo.gameObject.GetComponentInParent<Stats>().ApplyDamage(attackDamage, "boss_melee");
 		} else {
 
 		}

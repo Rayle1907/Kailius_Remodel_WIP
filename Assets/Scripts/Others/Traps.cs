@@ -8,7 +8,7 @@ public class Traps : MonoBehaviour {
 
     private void OnCollisionEnter2D(Collision2D collision) {
         if(collision.gameObject.name == "Player") {
-            collision.gameObject.GetComponentInParent<Stats>().takeTrueDamage(damage, "trap");
+            collision.gameObject.GetComponentInParent<Stats>().ApplyDamage(damage, "trap", true);
 
             if(collision.gameObject.GetComponentInParent<Stats>().health > 0) {
                 collision.gameObject.GetComponentInParent<PlayerController>().reSpawn();

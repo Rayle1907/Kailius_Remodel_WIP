@@ -51,8 +51,7 @@ public class Stats : MonoBehaviour {
     public GameObject sonidoMuerte;
     public GameObject sonidoDaño;
 
-    private bool once = false;
-    private bool deathAnalyticsRecorded = false;
+    private bool deathRecorded = false;
 
     // Start is called before the first frame update
     void Start() {
@@ -73,25 +72,6 @@ public class Stats : MonoBehaviour {
     void Update() {
         // Actualiza los contadores 
         UpdateStatText();
-
-        if (health <= 0) {
-            gameObject.GetComponent<Animator>().SetBool("die", true);
-            //gameObject.GetComponentInParent<PlayerController>().destroy();
-            gameObject.GetComponentInParent<PlayerController>().isDead();
-            if (camera != null) {
-                camera.SetActive(true);
-            }
-            if (stats != null) {
-                stats.SetActive(false);
-            }
-            if (!once) {
-                if (sonidoMuerte != null) {
-                    OneShotAudioPool.Play(sonidoMuerte, transform.position);
-                }
-                once = true;
-            }
-        }
-
 
         if (hearts != null) {
             switch (health) {
@@ -140,21 +120,31 @@ public class Stats : MonoBehaviour {
         }
     }
 
-    public void takeDamage(int value, string causeOfDeath = "enemy_contact") {
-        int healthBeforeDamage = this.health;
-        if((value-defense) > 0) {
-            this.health = Mathf.Max(0, this.health - (value-defense));
+    public void ApplyDamage(int amount, string cause, bool ignoresDefense = false) {
+        if(deathRecorded || amount <= 0) {
+            return;
         }
-        RecordLethalDamageIfNeeded(healthBeforeDamage, causeOfDeath);
-        if (sonidoDaño != null) {
+
+        int healthBefore = health;
+        int actualDamage = ignoresDefense ? amount : Mathf.Max(0, amount - defense);
+        health = Mathf.Max(0, health - actualDamage);
+
+        if(actualDamage > 0 && !ignoresDefense && sonidoDaño != null) {
             OneShotAudioPool.Play(sonidoDaño, transform.position);
+        }
+
+        if(healthBefore > 0 && health == 0) {
+            deathRecorded = true;
+            HandleDeath(string.IsNullOrWhiteSpace(cause) ? "unknown" : cause, healthBefore);
         }
     }
 
+    public void takeDamage(int value, string causeOfDeath = "enemy_contact") {
+        ApplyDamage(value, causeOfDeath);
+    }
+
     public void takeTrueDamage(int value, string causeOfDeath = "environmental") {
-        int healthBeforeDamage = this.health;
-        this.health = Mathf.Max(0, this.health - value);
-        RecordLethalDamageIfNeeded(healthBeforeDamage, causeOfDeath);
+        ApplyDamage(value, causeOfDeath, true);
     }
 
     public void takePower(int value) {
@@ -174,8 +164,27 @@ public class Stats : MonoBehaviour {
         if(this.health >= 200) {
             this.health = 200;
         }
-        if(this.health > 0) {
-            deathAnalyticsRecorded = false;
+    }
+
+    public void CompleteRevive(int restoredHealth = 200) {
+        health = Mathf.Clamp(restoredHealth, 1, 200);
+        deathRecorded = false;
+
+        Animator animator = GetComponent<Animator>();
+        if(animator != null) {
+            animator.SetBool("die", false);
+        }
+
+        PlayerController controller = GetComponentInParent<PlayerController>();
+        if(controller != null) {
+            controller.Revive();
+        }
+
+        if(camera != null) {
+            camera.SetActive(false);
+        }
+        if(stats != null) {
+            stats.SetActive(true);
         }
     }
 
@@ -193,14 +202,29 @@ public class Stats : MonoBehaviour {
         PlayerPrefs.SetInt("Defense", defense);
     }
 
-    private void RecordLethalDamageIfNeeded(int healthBeforeDamage, string causeOfDeath) {
-        if(deathAnalyticsRecorded || healthBeforeDamage <= 0 || this.health > 0) {
-            return;
+    private void HandleDeath(string causeOfDeath, int healthBeforeDeath) {
+        if(GauntletRunTracker.Instance != null) {
+            GauntletRunTracker.Instance.RecordPlayerDeath(causeOfDeath, healthBeforeDeath);
         }
 
-        deathAnalyticsRecorded = true;
-        if(GauntletRunTracker.Instance != null) {
-            GauntletRunTracker.Instance.RecordPlayerDeath(causeOfDeath, healthBeforeDamage);
+        Animator animator = GetComponent<Animator>();
+        if(animator != null) {
+            animator.SetBool("die", true);
+        }
+
+        PlayerController controller = GetComponentInParent<PlayerController>();
+        if(controller != null) {
+            controller.isDead();
+        }
+
+        if(camera != null) {
+            camera.SetActive(true);
+        }
+        if(stats != null) {
+            stats.SetActive(false);
+        }
+        if(sonidoMuerte != null) {
+            OneShotAudioPool.Play(sonidoMuerte, transform.position);
         }
     }
 }

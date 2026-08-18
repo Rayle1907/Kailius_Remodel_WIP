@@ -25,6 +25,13 @@ public class Menu : MonoBehaviour {
     }
 
     public void PlayAgain() {
-        SceneManager.LoadScene("Menu");
+        Time.timeScale = 1;
+
+        if (GauntletRunTracker.Instance != null) {
+            GauntletRunTracker.Instance.RestartCurrentRun();
+        }
+
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 }
