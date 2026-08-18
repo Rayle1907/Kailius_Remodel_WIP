@@ -52,7 +52,9 @@ public class Enemy : MonoBehaviour {
         dropItems();
 
         // Play animacion de muerto
-        animator.SetBool("isDead", true);
+        if (HasAnimatorParameter("isDead", AnimatorControllerParameterType.Bool)) {
+            animator.SetBool("isDead", true);
+        }
 
         // Añadir puntuacion 
         ScoreManager.instance.ChangeScore(100);
@@ -94,5 +96,18 @@ public class Enemy : MonoBehaviour {
         }
     }
 
+    private bool HasAnimatorParameter(string parameterName, AnimatorControllerParameterType parameterType) {
+        if (animator == null) {
+            return false;
+        }
+
+        foreach (AnimatorControllerParameter parameter in animator.parameters) {
+            if (parameter.name == parameterName && parameter.type == parameterType) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 }
