@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Build;
 
 public static class CodexAndroidBuild
 {
@@ -26,7 +27,7 @@ public static class CodexAndroidBuild
                 + " dust=" + RefName(move.dust));
         }
 
-        foreach (var canvas in UnityEngine.Object.FindObjectsOfType<UnityEngine.Canvas>())
+        foreach (var canvas in UnityEngine.Object.FindObjectsByType<UnityEngine.Canvas>(UnityEngine.FindObjectsSortMode.None))
         {
             UnityEngine.Debug.Log("Canvas " + GetPath(canvas.transform)
                 + " active=" + canvas.gameObject.activeInHierarchy
@@ -341,10 +342,10 @@ public static class CodexAndroidBuild
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
-        PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.kailius.gauntlet11");
+        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.kailius.gauntlet11");
         PlayerSettings.productName = "Gauntlet 1.1";
         PlayerSettings.Android.useCustomKeystore = false;
-        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
         var options = new BuildPlayerOptions
@@ -377,11 +378,11 @@ public static class CodexAndroidBuild
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
-        PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android, "com.kailius.gauntlet11");
+        PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.kailius.gauntlet11");
         PlayerSettings.productName = "Kailius Scene 1 Test";
         PlayerSettings.Android.useCustomKeystore = false;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
-        PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+        PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
         var options = new BuildPlayerOptions

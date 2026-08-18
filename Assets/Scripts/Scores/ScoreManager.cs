@@ -16,8 +16,6 @@ public class ScoreManager : MonoBehaviour {
     private int scoreGems;
     private int scoreStars;
 
-    private static bool created = false;
-
     // Start is called before the first frame update
     void Start() {
         if(instance == null) {

@@ -51,15 +51,13 @@ public class PlayerCombat : MonoBehaviour {
             hitEnemies
         );
 
-        // Resta el daño
-        for (int i = 0; i < hitCount; i++) {
-            Collider2D enemy = hitEnemies[i];
+        // Resta el daño al primer enemigo encontrado.
+        if (hitCount > 0) {
+            Collider2D enemy = hitEnemies[0];
             enemy.GetComponent<Enemy>().TakeDamage(Stats.instance.getAttackDamage());
 
             if(playerStats.getPower() != 4)
                 playerStats.takePower(1);
-
-            break;
         }
     }
 
