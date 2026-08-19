@@ -12,6 +12,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
     public string CurrentRunId { get; private set; }
     public string CurrentSegmentId { get; private set; }
     public bool IsCurrentSceneGauntlet { get; private set; }
+    public int PendingOfferPrice => pendingOffer?.Price ?? 0;
+    public bool CanAffordPendingOffer => pendingOffer != null
+        && CanAffordRevive(ResearchPlayerState.PremiumCurrencyBalance, pendingOffer.Price);
 
     private string currentSceneName;
     private string currentGauntletId;
@@ -147,7 +150,24 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public int GetNextRevivePrice()
     {
-        return 1 << Mathf.Min(offersShownInRun, 30);
+        return GetRevivePrice(offersShownInRun);
+    }
+
+    public static int GetRevivePrice(int zeroBasedOfferIndex)
+    {
+        if (zeroBasedOfferIndex < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(zeroBasedOfferIndex));
+        }
+
+        // Currency and analytics fields are signed ints. Saturating at 2^30
+        // preserves a positive, deterministically unaffordable price.
+        return 1 << Math.Min(zeroBasedOfferIndex, 30);
+    }
+
+    public static bool CanAffordRevive(int balance, int revivePrice)
+    {
+        return balance >= 0 && revivePrice > 0 && balance >= revivePrice;
     }
 
     public string RecordOfferShown()
@@ -180,7 +200,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 Balance = pendingOffer.BalanceBefore,
                 RevivePrice = price,
                 OfferNumber = offersShownInRun,
-                CanAfford = pendingOffer.BalanceBefore >= price,
+                CanAfford = CanAffordRevive(pendingOffer.BalanceBefore, price),
                 Variant = ResearchPlayerState.OfferVariant,
                 ExperimentVersion = ExperimentVersion
             };
@@ -197,7 +217,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
             return false;
         }
 
-        if (response == "accepted" && !ResearchPlayerState.TrySpendPremiumCurrency(pendingOffer.Price))
+        if (response == "accepted"
+            && (!CanAffordPendingOffer
+                || !ResearchPlayerState.TrySpendPremiumCurrency(pendingOffer.Price)))
         {
             return false;
         }
