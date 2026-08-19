@@ -28,6 +28,7 @@ public class Menu : MonoBehaviour {
         Time.timeScale = 1;
 
         if (GauntletRunTracker.Instance != null) {
+            GauntletRunTracker.Instance.SetNextRunStartReason("retry_button");
             GauntletRunTracker.Instance.RestartCurrentRun();
         }
 

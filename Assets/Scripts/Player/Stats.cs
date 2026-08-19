@@ -177,6 +177,9 @@ public class Stats : MonoBehaviour {
 
         PlayerController controller = GetComponentInParent<PlayerController>();
         if(controller != null) {
+            // Reviving continues from the latest checkpoint rather than from
+            // the location where the lethal hit occurred.
+            controller.reSpawn();
             controller.Revive();
         }
 
@@ -205,6 +208,13 @@ public class Stats : MonoBehaviour {
     private void HandleDeath(string causeOfDeath, int healthBeforeDeath) {
         if(GauntletRunTracker.Instance != null) {
             GauntletRunTracker.Instance.RecordPlayerDeath(causeOfDeath, healthBeforeDeath);
+        }
+
+        if (GauntletRunTracker.Instance != null
+            && GauntletRunTracker.ShouldShowOffer(GauntletRunTracker.Instance.DeathsInCurrentGauntletSession)
+            && ReviveOfferPrototype.TryShow(this)) {
+            Time.timeScale = 0f;
+            return;
         }
 
         Animator animator = GetComponent<Animator>();

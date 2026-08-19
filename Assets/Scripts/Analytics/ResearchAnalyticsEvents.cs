@@ -4,10 +4,12 @@ internal sealed class GauntletRunStartedEvent : Unity.Services.Analytics.Event
 {
     public GauntletRunStartedEvent() : base("gauntlet_run_started") { }
     public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string GauntletId { set => SetParameter("gauntlet_id", value); }
     public string SceneName { set => SetParameter("scene_name", value); }
     public string SegmentId { set => SetParameter("level_segment_id", value); }
     public int Balance { set => SetParameter("premium_currency_balance", value); }
+    public string RunStartReason { set => SetParameter("run_start_reason", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
 }
@@ -16,10 +18,12 @@ internal sealed class PlayerDeathEvent : Unity.Services.Analytics.Event
 {
     public PlayerDeathEvent() : base("player_death") { }
     public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string SceneName { set => SetParameter("scene_name", value); }
     public string SegmentId { set => SetParameter("level_segment_id", value); }
     public int DeathTotal { set => SetParameter("death_number_total", value); }
     public int DeathInSegment { set => SetParameter("death_number_in_segment", value); }
+    public int DeathInGauntletSession { set => SetParameter("death_number_in_gauntlet_session", value); }
     public float SessionSeconds { set => SetParameter("time_since_session_start", value); }
     public float SinceLastDeath { set => SetParameter("time_since_last_death", value); }
     public string Cause { set => SetParameter("cause_of_death", value); }
@@ -35,6 +39,7 @@ internal sealed class ReviveOfferShownEvent : Unity.Services.Analytics.Event
 {
     public ReviveOfferShownEvent() : base("revive_offer_shown") { }
     public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string OfferId { set => SetParameter("offer_id", value); }
     public string SceneName { set => SetParameter("scene_name", value); }
     public string SegmentId { set => SetParameter("level_segment_id", value); }
@@ -52,6 +57,7 @@ internal sealed class ReviveOfferResolvedEvent : Unity.Services.Analytics.Event
 {
     public ReviveOfferResolvedEvent() : base("revive_offer_resolved") { }
     public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string OfferId { set => SetParameter("offer_id", value); }
     public string Response { set => SetParameter("offer_response", value); }
     public float DecisionSeconds { set => SetParameter("time_to_decision", value); }
@@ -66,6 +72,7 @@ internal sealed class ReviveOutcomeObservedEvent : Unity.Services.Analytics.Even
 {
     public ReviveOutcomeObservedEvent() : base("revive_outcome_observed") { }
     public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string OfferId { set => SetParameter("offer_id", value); }
     public string Outcome { set => SetParameter("post_decision_outcome", value); }
     public float SecondsAfterDecision { set => SetParameter("seconds_after_decision", value); }
@@ -79,6 +86,7 @@ internal sealed class GauntletRunEndedEvent : Unity.Services.Analytics.Event
 {
     public GauntletRunEndedEvent() : base("gauntlet_run_ended") { }
     public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string GauntletId { set => SetParameter("gauntlet_id", value); }
     public string EndReason { set => SetParameter("run_end_reason", value); }
     public float RunDuration { set => SetParameter("run_duration_seconds", value); }

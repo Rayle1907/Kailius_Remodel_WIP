@@ -10,16 +10,27 @@ public sealed class GauntletRunTracker : MonoBehaviour
     public static GauntletRunTracker Instance { get; private set; }
 
     public string CurrentRunId { get; private set; }
+    public string CurrentGauntletSessionId { get; private set; }
     public string CurrentSegmentId { get; private set; }
     public bool IsCurrentSceneGauntlet { get; private set; }
+    public int DeathsInCurrentRun => deathsInRun;
+    public int DeathsInCurrentGauntletSession => deathsInGauntletSession;
+    public int CurrentOfferPrice => pendingOffer == null ? 0 : pendingOffer.Price;
 
     private string currentSceneName;
     private string currentGauntletId;
+    private string currentRunStartReason;
+    private string pendingRunStartReason;
     private int deathsInSegment;
     private int deathsInRun;
+    private int deathsInGauntletSession;
     private int offersShownInRun;
     private int acceptedRevives;
     private int lastDeathTotal;
+    // These survive scene object recreation while the application remains in
+    // the same gauntlet session.
+    private static string persistentGauntletSessionId;
+    private static int persistentGauntletDeaths;
     private double runStartedAt;
     private double lastDeathAt = -1;
     private bool startEventRecorded;
@@ -44,9 +55,13 @@ public sealed class GauntletRunTracker : MonoBehaviour
         }
 
         Instance = this;
+        // Keep the tracker alive across scene reloads so retries remain part of
+        // the same gauntlet session. The session is reset explicitly when the
+        // player leaves the gauntlet.
+        DontDestroyOnLoad(gameObject);
         SceneManager.activeSceneChanged += OnActiveSceneChanged;
         ResearchAnalyticsBootstrap.AnalyticsReady += OnAnalyticsReady;
-        StartRunForScene(SceneManager.GetActiveScene());
+        StartRunForScene(SceneManager.GetActiveScene(), "application_start");
     }
 
     private void OnDestroy()
@@ -110,7 +125,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
         lastDeathAt = now;
         lastDeathTotal = totalDeaths;
 
-        bool offerEligible = IsCurrentSceneGauntlet && ShouldShowOffer(deathsInRun);
+        deathsInGauntletSession++;
+        persistentGauntletDeaths = deathsInGauntletSession;
+        bool offerEligible = IsCurrentSceneGauntlet && ShouldShowOffer(deathsInGauntletSession);
 
         if (!ResearchAnalyticsBootstrap.IsReady)
         {
@@ -120,10 +137,12 @@ public sealed class GauntletRunTracker : MonoBehaviour
         PlayerDeathEvent deathEvent = new PlayerDeathEvent
         {
             RunId = CurrentRunId,
+            GauntletSessionId = CurrentGauntletSessionId,
             SceneName = currentSceneName,
             SegmentId = CurrentSegmentId,
             DeathTotal = totalDeaths,
             DeathInSegment = deathsInSegment,
+            DeathInGauntletSession = deathsInGauntletSession,
             SessionSeconds = (float)ResearchAnalyticsBootstrap.SessionElapsedSeconds,
             SinceLastDeath = (float)sinceLastDeath,
             Cause = string.IsNullOrWhiteSpace(causeOfDeath) ? "unknown" : causeOfDeath,
@@ -172,6 +191,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             ReviveOfferShownEvent shownEvent = new ReviveOfferShownEvent
             {
                 RunId = CurrentRunId,
+                GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
                 SceneName = currentSceneName,
                 SegmentId = CurrentSegmentId,
@@ -214,6 +234,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             ReviveOfferResolvedEvent resolvedEvent = new ReviveOfferResolvedEvent
             {
                 RunId = CurrentRunId,
+                GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
                 Response = response,
                 DecisionSeconds = (float)(pendingOffer.ResolvedAt - pendingOffer.ShownAt),
@@ -241,6 +262,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             ReviveOutcomeObservedEvent outcomeEvent = new ReviveOutcomeObservedEvent
             {
                 RunId = CurrentRunId,
+                GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
                 Outcome = outcome,
                 SecondsAfterDecision = (float)(Time.realtimeSinceStartupAsDouble - pendingOffer.ResolvedAt),
@@ -267,6 +289,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             GauntletRunEndedEvent endedEvent = new GauntletRunEndedEvent
             {
                 RunId = CurrentRunId,
+                GauntletSessionId = CurrentGauntletSessionId,
                 GauntletId = currentGauntletId,
                 EndReason = string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
                 RunDuration = (float)(Time.realtimeSinceStartupAsDouble - runStartedAt),
@@ -287,6 +310,11 @@ public sealed class GauntletRunTracker : MonoBehaviour
         EndCurrentRun("restarted");
     }
 
+    public void SetNextRunStartReason(string reason)
+    {
+        pendingRunStartReason = string.IsNullOrWhiteSpace(reason) ? "unknown" : reason;
+    }
+
     private void OnActiveSceneChanged(Scene previous, Scene next)
     {
         if (IsCurrentSceneGauntlet)
@@ -300,19 +328,53 @@ public sealed class GauntletRunTracker : MonoBehaviour
                         : "returned_to_outer_world";
             EndCurrentRun(endReason);
         }
-        StartRunForScene(next);
+        string startReason = pendingRunStartReason;
+        pendingRunStartReason = null;
+        if (string.IsNullOrWhiteSpace(startReason))
+        {
+            startReason = IsGauntletSceneName(previous.name)
+                ? "restarted_within_gauntlet"
+                : "entered_from_outer_world";
+        }
+        StartRunForScene(next, startReason, IsGauntletSceneName(previous.name) && IsGauntletSceneName(next.name));
     }
 
-    private void StartRunForScene(Scene scene)
+    private void StartRunForScene(Scene scene, string startReason, bool preserveGauntletSession = false)
     {
         currentSceneName = scene.name;
+        currentRunStartReason = string.IsNullOrWhiteSpace(startReason) ? "unknown" : startReason;
         CurrentSegmentId = string.IsNullOrWhiteSpace(scene.name) ? "unknown" : scene.name;
         IsCurrentSceneGauntlet = IsGauntletSceneName(scene.name);
         currentGauntletId = IsCurrentSceneGauntlet ? scene.name : string.Empty;
+        // A gauntlet scene reload is a retry, not a new gauntlet session. The
+        // persistent session is cleared explicitly when entering an outer
+        // world, so its presence is the reliable source of truth here.
+        bool startsNewGauntletSession = IsCurrentSceneGauntlet
+            && string.IsNullOrEmpty(persistentGauntletSessionId);
+        if (startsNewGauntletSession)
+        {
+            persistentGauntletSessionId = Guid.NewGuid().ToString("N");
+            persistentGauntletDeaths = 0;
+            CurrentGauntletSessionId = persistentGauntletSessionId;
+            deathsInGauntletSession = 0;
+            offersShownInRun = 0;
+        }
+        else if (IsCurrentSceneGauntlet)
+        {
+            CurrentGauntletSessionId = persistentGauntletSessionId;
+            deathsInGauntletSession = persistentGauntletDeaths;
+        }
+        else if (!IsCurrentSceneGauntlet)
+        {
+            CurrentGauntletSessionId = null;
+            persistentGauntletSessionId = null;
+            persistentGauntletDeaths = 0;
+            deathsInGauntletSession = 0;
+            offersShownInRun = 0;
+        }
         CurrentRunId = Guid.NewGuid().ToString("N");
         deathsInSegment = 0;
         deathsInRun = 0;
-        offersShownInRun = 0;
         acceptedRevives = 0;
         lastDeathAt = -1;
         runStartedAt = Time.realtimeSinceStartupAsDouble;
@@ -343,10 +405,12 @@ public sealed class GauntletRunTracker : MonoBehaviour
         GauntletRunStartedEvent startedEvent = new GauntletRunStartedEvent
         {
             RunId = CurrentRunId,
+            GauntletSessionId = CurrentGauntletSessionId,
             GauntletId = currentGauntletId,
             SceneName = currentSceneName,
             SegmentId = CurrentSegmentId,
             Balance = ResearchPlayerState.PremiumCurrencyBalance,
+            RunStartReason = currentRunStartReason,
             Variant = ResearchPlayerState.OfferVariant,
             ExperimentVersion = ExperimentVersion
         };

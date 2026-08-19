@@ -112,6 +112,10 @@ public class PlayerController : MonoBehaviour {
     // Salto solo cuando pisa el suelo
     private void OnCollisionEnter2D(Collision2D collision) {
 
+        if (collision.gameObject.CompareTag("ReSpawn")) {
+            currentRespawn = collision.transform;
+        }
+
         if (collision.transform.tag == "Patrols") {
             if (Time.time >= nextAttactTime) {
                 playerStats.ApplyDamage(damagePatrols, "enemy_contact");
@@ -153,18 +157,27 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
-    public void reSpawn() {
-        if(currentRespawn == null) {
+    public void reSpawn()
+    {
+        if (currentRespawn == null)
+        {
             currentRespawn = FindClosestRespawn();
-            if(currentRespawn == null) {
-                return;
-            }
         }
 
-        transform.position = new Vector3(currentRespawn.position.x, currentRespawn.position.y, transform.position.z);
+        if (currentRespawn == null)
+        {
+            Debug.LogError("No Respawn checkpoint found.");
+            return;
+        }
 
+        Debug.Log("Respawning at: " + currentRespawn.name);
+
+        transform.position = new Vector3(
+            currentRespawn.position.x,
+            currentRespawn.position.y,
+            transform.position.z
+        );
     }
-
     private Transform FindClosestRespawn() {
         GameObject[] respawns = GameObject.FindGameObjectsWithTag("ReSpawn");
         Transform closest = null;
