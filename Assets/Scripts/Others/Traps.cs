@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Traps : MonoBehaviour {
 
-    public int damage = 100;
+    public int damage = 50;
 
     private void OnCollisionEnter2D(Collision2D collision) {
         HandleHazardContact(collision.gameObject);
@@ -20,11 +20,15 @@ public class Traps : MonoBehaviour {
             return;
         }
 
+        int healthBefore = playerStats.health;
         playerStats.ApplyDamage(damage, "trap", true);
 
         // Preserve the original behavior: surviving hazard contact returns to
         // the latest checkpoint; lethal contact follows normal death handling.
         if (playerStats.health > 0) {
+            if (GauntletRunTracker.Instance != null) {
+                GauntletRunTracker.Instance.RecordPlayerFailure("hazard", healthBefore, playerStats.health);
+            }
             PlayerController controller = contactedObject.GetComponentInParent<PlayerController>();
             if (controller != null) {
                 controller.reSpawn();

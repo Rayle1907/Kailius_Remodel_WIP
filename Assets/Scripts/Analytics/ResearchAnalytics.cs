@@ -6,6 +6,7 @@ internal static class ResearchAnalytics
 {
     public static bool RecordRunStarted(GauntletRunStartedEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordDeath(PlayerDeathEvent analyticsEvent) => Record(analyticsEvent);
+    public static bool RecordFailure(PlayerFailureEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordOfferShown(ReviveOfferShownEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordOfferResolved(ReviveOfferResolvedEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordOutcome(ReviveOutcomeObservedEvent analyticsEvent) => Record(analyticsEvent);

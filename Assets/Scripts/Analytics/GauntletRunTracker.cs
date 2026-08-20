@@ -33,6 +33,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
     private static int persistentGauntletDeaths;
     private double runStartedAt;
     private double lastDeathAt = -1;
+    private double lastFailureAt = -1;
     private bool startEventRecorded;
     private PendingOffer pendingOffer;
 
@@ -117,11 +118,21 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public void RecordPlayerDeath(string causeOfDeath, int healthBeforeDeath)
     {
+        // If a revive was accepted, the outcome is not known until a later
+        // gameplay event. A new death is the first definitive "died_again"
+        // outcome.
+        if (pendingOffer != null && pendingOffer.Resolved)
+        {
+            RecordPostDecisionOutcome("died_again");
+        }
+
         deathsInSegment++;
         deathsInRun++;
         int totalDeaths = ResearchPlayerState.IncrementTotalDeaths();
         double now = Time.realtimeSinceStartupAsDouble;
-        double sinceLastDeath = lastDeathAt < 0 ? -1 : now - lastDeathAt;
+        double sinceLastDeath = lastDeathAt < 0
+            ? now - runStartedAt
+            : now - lastDeathAt;
         lastDeathAt = now;
         lastDeathTotal = totalDeaths;
 
@@ -149,11 +160,44 @@ public sealed class GauntletRunTracker : MonoBehaviour
             HealthBefore = healthBeforeDeath,
             Balance = ResearchPlayerState.PremiumCurrencyBalance,
             OfferEligible = offerEligible,
+            // The offer UI is created after this event is recorded. The
+            // definitive record of an actually displayed offer is the
+            // separate revive_offer_shown event, so do not infer it from
+            // schedule eligibility here.
             OfferShown = false,
             Variant = ResearchPlayerState.OfferVariant,
             ExperimentVersion = ExperimentVersion
         };
         ResearchAnalytics.RecordDeath(deathEvent);
+    }
+
+    public void RecordPlayerFailure(string failureReason, int healthBeforeFailure, int healthAfterFailure)
+    {
+        if (!IsCurrentSceneGauntlet) return;
+
+        double now = Time.realtimeSinceStartupAsDouble;
+        double sinceLastFailure = lastFailureAt < 0 ? -1 : now - lastFailureAt;
+        lastFailureAt = now;
+        if (!ResearchAnalyticsBootstrap.IsReady) return;
+
+        ResearchAnalytics.RecordFailure(new PlayerFailureEvent
+        {
+            RunId = CurrentRunId,
+            GauntletSessionId = CurrentGauntletSessionId,
+            SceneName = currentSceneName,
+            SegmentId = CurrentSegmentId,
+            DeathTotal = lastDeathTotal,
+            DeathInSegment = deathsInSegment,
+            DeathInGauntletSession = deathsInGauntletSession,
+            SessionSeconds = (float)ResearchAnalyticsBootstrap.SessionElapsedSeconds,
+            FailureReason = string.IsNullOrWhiteSpace(failureReason) ? "unknown" : failureReason,
+            HealthBefore = healthBeforeFailure,
+            HealthAfter = healthAfterFailure,
+            Balance = ResearchPlayerState.PremiumCurrencyBalance,
+            SinceLastFailure = (float)sinceLastFailure,
+            Variant = ResearchPlayerState.OfferVariant,
+            ExperimentVersion = ExperimentVersion
+        });
     }
 
     public static bool ShouldShowOffer(int deathNumberInGauntlet)
@@ -317,15 +361,15 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     private void OnActiveSceneChanged(Scene previous, Scene next)
     {
-        if (IsCurrentSceneGauntlet)
+        bool movingWithinGauntlet = IsCurrentSceneGauntlet
+            && IsGauntletSceneName(next.name)
+            && !string.Equals(previous.name, next.name, StringComparison.OrdinalIgnoreCase);
+
+        if (IsCurrentSceneGauntlet && !movingWithinGauntlet)
         {
-            string endReason = previous.name == next.name
-                ? "restarted"
-                : next.name.Equals("Menu", StringComparison.OrdinalIgnoreCase)
-                    ? "returned_to_menu"
-                    : IsGauntletSceneName(next.name)
-                        ? "gauntlet_changed"
-                        : "returned_to_outer_world";
+            string endReason = next.name.Equals("Menu", StringComparison.OrdinalIgnoreCase)
+                ? "returned_to_menu"
+                : "returned_to_outer_world";
             EndCurrentRun(endReason);
         }
         string startReason = pendingRunStartReason;
@@ -336,11 +380,14 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 ? "restarted_within_gauntlet"
                 : "entered_from_outer_world";
         }
-        StartRunForScene(next, startReason, IsGauntletSceneName(previous.name) && IsGauntletSceneName(next.name));
+        StartRunForScene(next, startReason, movingWithinGauntlet);
     }
 
     private void StartRunForScene(Scene scene, string startReason, bool preserveGauntletSession = false)
     {
+        bool continuingRun = preserveGauntletSession
+            && IsCurrentSceneGauntlet
+            && !string.IsNullOrEmpty(CurrentRunId);
         currentSceneName = scene.name;
         currentRunStartReason = string.IsNullOrWhiteSpace(startReason) ? "unknown" : startReason;
         CurrentSegmentId = string.IsNullOrWhiteSpace(scene.name) ? "unknown" : scene.name;
@@ -372,14 +419,23 @@ public sealed class GauntletRunTracker : MonoBehaviour
             deathsInGauntletSession = 0;
             offersShownInRun = 0;
         }
-        CurrentRunId = Guid.NewGuid().ToString("N");
-        deathsInSegment = 0;
-        deathsInRun = 0;
-        acceptedRevives = 0;
-        lastDeathAt = -1;
-        runStartedAt = Time.realtimeSinceStartupAsDouble;
-        pendingOffer = null;
-        startEventRecorded = false;
+        if (continuingRun)
+        {
+            // Keep run-wide counters and timing across Gauntlet scene segments.
+            deathsInSegment = 0;
+        }
+        else
+        {
+            CurrentRunId = Guid.NewGuid().ToString("N");
+            deathsInSegment = 0;
+            deathsInRun = 0;
+            acceptedRevives = 0;
+            lastDeathAt = -1;
+            lastFailureAt = -1;
+            runStartedAt = Time.realtimeSinceStartupAsDouble;
+            pendingOffer = null;
+            startEventRecorded = false;
+        }
 
         TryRecordRunStarted();
     }

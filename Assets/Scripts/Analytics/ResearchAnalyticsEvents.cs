@@ -35,6 +35,26 @@ internal sealed class PlayerDeathEvent : Unity.Services.Analytics.Event
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
 }
 
+internal sealed class PlayerFailureEvent : Unity.Services.Analytics.Event
+{
+    public PlayerFailureEvent() : base("player_failure") { }
+    public string RunId { set => SetParameter("run_id", value); }
+    public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
+    public string SceneName { set => SetParameter("scene_name", value); }
+    public string SegmentId { set => SetParameter("level_segment_id", value); }
+    public int DeathTotal { set => SetParameter("death_number_total", value); }
+    public int DeathInSegment { set => SetParameter("death_number_in_segment", value); }
+    public int DeathInGauntletSession { set => SetParameter("death_number_in_gauntlet_session", value); }
+    public float SessionSeconds { set => SetParameter("time_since_session_start", value); }
+    public string FailureReason { set => SetParameter("failureReason", value); }
+    public int HealthBefore { set => SetParameter("player_health_before_failure", value); }
+    public int HealthAfter { set => SetParameter("player_health_after_failure", value); }
+    public int Balance { set => SetParameter("premium_currency_balance", value); }
+    public float SinceLastFailure { set => SetParameter("time_since_last_failure", value); }
+    public string Variant { set => SetParameter("offer_variant", value); }
+    public string ExperimentVersion { set => SetParameter("experiment_version", value); }
+}
+
 internal sealed class ReviveOfferShownEvent : Unity.Services.Analytics.Event
 {
     public ReviveOfferShownEvent() : base("revive_offer_shown") { }
