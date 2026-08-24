@@ -175,7 +175,7 @@ MonoBehaviour:
   attackRange: 2.2
   attackMask:
     serializedVersion: 2
-    m_Bits: 1024
+    m_Bits: 512
 --- !u!114 &8676605311916295595
 MonoBehaviour:
   m_ObjectHideFlags: 0

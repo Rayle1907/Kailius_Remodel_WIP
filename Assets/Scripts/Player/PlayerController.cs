@@ -113,12 +113,16 @@ public class PlayerController : MonoBehaviour {
     private void OnCollisionEnter2D(Collision2D collision) {
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
+            bool reachedNextCheckpoint = currentRespawn != collision.transform;
             currentRespawn = collision.transform;
+            if (reachedNextCheckpoint && GauntletRunTracker.Instance != null) {
+                GauntletRunTracker.Instance.RecordPostDecisionOutcome("next_checkpoint_reached");
+            }
         }
 
         if (collision.transform.tag == "Patrols") {
             if (Time.time >= nextAttactTime) {
-                playerStats.ApplyDamage(damagePatrols, "enemy_contact");
+                playerStats.ApplyDamage(damagePatrols, "enemy_contact", true);
                 nextAttactTime = Time.time + attactRate;
 
             }
@@ -153,7 +157,11 @@ public class PlayerController : MonoBehaviour {
         }
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
+            bool reachedNextCheckpoint = currentRespawn != collision.transform;
             currentRespawn = collision.transform;
+            if (reachedNextCheckpoint && GauntletRunTracker.Instance != null) {
+                GauntletRunTracker.Instance.RecordPostDecisionOutcome("next_checkpoint_reached");
+            }
         }
     }
 

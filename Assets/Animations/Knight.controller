@@ -143,6 +143,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 2.5
+  verticalChaseRange: 1.5
   attackRange: 1
   ledgeCheckDistance: 1.2
   groundLayer:

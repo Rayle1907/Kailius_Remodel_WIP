@@ -11,6 +11,7 @@ public class Portal : MonoBehaviour {
         if (plyr.gameObject.tag == "Player") {
             if (GauntletRunTracker.Instance != null
                 && GauntletRunTracker.Instance.IsCurrentSceneGauntlet) {
+                GauntletRunTracker.Instance.RecordPostDecisionOutcome("level_completed");
                 GauntletRunTracker.Instance.EndCurrentRun("completed");
             }
 

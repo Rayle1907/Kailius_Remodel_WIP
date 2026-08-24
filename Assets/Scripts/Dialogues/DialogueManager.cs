@@ -9,6 +9,10 @@ public class DialogueManager : MonoBehaviour {
     public GameObject dialoguePanel;
     public TextMeshProUGUI displayText;
     public float typingSpeed = 0.05f;
+    [Min(0.1f)]
+    public float interactionRadius = 5f;
+    [TextArea(2, 4)]
+    public string fallbackSentence;
     //public AudioClip speakSound; 
 
     Queue<string> sentences;
@@ -19,19 +23,47 @@ public class DialogueManager : MonoBehaviour {
     void Start() {
         sentences = new Queue<string>();
         //myAudio = GetComponent<AudioSource>();
+
+        ResolveDialogueReferences();
+
+        CapsuleCollider2D trigger = GetComponent<CapsuleCollider2D>();
+        if (trigger != null) {
+            trigger.isTrigger = true;
+            trigger.size = new Vector2(interactionRadius * 2f, interactionRadius * 2f);
+        }
     }
 
     void StartDialogue() {
+        if (dialoguePanel == null || displayText == null) {
+            return;
+        }
+
         sentences.Clear();
 
-        foreach(string sentence in dialogue.sentenceList) {
-            sentences.Enqueue(sentence);
+        if (dialogue != null && dialogue.sentenceList != null) {
+            foreach(string sentence in dialogue.sentenceList) {
+                if (!string.IsNullOrWhiteSpace(sentence)) {
+                    sentences.Enqueue(sentence);
+                }
+            }
+        }
+
+        if (sentences.Count == 0 && !string.IsNullOrWhiteSpace(fallbackSentence)) {
+            sentences.Enqueue(fallbackSentence);
+        }
+
+        if (sentences.Count == 0) {
+            return;
         }
 
         DisplayNextSentence();
     }
     
     void DisplayNextSentence() {
+        if (displayText == null) {
+            return;
+        }
+
         if(sentences.Count <= 0) {
             displayText.text = activeSentence;
             return;
@@ -56,6 +88,11 @@ public class DialogueManager : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D other) {
         if(other.CompareTag("Player")) {
+            ResolveDialogueReferences();
+            if (dialoguePanel == null || displayText == null) {
+                return;
+            }
+
             dialoguePanel.SetActive(true);
             StartDialogue();
         }
@@ -71,14 +108,39 @@ public class DialogueManager : MonoBehaviour {
 
     private void OnTriggerExit2D(Collider2D collision) {
         if(collision.CompareTag("Player")) {
-            dialoguePanel.SetActive(false);
+            if (dialoguePanel != null) {
+                dialoguePanel.SetActive(false);
+            }
             StopAllCoroutines();
         }
     }
 
     public void DialogueMobile() {
-        if (displayText.text == activeSentence) {
+        if (displayText != null && displayText.text == activeSentence) {
             DisplayNextSentence();
+        }
+    }
+
+    private void ResolveDialogueReferences() {
+        if (dialoguePanel != null && displayText != null) {
+            return;
+        }
+
+        GameObject dialogueRoot = GameObject.Find("Dialogos");
+        if (dialogueRoot == null) {
+            return;
+        }
+
+        Transform panelTransform = dialogueRoot.transform.Find("Image");
+        if (dialoguePanel == null && panelTransform != null) {
+            dialoguePanel = panelTransform.gameObject;
+        }
+
+        if (displayText == null && panelTransform != null) {
+            Transform textTransform = panelTransform.Find("DisplayText");
+            if (textTransform != null) {
+                displayText = textTransform.GetComponent<TextMeshProUGUI>();
+            }
         }
     }
 
