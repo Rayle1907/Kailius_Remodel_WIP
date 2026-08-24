@@ -56,8 +56,10 @@ public class PlayerCombat : MonoBehaviour {
             Collider2D enemy = hitEnemies[0];
             enemy.GetComponent<Enemy>().TakeDamage(Stats.instance.getAttackDamage());
 
-            if(playerStats.getPower() != 4)
+            // Successful melee hits build Fury. The bow no longer consumes it.
+            if(playerStats.getPower() < 4) {
                 playerStats.takePower(1);
+            }
         }
     }
 

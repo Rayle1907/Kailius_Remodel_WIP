@@ -9,33 +9,11 @@ public class Bow : MonoBehaviour {
     public GameObject arrowPrefab;
     public GameObject sonido;
 
-    // Update is called once per frame
-    void Update() {
-
-        if (Input.GetKeyDown(KeyCode.C) && GetComponentInParent<Stats>().power == 4) {
-            GetComponentInParent<Stats>().power = 0;
-            Shoot();
-        }
-        
-    }
-
-    void Shoot() {
-        // Animacion de disparar la fecha
-        animator.SetTrigger("attackBow");
-    }
-
+    // Kept temporarily because this component is serialized in existing scenes.
+    // The bow mechanic has been removed, so animation events must do nothing.
     void ShootArrow() {
-        // Dispara la flecha 
-        Instantiate(arrowPrefab, bow.position, bow.rotation);
-
-        //Sonido
-        OneShotAudioPool.Play(sonido, bow.position);
     }
 
     public void AttackButton() {
-        if (GetComponentInParent<Stats>().power == 4) {
-            GetComponentInParent<Stats>().power = 0;
-            Shoot();
-        }
     }
 }
