@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4930142433679705527}
   m_Layer: 10
   m_Name: Chest
-  m_TagString: Ground
+  m_TagString: Chest
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

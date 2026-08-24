@@ -14,11 +14,13 @@ public class BossWeapon : MonoBehaviour {
 		pos += transform.right * attackOffset.x;
 		pos += transform.up * attackOffset.y;
 
-		Collider2D colInfo = Physics2D.OverlapCircle(pos, attackRange, attackMask);
-		if (colInfo != null) {
-			colInfo.gameObject.GetComponentInParent<Stats>().ApplyDamage(attackDamage, "boss_melee");
-		} else {
-
+		Collider2D[] hits = Physics2D.OverlapCircleAll(pos, attackRange, attackMask);
+		foreach (Collider2D hit in hits) {
+			Stats playerStats = hit.GetComponentInParent<Stats>();
+			if (playerStats != null) {
+				playerStats.ApplyDamage(attackDamage, "boss_melee", true);
+				return;
+			}
 		}
 	}
 

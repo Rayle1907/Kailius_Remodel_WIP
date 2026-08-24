@@ -4,15 +4,27 @@ using UnityEngine;
 
 public class Patrol : MonoBehaviour {
 
+    private int groundLayerMask;
+
     public float speed;
     public float distance;
     private bool movingRight = true;
     public Transform groundDetection;
 
+    private void Awake()
+    {
+        groundLayerMask = LayerMask.GetMask("Ground");
+    }
+
     private void Update() {
 
         transform.Translate(Vector2.right * speed * Time.deltaTime);
-        RaycastHit2D groundInfo = Physics2D.Raycast(groundDetection.position, Vector2.down, distance);
+        RaycastHit2D groundInfo = Physics2D.Raycast(
+            groundDetection.position,
+            Vector2.down,
+            distance,
+            groundLayerMask
+        );
 
         if (groundInfo.collider == false) {
             if (movingRight == true) {

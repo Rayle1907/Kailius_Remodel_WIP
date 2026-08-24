@@ -318,6 +318,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
+  verticalChaseRange: 15
   attackRange: 3
 --- !u!1101 &8092758712360544495
 AnimatorStateTransition:
