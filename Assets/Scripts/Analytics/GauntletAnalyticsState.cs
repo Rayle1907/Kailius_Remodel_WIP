@@ -10,6 +10,11 @@ public sealed class GauntletAnalyticsState
     public double RunStartedAt { get; private set; }
     public double? LastDeathAt { get; private set; }
     public bool ReviveAccepted { get; private set; }
+    public int OffersShown { get; private set; }
+    public bool OfferPending { get; private set; }
+    public double? OfferShownAt { get; private set; }
+    public string OfferResponse { get; private set; }
+    public float? TimeToDecision { get; private set; }
     public string CurrentCheckpointId { get; private set; }
     public int CurrentCheckpointIndex { get; private set; }
     public string OutcomeObserved { get; private set; }
@@ -21,6 +26,11 @@ public sealed class GauntletAnalyticsState
         RunStartedAt = now;
         LastDeathAt = null;
         ReviveAccepted = false;
+        OffersShown = 0;
+        OfferPending = false;
+        OfferShownAt = null;
+        OfferResponse = null;
+        TimeToDecision = null;
         CurrentCheckpointId = null;
         CurrentCheckpointIndex = -1;
         OutcomeObserved = null;
@@ -54,6 +64,44 @@ public sealed class GauntletAnalyticsState
     public void AcceptRevive()
     {
         ReviveAccepted = true;
+    }
+
+    public bool RecordOfferShown(double shownAt)
+    {
+        if (OfferPending)
+        {
+            return false;
+        }
+
+        OffersShown++;
+        OfferPending = true;
+        OfferShownAt = shownAt;
+        OfferResponse = null;
+        TimeToDecision = null;
+        return true;
+    }
+
+    public bool ResolveOffer(double resolvedAt, string response, out float timeToDecision)
+    {
+        timeToDecision = 0f;
+        if (!OfferPending || !IsValidOfferResponse(response))
+        {
+            return false;
+        }
+
+        timeToDecision = (float)(resolvedAt - OfferShownAt.Value);
+        TimeToDecision = timeToDecision;
+        OfferResponse = response;
+        OfferPending = false;
+        return true;
+    }
+
+    private static bool IsValidOfferResponse(string response)
+    {
+        return response == "accepted"
+            || response == "declined"
+            || response == "ignored"
+            || response == "quit";
     }
     public void ObserveOutcome(string outcome)
     {
