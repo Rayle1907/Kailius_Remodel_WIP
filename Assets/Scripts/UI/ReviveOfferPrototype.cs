@@ -170,7 +170,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         label.fontSize = size;
         label.alignment = alignment;
         label.color = Color.white;
-        label.enableWordWrapping = true;
+        label.textWrappingMode = TextWrappingModes.Normal;
         return label;
     }
 

@@ -25,7 +25,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         IsReady = false;
         IsShuttingDown = false;
 
-        if (instance != null)
+        if (instance != null || FindAnyObjectByType<ResearchAnalyticsBootstrap>() != null)
         {
             return;
         }
@@ -50,6 +50,14 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
     private async void Awake()
     {
         if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        ResearchAnalyticsBootstrap existing =
+            FindAnyObjectByType<ResearchAnalyticsBootstrap>();
+        if (existing != null && existing != this)
         {
             Destroy(gameObject);
             return;

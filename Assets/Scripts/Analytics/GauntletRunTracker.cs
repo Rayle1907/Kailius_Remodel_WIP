@@ -16,6 +16,8 @@ public sealed class GauntletRunTracker : MonoBehaviour
     public int DeathsInCurrentRun => deathsInRun;
     public int DeathsInCurrentGauntletSession => deathsInGauntletSession;
     public int CurrentOfferPrice => pendingOffer == null ? 0 : pendingOffer.Price;
+    public bool CanAffordPendingOffer => pendingOffer != null
+        && CanAffordRevive(ResearchPlayerState.PremiumCurrencyBalance, pendingOffer.Price);
 
     private string currentSceneName;
     private string currentGauntletId;
@@ -45,6 +47,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
         public double ShownAt;
         public double ResolvedAt;
         public bool Resolved;
+        public string Response;
+        public bool ShownEventRecorded;
+        public bool ResolvedEventRecorded;
     }
 
     private void Awake()
@@ -87,6 +92,20 @@ public sealed class GauntletRunTracker : MonoBehaviour
         }
 
         TryRecordDuringShutdown(() => EndCurrentRun("application_quit"));
+    }
+
+    private void OnApplicationPause(bool paused)
+    {
+        if (!paused || pendingOffer == null || pendingOffer.Resolved)
+        {
+            return;
+        }
+
+        // Backgrounding can be the only observable indication that the app
+        // was closed while a revive offer was open. Resolution remains
+        // best-effort because the operating system may suspend the process
+        // before Unity Analytics can upload the event.
+        TryRecordDuringShutdown(() => ResolveOffer("quit"));
     }
 
     private static void TryRecordDuringShutdown(Action recordAction)
@@ -210,24 +229,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public int GetNextRevivePrice()
     {
-        return GetRevivePrice(offersShownInRun);
-    }
-
-    public static int GetRevivePrice(int zeroBasedOfferIndex)
-    {
-        if (zeroBasedOfferIndex < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(zeroBasedOfferIndex));
-        }
-
-        // Currency and analytics fields are signed ints. Saturating at 2^30
-        // preserves a positive, deterministically unaffordable price.
-        return 1 << Math.Min(zeroBasedOfferIndex, 30);
-    }
-
-    public static bool CanAffordRevive(int balance, int revivePrice)
-    {
-        return balance >= 0 && revivePrice > 0 && balance >= revivePrice;
+        return 1 << Mathf.Min(offersShownInRun, 30);
     }
 
     public string RecordOfferShown()
@@ -247,26 +249,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
         };
         offersShownInRun++;
 
-        if (ResearchAnalyticsBootstrap.IsReady)
-        {
-            ReviveOfferShownEvent shownEvent = new ReviveOfferShownEvent
-            {
-                RunId = CurrentRunId,
-                GauntletSessionId = CurrentGauntletSessionId,
-                OfferId = pendingOffer.OfferId,
-                SceneName = currentSceneName,
-                SegmentId = CurrentSegmentId,
-                DeathTotal = lastDeathTotal,
-                DeathInSegment = deathsInSegment,
-                Balance = pendingOffer.BalanceBefore,
-                RevivePrice = price,
-                OfferNumber = offersShownInRun,
-                CanAfford = CanAffordRevive(pendingOffer.BalanceBefore, price),
-                Variant = ResearchPlayerState.OfferVariant,
-                ExperimentVersion = ExperimentVersion
-            };
-            ResearchAnalytics.RecordOfferShown(shownEvent);
-        }
+        TryRecordPendingOfferEvents();
 
         return pendingOffer.OfferId;
     }
@@ -278,37 +261,20 @@ public sealed class GauntletRunTracker : MonoBehaviour
             return false;
         }
 
-        if (response == "accepted"
-            && (!CanAffordPendingOffer
-                || !ResearchPlayerState.TrySpendPremiumCurrency(pendingOffer.Price)))
+        if (response == "accepted" && !ResearchPlayerState.TrySpendPremiumCurrency(pendingOffer.Price))
         {
             return false;
         }
 
         pendingOffer.Resolved = true;
+        pendingOffer.Response = response;
         pendingOffer.ResolvedAt = Time.realtimeSinceStartupAsDouble;
         if (response == "accepted")
         {
             acceptedRevives++;
         }
 
-        if (ResearchAnalyticsBootstrap.IsReady)
-        {
-            ReviveOfferResolvedEvent resolvedEvent = new ReviveOfferResolvedEvent
-            {
-                RunId = CurrentRunId,
-                GauntletSessionId = CurrentGauntletSessionId,
-                OfferId = pendingOffer.OfferId,
-                Response = response,
-                DecisionSeconds = (float)(pendingOffer.ResolvedAt - pendingOffer.ShownAt),
-                RevivePrice = pendingOffer.Price,
-                BalanceBefore = pendingOffer.BalanceBefore,
-                BalanceAfter = ResearchPlayerState.PremiumCurrencyBalance,
-                Variant = ResearchPlayerState.OfferVariant,
-                ExperimentVersion = ExperimentVersion
-            };
-            ResearchAnalytics.RecordOfferResolved(resolvedEvent);
-        }
+        TryRecordPendingOfferEvents();
 
         return true;
     }
@@ -468,6 +434,54 @@ public sealed class GauntletRunTracker : MonoBehaviour
     private void OnAnalyticsReady()
     {
         TryRecordRunStarted();
+        TryRecordPendingOfferEvents();
+    }
+
+    private void TryRecordPendingOfferEvents()
+    {
+        if (!ResearchAnalyticsBootstrap.IsReady || pendingOffer == null)
+        {
+            return;
+        }
+
+        if (!pendingOffer.ShownEventRecorded)
+        {
+            ReviveOfferShownEvent shownEvent = new ReviveOfferShownEvent
+            {
+                RunId = CurrentRunId,
+                GauntletSessionId = CurrentGauntletSessionId,
+                OfferId = pendingOffer.OfferId,
+                SceneName = currentSceneName,
+                SegmentId = CurrentSegmentId,
+                DeathTotal = lastDeathTotal,
+                DeathInSegment = deathsInSegment,
+                Balance = pendingOffer.BalanceBefore,
+                RevivePrice = pendingOffer.Price,
+                OfferNumber = offersShownInRun,
+                CanAfford = pendingOffer.BalanceBefore >= pendingOffer.Price,
+                Variant = ResearchPlayerState.OfferVariant,
+                ExperimentVersion = ExperimentVersion
+            };
+            pendingOffer.ShownEventRecorded = ResearchAnalytics.RecordOfferShown(shownEvent);
+        }
+
+        if (pendingOffer.Resolved && !pendingOffer.ResolvedEventRecorded)
+        {
+            ReviveOfferResolvedEvent resolvedEvent = new ReviveOfferResolvedEvent
+            {
+                RunId = CurrentRunId,
+                GauntletSessionId = CurrentGauntletSessionId,
+                OfferId = pendingOffer.OfferId,
+                Response = pendingOffer.Response,
+                DecisionSeconds = (float)(pendingOffer.ResolvedAt - pendingOffer.ShownAt),
+                RevivePrice = pendingOffer.Price,
+                BalanceBefore = pendingOffer.BalanceBefore,
+                BalanceAfter = ResearchPlayerState.PremiumCurrencyBalance,
+                Variant = ResearchPlayerState.OfferVariant,
+                ExperimentVersion = ExperimentVersion
+            };
+            pendingOffer.ResolvedEventRecorded = ResearchAnalytics.RecordOfferResolved(resolvedEvent);
+        }
     }
 
     private void TryRecordRunStarted()

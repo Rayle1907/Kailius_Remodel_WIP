@@ -27,7 +27,7 @@ public static class CodexAndroidBuild
                 + " dust=" + RefName(move.dust));
         }
 
-        foreach (var canvas in UnityEngine.Object.FindObjectsByType<UnityEngine.Canvas>(UnityEngine.FindObjectsSortMode.None))
+        foreach (var canvas in UnityEngine.Object.FindObjectsByType<UnityEngine.Canvas>())
         {
             UnityEngine.Debug.Log("Canvas " + GetPath(canvas.transform)
                 + " active=" + canvas.gameObject.activeInHierarchy
