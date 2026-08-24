@@ -232,6 +232,11 @@ public sealed class GauntletRunTracker : MonoBehaviour
         return 1 << Mathf.Min(offersShownInRun, 30);
     }
 
+    public static bool CanAffordRevive(int balance, int revivePrice)
+    {
+        return balance >= 0 && revivePrice > 0 && balance >= revivePrice;
+    }
+
     public string RecordOfferShown()
     {
         if (!IsCurrentSceneGauntlet || pendingOffer != null && !pendingOffer.Resolved)
