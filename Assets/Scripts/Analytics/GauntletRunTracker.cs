@@ -16,6 +16,8 @@ public sealed class GauntletRunTracker : MonoBehaviour
     public int DeathsInCurrentRun => deathsInRun;
     public int DeathsInCurrentGauntletSession => deathsInGauntletSession;
     public int CurrentOfferPrice => pendingOffer == null ? 0 : pendingOffer.Price;
+    public bool CanAffordPendingOffer => pendingOffer != null
+        && CanAffordRevive(ResearchPlayerState.PremiumCurrencyBalance, pendingOffer.Price);
 
     private string currentSceneName;
     private string currentGauntletId;
