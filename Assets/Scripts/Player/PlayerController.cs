@@ -122,7 +122,7 @@ public class PlayerController : MonoBehaviour {
 
         if (collision.transform.tag == "Patrols") {
             if (Time.time >= nextAttactTime) {
-                playerStats.ApplyDamage(damagePatrols, "enemy_contact", true);
+                playerStats.ApplyDamage(damagePatrols, "enemy_contact");
                 nextAttactTime = Time.time + attactRate;
 
             }

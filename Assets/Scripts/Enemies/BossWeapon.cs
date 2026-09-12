@@ -18,7 +18,7 @@ public class BossWeapon : MonoBehaviour {
 		foreach (Collider2D hit in hits) {
 			Stats playerStats = hit.GetComponentInParent<Stats>();
 			if (playerStats != null) {
-				playerStats.ApplyDamage(attackDamage, "boss_melee", true);
+				playerStats.ApplyDamage(attackDamage, "boss_melee");
 				return;
 			}
 		}
