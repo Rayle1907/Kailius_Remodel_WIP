@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Patrol : MonoBehaviour {
 
-    private int groundLayerMask;
+    [SerializeField] private LayerMask groundLayer;
 
     public float speed;
     public float distance;
@@ -13,7 +13,10 @@ public class Patrol : MonoBehaviour {
 
     private void Awake()
     {
-        groundLayerMask = LayerMask.GetMask("Ground");
+        if (groundLayer.value == 0)
+        {
+            groundLayer = LayerMask.GetMask("Ground");
+        }
     }
 
     private void Update() {
@@ -23,7 +26,7 @@ public class Patrol : MonoBehaviour {
             groundDetection.position,
             Vector2.down,
             distance,
-            groundLayerMask
+            groundLayer
         );
 
         if (groundInfo.collider == false) {
