@@ -17,6 +17,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
     private Button reviveButton;
     private TextMeshProUGUI affordabilityText;
     private Coroutine timeoutRoutine;
+    private readonly System.Collections.Generic.List<GameObject> hiddenSceneCanvases = new System.Collections.Generic.List<GameObject>();
 
     public static bool TryShow(Stats stats)
     {
@@ -61,6 +62,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             return;
         }
 
+        HideOtherSceneCanvases(canvasObject);
         canvasObject.SetActive(true);
         CanvasScaler sceneScaler = canvasObject.GetComponent<CanvasScaler>();
         if (sceneScaler != null)
@@ -175,6 +177,39 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             overlay.SetActive(false);
             overlay = null;
         }
+
+        RestoreOtherSceneCanvases();
+    }
+
+    private void HideOtherSceneCanvases(GameObject reviveCanvas)
+    {
+        hiddenSceneCanvases.Clear();
+
+        Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
+        foreach (Canvas canvas in canvases)
+        {
+            GameObject canvasObject = canvas.gameObject;
+            if (canvasObject == reviveCanvas || !canvasObject.scene.IsValid() || !canvasObject.activeSelf)
+            {
+                continue;
+            }
+
+            hiddenSceneCanvases.Add(canvasObject);
+            canvasObject.SetActive(false);
+        }
+    }
+
+    private void RestoreOtherSceneCanvases()
+    {
+        foreach (GameObject canvasObject in hiddenSceneCanvases)
+        {
+            if (canvasObject != null)
+            {
+                canvasObject.SetActive(true);
+            }
+        }
+
+        hiddenSceneCanvases.Clear();
     }
 
     private static Image CreateImage(Transform parent, string name, Color color)
