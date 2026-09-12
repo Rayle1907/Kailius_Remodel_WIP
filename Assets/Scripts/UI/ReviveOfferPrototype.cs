@@ -1,11 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// Temporary runtime-built revive offer UI. Replace the visuals with a prefab once the layout is approved.
+/// Temporary runtime-built revive offer UI. Replac the visuals with a prefab once the layout is approved.
 /// </summary>
 public sealed class ReviveOfferPrototype : MonoBehaviour
 {
@@ -86,6 +87,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             Debug.LogError("ReviveCanvas is missing a child named Panel.");
             canvasObject.SetActive(false);
             overlay = null;
+            RestoreOtherSceneCanvases();
             return;
         }
 
@@ -98,21 +100,21 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         RemoveGeneratedChildren(panel.transform);
 
         TextMeshProUGUI heading = CreateText(panel.transform, "ReviveHeading", "REVIVE?", 46f, TextAlignmentOptions.Center);
-        AnchorTop(heading.rectTransform, 35f, 70f, 1000f);
+        AnchorTop(heading.rectTransform, 350f, -110f, 1000f);
 
         TextMeshProUGUI explanation = CreateText(panel.transform, "Explanation", "Continue this gauntlet from the last checkpoint.", 20f, TextAlignmentOptions.Center);
-        AnchorTop(explanation.rectTransform, 140f, 90f, 1000f);
+        AnchorTop(explanation.rectTransform, 425f, -130f, 1000f);
 
         TextMeshProUGUI cost = CreateText(panel.transform, "Cost", $"Cost: {price} Embers\nYou have: {balance} Embers", 28f, TextAlignmentOptions.Center);
-        AnchorTop(cost.rectTransform, 260f, 110f, 1000f);
+        AnchorTop(cost.rectTransform, 475f, -150f, 1000f);
 
         affordabilityText = CreateText(panel.transform, "Affordability", canAfford ? "" : "Not enough Embers", 22f, TextAlignmentOptions.Center);
         affordabilityText.color = new Color(1f, 0.72f, 0.25f);
         AnchorTop(affordabilityText.rectTransform, 385f, 45f, 1000f);
 
-        reviveButton = CreateButton(panel.transform, "Revive", "REVIVE", new Vector2(-260f, -250f), 420f, AcceptRevive);
+        reviveButton = CreateButton(panel.transform, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
         reviveButton.interactable = canAfford;
-        CreateButton(panel.transform, "Restart", "RESTART", new Vector2(260f, -250f), 420f, DeclineRevive);
+        CreateButton(panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
 
         timeoutRoutine = StartCoroutine(ResolveTimeout());
     }
