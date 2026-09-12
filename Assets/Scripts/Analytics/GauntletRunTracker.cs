@@ -227,9 +227,24 @@ public sealed class GauntletRunTracker : MonoBehaviour
             || (deathNumberInGauntlet >= 8 && deathNumberInGauntlet % 2 == 0);
     }
 
+    public static int GetRevivePrice(int zeroBasedOfferIndex)
+    {
+        if (zeroBasedOfferIndex < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(zeroBasedOfferIndex));
+        }
+
+        return 1 << Mathf.Min(zeroBasedOfferIndex, 30);
+    }
+
+    public static bool CanAffordRevive(int balance, int revivePrice)
+    {
+        return balance >= 0 && revivePrice > 0 && balance >= revivePrice;
+    }
+
     public int GetNextRevivePrice()
     {
-        return 1 << Mathf.Min(offersShownInRun, 30);
+        return GetRevivePrice(offersShownInRun);
     }
 
     public string RecordOfferShown()
