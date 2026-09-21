@@ -113,7 +113,7 @@ public class PlayerController : MonoBehaviour {
     private void OnCollisionEnter2D(Collision2D collision) {
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
-            currentRespawn = collision.transform;
+            HandleCheckpointReached(collision.transform);
         }
 
         if (collision.transform.tag == "Patrols") {
@@ -153,7 +153,15 @@ public class PlayerController : MonoBehaviour {
         }
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
-            currentRespawn = collision.transform;
+            HandleCheckpointReached(collision.transform);
+        }
+    }
+
+    private void HandleCheckpointReached(Transform checkpoint) {
+        bool reachedNextCheckpoint = currentRespawn != checkpoint;
+        currentRespawn = checkpoint;
+        if (reachedNextCheckpoint && GauntletRunTracker.Instance != null) {
+            GauntletRunTracker.Instance.SetSegment(checkpoint.name);
         }
     }
 
