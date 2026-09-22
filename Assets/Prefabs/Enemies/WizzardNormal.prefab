@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 9020108510297927833}
   - component: {fileID: 9020108510297927834}
   - component: {fileID: 9020108510297927835}
+  - component: {fileID: 777700000000000004}
   m_Layer: 12
   m_Name: WizzardNormal
   m_TagString: Boss
@@ -143,6 +144,21 @@ CapsuleCollider2D:
   m_Offset: {x: -0.0019769669, y: -0.7435441}
   m_Size: {x: 1.8419547, y: 2.6569185}
   m_Direction: 0
+--- !u!114 &777700000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9020108510297927847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e58e421469a4f218f7dfbdb4178892c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  spriteRenderer: {fileID: 0}
+  hurtColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  flashDuration: 0.12
 --- !u!114 &9020108510297927833
 MonoBehaviour:
   m_ObjectHideFlags: 0

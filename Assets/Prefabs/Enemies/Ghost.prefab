@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 3133617829513601520}
   - component: {fileID: 3133617829513601525}
   - component: {fileID: 3133617829513601526}
+  - component: {fileID: 777700000000000001}
   m_Layer: 12
   m_Name: Ghost
   m_TagString: Patrols
@@ -136,6 +137,21 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &777700000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3133617829513601423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e58e421469a4f218f7dfbdb4178892c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  spriteRenderer: {fileID: 0}
+  hurtColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  flashDuration: 0.12
 --- !u!114 &3133617829513601521
 MonoBehaviour:
   m_ObjectHideFlags: 0

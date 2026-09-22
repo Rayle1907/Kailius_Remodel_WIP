@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6363950554032350174}
   - component: {fileID: 6363950554032350173}
   - component: {fileID: 6363950554032350172}
+  - component: {fileID: 777700000000000012}
   m_Layer: 12
   m_Name: Hellcat
   m_TagString: Patrols
@@ -143,6 +144,21 @@ CapsuleCollider2D:
   m_Offset: {x: 0.5389974, y: -0.3982426}
   m_Size: {x: 3.6022701, y: 1.9637263}
   m_Direction: 1
+--- !u!114 &777700000000000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6363950554032350171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e58e421469a4f218f7dfbdb4178892c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  spriteRenderer: {fileID: 0}
+  hurtColor: {r: 1, g: 0.15, b: 0.15, a: 1}
+  flashDuration: 0.12
 --- !u!114 &6363950554032350173
 MonoBehaviour:
   m_ObjectHideFlags: 0

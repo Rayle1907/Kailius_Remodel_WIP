@@ -19,6 +19,11 @@ public class Enemy : MonoBehaviour {
     public int maxSwords = 2;
     public int maxShields = 2;
     private bool isDying;
+    private SpriteHurtFlash hurtFlash;
+
+    private void Awake() {
+        hurtFlash = GetComponent<SpriteHurtFlash>();
+    }
 
     public void TakeDamage(int damage) {
         if (isDying) {
@@ -27,8 +32,8 @@ public class Enemy : MonoBehaviour {
 
         this.health -= damage;
 
-        // Play animacion de herida
-        animator.SetTrigger("hurt");
+        // Hurt feedback is a tint only; do not replace the current sprite.
+        hurtFlash?.Flash();
 
         if(health <= 0) {
             Die();

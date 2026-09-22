@@ -52,6 +52,11 @@ public class Stats : MonoBehaviour {
     public GameObject sonidoDaño;
 
     private bool deathRecorded = false;
+    private SpriteHurtFlash hurtFlash;
+
+    private void Awake() {
+        hurtFlash = GetComponent<SpriteHurtFlash>();
+    }
 
     // Start is called before the first frame update
     void Start() {
@@ -128,6 +133,10 @@ public class Stats : MonoBehaviour {
         int healthBefore = health;
         int actualDamage = ignoresDefense ? amount : Mathf.Max(0, amount - defense);
         health = Mathf.Max(0, health - actualDamage);
+
+        if(actualDamage > 0) {
+            hurtFlash?.Flash();
+        }
 
         if(actualDamage > 0 && !ignoresDefense && sonidoDaño != null) {
             OneShotAudioPool.Play(sonidoDaño, transform.position);
