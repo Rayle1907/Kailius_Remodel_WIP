@@ -2,6 +2,9 @@
 
 public class PlayerController : MonoBehaviour {
 
+    public event System.Action<Transform> CheckpointTouched;
+    public event System.Action<Transform> CheckpointRespawned;
+
     public float moveSpeed;
     public float jumpHeight;
   
@@ -113,7 +116,7 @@ public class PlayerController : MonoBehaviour {
     private void OnCollisionEnter2D(Collision2D collision) {
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
-            HandleCheckpointReached(collision.transform);
+            HandleCheckpointTouched(collision.transform);
         }
 
         if (collision.transform.tag == "Patrols") {
@@ -153,13 +156,14 @@ public class PlayerController : MonoBehaviour {
         }
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
-            HandleCheckpointReached(collision.transform);
+            HandleCheckpointTouched(collision.transform);
         }
     }
 
-    private void HandleCheckpointReached(Transform checkpoint) {
+    private void HandleCheckpointTouched(Transform checkpoint) {
         bool reachedNextCheckpoint = currentRespawn != checkpoint;
         currentRespawn = checkpoint;
+        CheckpointTouched?.Invoke(checkpoint);
         if (reachedNextCheckpoint && GauntletRunTracker.Instance != null) {
             GauntletRunTracker.Instance.SetSegment(checkpoint.name);
         }
@@ -185,6 +189,7 @@ public class PlayerController : MonoBehaviour {
             currentRespawn.position.y,
             transform.position.z
         );
+        CheckpointRespawned?.Invoke(currentRespawn);
     }
     private Transform FindClosestRespawn() {
         GameObject[] respawns = GameObject.FindGameObjectsWithTag("ReSpawn");
