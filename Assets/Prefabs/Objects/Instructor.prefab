@@ -119,16 +119,14 @@ MonoBehaviour:
   dialogue:
     name: Instructor1
     sentenceList:
-    - "Se\xF1or Kailius, unos monstruos nos robaron todas nuestras joyas que teniamos!"
-    - Necesitamos tu ayuda para recuperar nuestras joyas. No te olvides de
-    - "nuestras estrellas es nuestra joya m\xE1s valiosa y solo tenemos tres."
-    - 'Para poder moverte utliza ''A'', ''D'' y para saltar utiliza el ''Space'' '
-    - Tambien llevaras una espada y un arco con el que poder defenderte.
-    - La espada la podras utilizar con la 'F' y el arco con la tecla 'C'
-    - "Recuerda que el arco es m\xE1s poderoso que la espada pero debes cargarlo"
-    - utilizando la espada.
-    - "Te dar\xE9 como misi\xF3n recoger 150 monedas, 60 gemas y 3 estrellas."
-    - Ten mucho cuidado caballero!
+    - "Sir Kailius, some monsters stole all our jewels!"
+    - "We need your help to recover our jewels."
+    - "Don’t forget our stars. They’re our most valuable jewels, and we have only three."
+    - "Press A and D to move. Press Space to jump."
+    - "You’ll carry a sword to defend yourself."
+    - "Press F to attack with your sword."
+    - "Your mission is to collect 150 coins, 60 gems, and 3 stars."
+    - "Take care, knight!"
   dialoguePanel: {fileID: 0}
   displayText: {fileID: 0}
   typingSpeed: 0.05

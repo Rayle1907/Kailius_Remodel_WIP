@@ -59634,17 +59634,17 @@ PrefabInstance:
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[0]'
-      value: Menos mal que llegaste sano y salvo Kailius. Estas casi a punto de terminar,
+      value: "Thank goodness you made it safely, Kailius. You’re almost finished."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[1]'
-      value: "veo que est\xE1s recuperando muchas joyas robadas, no te olvides "
+      value: "I see you’ve recovered many of our stolen jewels."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[2]'
-      value: recuperar las estrellas. Nos veremos pronto! Ten mucho cuidado.
+      value: "Don’t forget to recover the stars. See you soon! Take care."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200476, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}

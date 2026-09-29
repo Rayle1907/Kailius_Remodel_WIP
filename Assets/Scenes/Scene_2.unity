@@ -26694,27 +26694,27 @@ PrefabInstance:
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[0]'
-      value: 'Menos mal que llegaste Kailius, la cosa se esta poniendo cada vez peor. '
+      value: "Thank goodness you’re here, Kailius. Things are getting worse."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[1]'
-      value: 'Veo que ya has empezado a recoger nuestras joyas pero no son '
+      value: "I see you’ve already recovered some of our jewels, but it’s not enough."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[2]'
-      value: "suficientes necesitas recoger m\xE1s. Y una cosa m\xE1s necesitas"
+      value: "You’ll need to collect more."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[3]'
-      value: "matar a m\xE1s monstrous para conseguir mejoras de ataque y defensa"
+      value: "Defeating monsters earns you attack and defense upgrades."
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[4]'
-      value: "para poder avanzar mas r\xE1pido. Hasta la pr\xF3xima!"
+      value: "They’ll help you progress faster. See you next time!"
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200476, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
