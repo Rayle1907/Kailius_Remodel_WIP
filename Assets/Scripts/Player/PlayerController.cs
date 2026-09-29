@@ -4,6 +4,7 @@ public class PlayerController : MonoBehaviour {
 
     public event System.Action<Transform> CheckpointTouched;
     public event System.Action<Transform> CheckpointRespawned;
+    public Transform CurrentRespawnCheckpoint => currentRespawn;
 
     public float moveSpeed;
     public float jumpHeight;

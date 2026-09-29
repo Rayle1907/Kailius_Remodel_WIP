@@ -13,7 +13,6 @@ public sealed class DeathWall : MonoBehaviour
     [SerializeField] private SpriteRenderer gradientRenderer;
     [SerializeField, Min(0f)] private float speed = 10f;
     [SerializeField, Min(0f)] private float headStart = 8f;
-    [SerializeField, Range(0f, 0.4f)] private float minimumVisibleFillViewportFraction = 0f;
     [SerializeField, Range(0.01f, 0.5f)] private float gradientViewportFraction = 0.15f;
     [SerializeField, Range(0f, 0.25f)] private float fillOverscanViewportFraction = 0.05f;
     [SerializeField, Min(0f)] private float verticalOverscan = 2f;
@@ -139,8 +138,6 @@ public sealed class DeathWall : MonoBehaviour
     {
         activated = true;
         Vector2 position = body.position;
-        // Begin at the left edge so the solid region grows into view as the wall advances.
-        // The gradient preview is already anchored here before the checkpoint is reached.
         position.x = gameplayCamera != null
             ? GetCameraLeft()
             : checkpoint.position.x - headStart;
@@ -152,7 +149,7 @@ public sealed class DeathWall : MonoBehaviour
 
         lethalCollider.enabled = true;
         SetPresentationVisible(true);
-        KeepAtVisibleScreenEdge();
+        FollowCameraHeight();
         UpdatePresentationAndCollider();
     }
 
@@ -165,7 +162,7 @@ public sealed class DeathWall : MonoBehaviour
 
         if (playerStats != null && playerStats.health <= 0)
         {
-            stoppedForDeath = true;
+            PauseAtCheckpointOnDeath();
             return;
         }
 
@@ -188,12 +185,6 @@ public sealed class DeathWall : MonoBehaviour
         }
 
         float nextX = body.position.x + speed * Time.fixedDeltaTime;
-        if (gameplayCamera != null)
-        {
-            float minimumX = GetCameraLeft() + GetViewportWidth() * minimumVisibleFillViewportFraction;
-            nextX = Mathf.Max(nextX, minimumX);
-        }
-
         body.MovePosition(new Vector2(nextX, body.position.y));
     }
 
@@ -206,8 +197,6 @@ public sealed class DeathWall : MonoBehaviour
 
         if (!activated)
         {
-            // Show the warning fade at the camera's left edge before the checkpoint,
-            // without showing the solid fill or enabling its lethal trigger.
             if (gameplayCamera != null)
             {
                 body.position = new Vector2(GetCameraLeft(), gameplayCamera.transform.position.y);
@@ -222,10 +211,9 @@ public sealed class DeathWall : MonoBehaviour
             return;
         }
 
-        // FixedUpdate is suspended when the revive offer sets timeScale to zero.
         if (playerStats != null && playerStats.health <= 0)
         {
-            stoppedForDeath = true;
+            PauseAtCheckpointOnDeath();
         }
 
         if (waitingForCameraCatchup)
@@ -244,12 +232,11 @@ public sealed class DeathWall : MonoBehaviour
             }
         }
 
-        // Run after the camera follow so fast camera motion cannot leave the lethal edge offscreen.
-        KeepAtVisibleScreenEdge();
+        FollowCameraHeight();
         UpdatePresentationAndCollider();
     }
 
-    private void KeepAtVisibleScreenEdge()
+    private void FollowCameraHeight()
     {
         if (gameplayCamera == null)
         {
@@ -257,13 +244,28 @@ public sealed class DeathWall : MonoBehaviour
         }
 
         Vector2 position = body.position;
-        float minimumX = GetCameraLeft() + GetViewportWidth() * minimumVisibleFillViewportFraction;
-        if (position.x < minimumX)
+        position.y = gameplayCamera.transform.position.y;
+        body.position = position;
+    }
+
+    private void PauseAtCheckpointOnDeath()
+    {
+        if (stoppedForDeath)
         {
-            position.x = minimumX;
+            return;
         }
 
-        position.y = gameplayCamera.transform.position.y;
+        stoppedForDeath = true;
+        Transform checkpoint = playerController != null
+            ? playerController.CurrentRespawnCheckpoint
+            : null;
+        if (checkpoint == null)
+        {
+            return;
+        }
+
+        Vector2 position = body.position;
+        position.x = checkpoint.position.x - headStart;
         body.position = position;
     }
 
