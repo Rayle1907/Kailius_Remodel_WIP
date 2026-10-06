@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour {
 
@@ -27,6 +28,10 @@ public class PlayerController : MonoBehaviour {
     public ParticleSystem dust;
 
     private Rigidbody2D body;
+    private Collider2D mainCollider;
+    private readonly HashSet<Collider2D> pendingCheckpointTriggers = new HashSet<Collider2D>();
+    private Transform lastCheckpointTouched;
+    private int lastCheckpointTouchedFrame = -1;
     private Animator playerAnimator;
     private SpriteRenderer playerSprite;
     private PlayerControllerUP jumpController;
@@ -36,6 +41,7 @@ public class PlayerController : MonoBehaviour {
 
     void Awake() {
         body = GetComponent<Rigidbody2D>();
+        mainCollider = GetComponent<Collider2D>();
         playerAnimator = GetComponent<Animator>();
         playerSprite = GetComponent<SpriteRenderer>();
         jumpController = GetComponentInChildren<PlayerControllerUP>();
@@ -117,7 +123,7 @@ public class PlayerController : MonoBehaviour {
     private void OnCollisionEnter2D(Collision2D collision) {
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
-            HandleCheckpointTouched(collision.transform);
+            TryHandleCheckpointTouched(collision.collider);
         }
 
         if (collision.transform.tag == "Patrols") {
@@ -157,17 +163,63 @@ public class PlayerController : MonoBehaviour {
         }
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
-            HandleCheckpointTouched(collision.transform);
+            if (!TryHandleCheckpointTouched(collision))
+            {
+                pendingCheckpointTriggers.Add(collision);
+            }
         }
     }
 
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (!collision.gameObject.CompareTag("ReSpawn")
+            || !pendingCheckpointTriggers.Contains(collision))
+        {
+            return;
+        }
+
+        if (currentRespawn == collision.transform || TryHandleCheckpointTouched(collision))
+        {
+            pendingCheckpointTriggers.Remove(collision);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        pendingCheckpointTriggers.Remove(collision);
+    }
+
     private void HandleCheckpointTouched(Transform checkpoint) {
+        if (lastCheckpointTouched == checkpoint && lastCheckpointTouchedFrame == Time.frameCount)
+        {
+            return;
+        }
+
+        lastCheckpointTouched = checkpoint;
+        lastCheckpointTouchedFrame = Time.frameCount;
         bool reachedNextCheckpoint = currentRespawn != checkpoint;
         currentRespawn = checkpoint;
         CheckpointTouched?.Invoke(checkpoint);
         if (reachedNextCheckpoint && GauntletRunTracker.Instance != null) {
             GauntletRunTracker.Instance.SetSegment(checkpoint.name);
         }
+    }
+
+    private bool TryHandleCheckpointTouched(Collider2D checkpointCollider)
+    {
+        CheckpointActivationRegion activationRegion = checkpointCollider.GetComponent<CheckpointActivationRegion>();
+        if (activationRegion == null || mainCollider == null
+            || !CheckpointActivationRegion.IsPlayerInActivationRange(
+                mainCollider.bounds.min.y,
+                checkpointCollider.transform.position.y,
+                activationRegion.ActivationHeight,
+                activationRegion.IsDirectTouchCollider(checkpointCollider)))
+        {
+            return false;
+        }
+
+        HandleCheckpointTouched(checkpointCollider.transform);
+        return true;
     }
 
     public void reSpawn()
