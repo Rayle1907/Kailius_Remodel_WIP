@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public sealed class GauntletRunTracker : MonoBehaviour
 {
-    public const string ExperimentVersion = "revive_study_v1";
+    public const string ExperimentVersion = "revive_study_v2";
 
     public static GauntletRunTracker Instance { get; private set; }
 
