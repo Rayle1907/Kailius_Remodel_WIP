@@ -1699,6 +1699,7 @@ GameObject:
   - component: {fileID: 910607396}
   - component: {fileID: 910607395}
   - component: {fileID: 910607394}
+  - component: {fileID: 910607398}
   m_Layer: 5
   m_Name: ReviveCanvas
   m_TagString: Untagged
@@ -1738,7 +1739,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1080, y: 1920}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
@@ -1791,6 +1792,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &910607398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910607393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50f5914c5eff69b4e8a41b8d9c1d900d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonPrefab: {fileID: 7106431089791104508, guid: b0b92fef0172a2d4c91c7c1885472d61,
+    type: 3}
+  pressMeButtonPrefab: {fileID: 8100000000000000001, guid: 5ebed260254e783419452c0343f1513c,
+    type: 3}
+  uiFont: {fileID: 11400000, guid: d22c986e05eac53b8bc884c1372fa019, type: 2}
 --- !u!1001 &912064282
 PrefabInstance:
   m_ObjectHideFlags: 0

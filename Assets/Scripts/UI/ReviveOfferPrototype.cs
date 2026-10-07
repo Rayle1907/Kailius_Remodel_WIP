@@ -2,12 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// Temporary runtime-built revive offer UI. Replac the visuals with a prefab once the layout is approved.
-/// </summary>
 public sealed class ReviveOfferPrototype : MonoBehaviour
 {
     private const float DecisionTimeoutSeconds = 10f;
@@ -63,6 +61,13 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             return;
         }
 
+        ReviveButtonAssets buttonAssets = canvasObject.GetComponent<ReviveButtonAssets>();
+        if (buttonAssets == null || buttonAssets.ButtonPrefab == null || buttonAssets.PressMeButtonPrefab == null || buttonAssets.UIFont == null)
+        {
+            Debug.LogError($"ReviveCanvas configuration is incomplete: component={buttonAssets != null}, regular={buttonAssets != null && buttonAssets.ButtonPrefab != null}, PressMe={buttonAssets != null && buttonAssets.PressMeButtonPrefab != null}, font={buttonAssets != null && buttonAssets.UIFont != null}.");
+            return;
+        }
+
         HideOtherSceneCanvases(canvasObject);
         canvasObject.SetActive(true);
         CanvasScaler sceneScaler = canvasObject.GetComponent<CanvasScaler>();
@@ -99,22 +104,26 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
         RemoveGeneratedChildren(panel.transform);
 
-        TextMeshProUGUI heading = CreateText(panel.transform, "ReviveHeading", "REVIVE?", 46f, TextAlignmentOptions.Center);
+        TextMeshProUGUI heading = CreateText(panel.transform, "ReviveHeading", "REVIVE?", 46f, TextAlignmentOptions.Center, buttonAssets.UIFont);
         AnchorTop(heading.rectTransform, 350f, -110f, 1000f);
 
-        TextMeshProUGUI explanation = CreateText(panel.transform, "Explanation", "Continue this gauntlet from the last checkpoint.", 20f, TextAlignmentOptions.Center);
+        TextMeshProUGUI explanation = CreateText(panel.transform, "Explanation", "Continue this gauntlet from the last checkpoint.", 20f, TextAlignmentOptions.Center, buttonAssets.UIFont);
         AnchorTop(explanation.rectTransform, 425f, -130f, 1000f);
 
-        TextMeshProUGUI cost = CreateText(panel.transform, "Cost", $"Cost: {price} Embers\nYou have: {balance} Embers", 28f, TextAlignmentOptions.Center);
+        TextMeshProUGUI cost = CreateText(panel.transform, "Cost", $"Cost: {price} Embers\nYou have: {balance} Embers", 28f, TextAlignmentOptions.Center, buttonAssets.UIFont);
         AnchorTop(cost.rectTransform, 475f, -150f, 1000f);
 
-        affordabilityText = CreateText(panel.transform, "Affordability", canAfford ? "" : "Not enough Embers", 22f, TextAlignmentOptions.Center);
+        affordabilityText = CreateText(panel.transform, "Affordability", canAfford ? "" : "Not enough Embers", 22f, TextAlignmentOptions.Center, buttonAssets.UIFont);
         affordabilityText.color = new Color(1f, 0.72f, 0.25f);
         AnchorTop(affordabilityText.rectTransform, 385f, 45f, 1000f);
 
-        reviveButton = CreateButton(panel.transform, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
+        reviveButton = CreateButton(buttonAssets.PressMeButtonPrefab, panel.transform, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
         reviveButton.interactable = canAfford;
-        CreateButton(panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        Button restartButton = CreateButton(buttonAssets.ButtonPrefab, panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(canAfford ? reviveButton.gameObject : restartButton.gameObject);
+        }
 
         timeoutRoutine = StartCoroutine(ResolveTimeout());
     }
@@ -141,7 +150,6 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         }
 
         CloseOverlay();
-        // The offer freezes gameplay; accepting it must unfreeze the player.
         Time.timeScale = 1f;
         playerStats.CompleteRevive();
     }
@@ -214,15 +222,6 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         hiddenSceneCanvases.Clear();
     }
 
-    private static Image CreateImage(Transform parent, string name, Color color)
-    {
-        GameObject objectRoot = new GameObject(name);
-        objectRoot.transform.SetParent(parent, false);
-        Image image = objectRoot.AddComponent<Image>();
-        image.color = color;
-        return image;
-    }
-
     private static GameObject FindSceneCanvasRoot()
     {
         Canvas[] canvases = Resources.FindObjectsOfTypeAll<Canvas>();
@@ -273,16 +272,20 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             Transform child = panel.Find(generatedName);
             if (child != null)
             {
+                child.gameObject.SetActive(false);
+                child.SetParent(null, false);
                 Destroy(child.gameObject);
             }
         }
     }
 
-    private static TextMeshProUGUI CreateText(Transform parent, string name, string text, float size, TextAlignmentOptions alignment)
+    private static TextMeshProUGUI CreateText(Transform parent, string name, string text, float size, TextAlignmentOptions alignment, TMP_FontAsset font)
     {
         GameObject objectRoot = new GameObject(name);
         objectRoot.transform.SetParent(parent, false);
         TextMeshProUGUI label = objectRoot.AddComponent<TextMeshProUGUI>();
+        label.font = font;
+        label.fontSharedMaterial = font.material;
         label.text = text;
         label.fontSize = size;
         label.alignment = alignment;
@@ -291,24 +294,16 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         return label;
     }
 
-    private static Button CreateButton(Transform parent, string name, string labelText, Vector2 position, float width, UnityEngine.Events.UnityAction action)
+    private static Button CreateButton(LayeredButton prefab, Transform parent, string name, string labelText, Vector2 position, float width, UnityEngine.Events.UnityAction action)
     {
-        Image image = CreateImage(parent, name, new Color(0.34f, 0.34f, 0.34f, 1f));
-        SetSize(image.rectTransform, width, 64f);
-        image.rectTransform.anchoredPosition = position;
-        Button button = image.gameObject.AddComponent<Button>();
+        LayeredButton button = Instantiate(prefab, parent, false);
+        button.name = name;
+        RectTransform rect = (RectTransform)button.transform;
+        SetSize(rect, width, 64f);
+        rect.anchoredPosition = position;
+        button.SetLabel(labelText);
         button.onClick.AddListener(action);
-        TextMeshProUGUI label = CreateText(image.transform, "Label", labelText, 24f, TextAlignmentOptions.Center);
-        Stretch(label.rectTransform);
         return button;
-    }
-
-    private static void Stretch(RectTransform rect)
-    {
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.one;
-        rect.offsetMin = Vector2.zero;
-        rect.offsetMax = Vector2.zero;
     }
 
     private static void SetSize(RectTransform rect, float width, float height)
