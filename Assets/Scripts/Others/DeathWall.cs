@@ -462,15 +462,28 @@ public sealed class DeathWall : MonoBehaviour
         return CameraPosition.x - chaseDirection * GetViewportWidth() * 0.5f;
     }
 
+    public int Direction => direction;
+
     public bool TryReverseDirection()
     {
-        if (!isActiveAndEnabled || !activated || playerStats == null || playerStats.health <= 0
+        return TrySetDirection(-direction);
+    }
+
+    public bool TrySetDirection(int newDirection)
+    {
+        if ((newDirection != -1 && newDirection != 1)
+            || !isActiveAndEnabled || !activated || playerStats == null || playerStats.health <= 0
             || solidFillRenderer == null || gradientRenderer == null)
         {
             return false;
         }
 
-        direction = -direction;
+        if (direction == newDirection)
+        {
+            return true;
+        }
+
+        direction = newDirection;
         float safeX = playerStats.transform.position.x - direction * Mathf.Max(headStart, 0.01f);
         float edgeX = GetCameraEdge(direction);
         float nextX = direction > 0 ? Mathf.Min(edgeX, safeX) : Mathf.Max(edgeX, safeX);
