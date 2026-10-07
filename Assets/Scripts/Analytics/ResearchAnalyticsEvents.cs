@@ -66,7 +66,7 @@ internal sealed class ReviveOfferShownEvent : Unity.Services.Analytics.Event
     public int DeathTotal { set => SetParameter("death_number_total", value); }
     public int DeathInSegment { set => SetParameter("death_number_in_segment", value); }
     public int Balance { set => SetParameter("premium_currency_balance", value); }
-    public int RevivePrice { set => SetParameter("revive_price", value); }
+    public int RevivePrice { set => SetParameter("revive_price_int", value); }
     public int OfferNumber { set => SetParameter("offer_number_in_gauntlet", value); }
     public bool CanAfford { set => SetParameter("can_afford", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
@@ -81,7 +81,7 @@ internal sealed class ReviveOfferResolvedEvent : Unity.Services.Analytics.Event
     public string OfferId { set => SetParameter("offer_id", value); }
     public string Response { set => SetParameter("offer_response", value); }
     public float DecisionSeconds { set => SetParameter("time_to_decision", value); }
-    public int RevivePrice { set => SetParameter("revive_price", value); }
+    public int RevivePrice { set => SetParameter("revive_price_int", value); }
     public int BalanceBefore { set => SetParameter("premium_currency_balance", value); }
     public int BalanceAfter { set => SetParameter("balance_after_decision", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
