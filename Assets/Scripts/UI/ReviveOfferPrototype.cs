@@ -5,9 +5,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// Temporary runtime-built revive offer UI. Replac the visuals with a prefab once the layout is approved.
-/// </summary>
 public sealed class ReviveOfferPrototype : MonoBehaviour
 {
     private const float DecisionTimeoutSeconds = 10f;
@@ -61,6 +58,12 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         {
             Debug.LogError("ReviveCanvas was not found in the active scene.");
             return;
+        }
+
+        Transform dimBackground = FindChild(canvasObject.transform, "DimBackground");
+        if (dimBackground != null && dimBackground.GetComponent<MobileSafeAreaFullScreen>() == null)
+        {
+            dimBackground.gameObject.AddComponent<MobileSafeAreaFullScreen>();
         }
 
         HideOtherSceneCanvases(canvasObject);
@@ -141,7 +144,6 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         }
 
         CloseOverlay();
-        // The offer freezes gameplay; accepting it must unfreeze the player.
         Time.timeScale = 1f;
         playerStats.CompleteRevive();
     }

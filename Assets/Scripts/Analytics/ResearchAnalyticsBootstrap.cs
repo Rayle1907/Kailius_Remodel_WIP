@@ -8,17 +8,17 @@ using UnityEngine.UnityConsent;
 public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 {
     private const string ConsentKey = "research_analytics_consent";
+    private const string DeletionPendingKey = "research_analytics_deletion_pending";
     private static ResearchAnalyticsBootstrap instance;
 
     public static bool IsReady { get; private set; }
     public static bool IsShuttingDown { get; private set; }
+    public static bool HasAnalyticsConsent => PlayerPrefs.GetInt(ConsentKey, 0) == 1;
     public static double SessionElapsedSeconds => Time.realtimeSinceStartupAsDouble - sessionStartedAt;
     public static event Action AnalyticsReady;
 
     private static double sessionStartedAt;
 
-    // Analytics registers itself with Unity Services during BeforeSceneLoad.
-    // Starting after the scene loads guarantees that registration has completed.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void CreateAutomatically()
     {
@@ -82,10 +82,9 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
             options.SetEnvironmentName(environmentName);
             await UnityServices.InitializeAsync(options);
 
-            // Accessing Instance verifies that the Analytics package, rather than
-            // only Unity Services Core, completed its initialization.
             _ = AnalyticsService.Instance;
             IsReady = true;
+            TrySendPendingDeletion();
             AnalyticsReady?.Invoke();
 
             Debug.Log($"Research Analytics initialized in '{environmentName}'.");
@@ -99,6 +98,15 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 
     public static void SetAnalyticsConsent(bool granted)
     {
+        if (granted && PlayerPrefs.GetInt(DeletionPendingKey, 0) == 1)
+        {
+            TrySendPendingDeletion();
+            if (PlayerPrefs.GetInt(DeletionPendingKey, 0) == 1)
+            {
+                return;
+            }
+        }
+
         PlayerPrefs.SetInt(ConsentKey, granted ? 1 : 0);
         PlayerPrefs.Save();
         ApplyConsent(granted);
@@ -107,16 +115,33 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
     public static void RequestPlayerDataDeletion()
     {
         SetAnalyticsConsent(false);
-        if (IsReady)
+        PlayerPrefs.SetInt(DeletionPendingKey, 1);
+        PlayerPrefs.Save();
+        TrySendPendingDeletion();
+    }
+
+    private static void TrySendPendingDeletion()
+    {
+        if (!IsReady || PlayerPrefs.GetInt(DeletionPendingKey, 0) != 1)
+        {
+            return;
+        }
+
+        try
         {
             AnalyticsService.Instance.RequestDataDeletion();
+            PlayerPrefs.SetInt(DeletionPendingKey, 0);
+            PlayerPrefs.Save();
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning("Research Analytics deletion request will retry: " + exception.Message);
         }
     }
 
     private static void ApplyStoredConsentBeforeInitialization()
     {
 #if UNITY_EDITOR
-        // Editor sessions contain developer test data only.
         ApplyConsent(true);
 #else
         ApplyConsent(PlayerPrefs.GetInt(ConsentKey, 0) == 1);

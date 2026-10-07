@@ -1,6 +1,9 @@
 ![caption](images/kailiusDemo.gif)
 
 # Kailius
+
+For personal iPad testing, see [the iOS build guide](ios_build.md).
+
 In Kailius, players embark on an exhilarating adventure through a captivating 2D platforming world. Developed using Unity, this engrossing game is available for Android, Windows, and Linux platforms, allowing gamers to immerse themselves in its enchanting universe on their preferred devices.
 
 Set in a realm brimming with excitement and challenges, Kailius offers a test of skill for players of all levels. With its diverse range of levels, the game keeps you engaged as the difficulty steadily increases, ensuring a thrilling experience from start to finish. Each level presents unique obstacles and puzzles that demand precise timing, nimble movements, and quick thinking to overcome.

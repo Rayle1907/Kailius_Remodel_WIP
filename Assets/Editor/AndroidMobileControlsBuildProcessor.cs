@@ -8,24 +8,60 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// Repairs and validates mobile controls in Android's build-time scene data.
-/// Unity serializes these changes into the player build without saving scenes to disk.
-/// </summary>
 public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithReport
 {
     public int callbackOrder => 0;
 
     public void OnProcessScene(Scene scene, BuildReport report)
     {
-        if (report.summary.platform != BuildTarget.Android || scene.name == "Menu")
+        bool isAndroid = report.summary.platform == BuildTarget.Android;
+        bool isIos = report.summary.platform == BuildTarget.iOS;
+        if (!isAndroid && !isIos)
+        {
+            return;
+        }
+
+        if (isIos)
+        {
+            foreach (var canvas in scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Canvas>(true)))
+            {
+                if (canvas.isRootCanvas && canvas.renderMode != RenderMode.WorldSpace &&
+                    canvas.GetComponent<MobileSafeArea>() == null)
+                {
+                    canvas.gameObject.AddComponent<MobileSafeArea>();
+                }
+
+                if (canvas.isRootCanvas &&
+                    (scene.name == "Menu" || canvas.name == "MenuIn-Game") &&
+                    canvas.GetComponent<MobilePrivacyControls>() == null)
+                {
+                    canvas.gameObject.AddComponent<MobilePrivacyControls>();
+                }
+            }
+
+            foreach (var button in scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Button>(true)))
+            {
+                for (int index = 0; index < button.onClick.GetPersistentEventCount(); ++index)
+                {
+                    if (button.onClick.GetPersistentMethodName(index) == "QuitGame")
+                    {
+                        button.gameObject.SetActive(false);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (scene.name == "Menu")
         {
             return;
         }
 
         try
         {
-            ConfigureAndValidate(scene);
+            ConfigureAndValidate(scene, isAndroid);
         }
         catch (BuildFailedException)
         {
@@ -33,11 +69,11 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
         }
         catch (Exception exception)
         {
-            throw new BuildFailedException("Android mobile controls setup failed in scene '" + scene.name + "': " + exception.Message);
+            throw new BuildFailedException("Mobile controls setup failed in scene '" + scene.name + "': " + exception.Message);
         }
     }
 
-    private static void ConfigureAndValidate(Scene scene)
+    private static void ConfigureAndValidate(Scene scene, bool isAndroid)
     {
         var sceneName = scene.name;
         var player = FindUniqueObject(scene, "Player");
@@ -142,7 +178,8 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
             Fail(sceneName, "EventSystem or its input module is inactive after setup.");
         }
 
-        Debug.Log("ANDROID BUILD PREFLIGHT: " + sceneName + " mobile controls repaired in build data and input checks passed.");
+        Debug.Log((isAndroid ? "ANDROID" : "IOS") + " BUILD PREFLIGHT: " + sceneName +
+            " mobile controls repaired in build data and input checks passed.");
     }
 
     private static void ConfigureActionButton<T>(Transform controlsRoot, T handler, string sceneName, string label)
@@ -245,6 +282,6 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
 
     private static void Fail(string sceneName, string message)
     {
-        throw new BuildFailedException("Android build stopped in scene '" + sceneName + "': " + message);
+        throw new BuildFailedException("Mobile build stopped in scene '" + sceneName + "': " + message);
     }
 }
