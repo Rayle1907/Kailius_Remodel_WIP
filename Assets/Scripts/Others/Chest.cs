@@ -32,7 +32,9 @@ public class Chest : MonoBehaviour {
     public void generar() {
         int numCoins = Random.Range(1, maxCoins);
         int numGems = Random.Range(1, maxGems);
-        int numHearts = Random.Range(1, maxHearts);
+        int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
+            ? GauntletHealthDropRules.GetChestHeartCount(Random.Range(0, 100))
+            : Random.Range(1, maxHearts);
         int numSwords = Random.Range(0, maxSwords);
         int numShields = Random.Range(0, maxShields);
 
@@ -44,7 +46,7 @@ public class Chest : MonoBehaviour {
             Instantiate(gems, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 3.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
-        for (int i = 0; i < numHearts; i++) {
+        for (int i = 0; hearts != null && i < numHearts; i++) {
             Instantiate(hearts, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 3.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 

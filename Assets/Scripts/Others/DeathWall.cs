@@ -25,6 +25,9 @@ public sealed class DeathWall : MonoBehaviour
     private Rigidbody2D body;
     private BoxCollider2D lethalCollider;
     private Camera gameplayCamera;
+    private CameraController cameraController;
+    private int direction = 1;
+    private int checkpointDirection = 1;
     private Stats playerStats;
     private Texture2D generatedSolidTexture;
     private Sprite generatedSolidSprite;
@@ -112,6 +115,8 @@ public sealed class DeathWall : MonoBehaviour
         {
             ActivateAt(checkpoint);
         }
+
+        checkpointDirection = direction;
     }
 
     private void HandleCheckpointRespawned(Transform checkpoint)
@@ -121,11 +126,12 @@ public sealed class DeathWall : MonoBehaviour
             return;
         }
 
+        direction = checkpointDirection;
         Vector2 resetPosition = body.position;
-        resetPosition.x = checkpoint.position.x - headStart;
+        resetPosition.x = checkpoint.position.x - direction * headStart;
         if (gameplayCamera != null)
         {
-            resetPosition.y = gameplayCamera.transform.position.y;
+            resetPosition.y = CameraPosition.y;
         }
 
         body.position = resetPosition;
@@ -140,10 +146,10 @@ public sealed class DeathWall : MonoBehaviour
         Vector2 position = body.position;
         position.x = gameplayCamera != null
             ? GetCameraLeft()
-            : checkpoint.position.x - headStart;
+            : checkpoint.position.x - direction * headStart;
         if (gameplayCamera != null)
         {
-            position.y = gameplayCamera.transform.position.y;
+            position.y = CameraPosition.y;
         }
         body.position = position;
 
@@ -179,12 +185,12 @@ public sealed class DeathWall : MonoBehaviour
         if (stoppedForDeath && playerStats != null)
         {
             Vector2 revivedPosition = body.position;
-            revivedPosition.x = playerStats.transform.position.x - headStart;
+            revivedPosition.x = playerStats.transform.position.x - direction * headStart;
             body.position = revivedPosition;
             stoppedForDeath = false;
         }
 
-        float nextX = body.position.x + speed * Time.fixedDeltaTime;
+        float nextX = body.position.x + direction * speed * Time.fixedDeltaTime;
         body.MovePosition(new Vector2(nextX, body.position.y));
     }
 
@@ -199,7 +205,7 @@ public sealed class DeathWall : MonoBehaviour
         {
             if (gameplayCamera != null)
             {
-                body.position = new Vector2(GetCameraLeft(), gameplayCamera.transform.position.y);
+                body.position = new Vector2(GetCameraLeft(), CameraPosition.y);
             }
 
             UpdatePresentationAndCollider();
@@ -225,7 +231,7 @@ public sealed class DeathWall : MonoBehaviour
             else
             {
                 Vector2 heldPosition = body.position;
-                heldPosition.y = gameplayCamera.transform.position.y;
+                heldPosition.y = CameraPosition.y;
                 body.position = heldPosition;
                 UpdatePresentationAndCollider();
                 return;
@@ -244,7 +250,7 @@ public sealed class DeathWall : MonoBehaviour
         }
 
         Vector2 position = body.position;
-        position.y = gameplayCamera.transform.position.y;
+        position.y = CameraPosition.y;
         body.position = position;
     }
 
@@ -256,6 +262,7 @@ public sealed class DeathWall : MonoBehaviour
         }
 
         stoppedForDeath = true;
+        direction = checkpointDirection;
         Transform checkpoint = playerController != null
             ? playerController.CurrentRespawnCheckpoint
             : null;
@@ -265,7 +272,7 @@ public sealed class DeathWall : MonoBehaviour
         }
 
         Vector2 position = body.position;
-        position.x = checkpoint.position.x - headStart;
+        position.x = checkpoint.position.x - direction * headStart;
         body.position = position;
     }
 
@@ -273,7 +280,7 @@ public sealed class DeathWall : MonoBehaviour
     {
         return gameplayCamera != null
             && playerStats != null
-            && gameplayCamera.transform.position.x > playerStats.transform.position.x;
+            && (CameraPosition.x - playerStats.transform.position.x) * direction > 0f;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -387,25 +394,30 @@ public sealed class DeathWall : MonoBehaviour
 
     private void UpdatePresentationAndCollider()
     {
+        if (solidFillRenderer == null || gradientRenderer == null)
+        {
+            return;
+        }
+
         float viewportWidth = GetViewportWidth();
         float viewportHeight = gameplayCamera != null
             ? gameplayCamera.orthographicSize * 2f
             : 100f;
         float height = viewportHeight + verticalOverscan;
-        float cameraLeft = gameplayCamera != null ? GetCameraLeft() : body.position.x - 10f;
-        float fillLeft = cameraLeft - viewportWidth * fillOverscanViewportFraction;
-        float fillWidth = Mathf.Max(0.01f, body.position.x - fillLeft);
+        float trailingEdge = GetCameraEdge(direction) - direction * viewportWidth * fillOverscanViewportFraction;
+        float fillWidth = Mathf.Max(0.01f, (body.position.x - trailingEdge) * direction);
         float fadeWidth = Mathf.Max(0.01f, viewportWidth * gradientViewportFraction);
 
-        solidFillRenderer.transform.localPosition = new Vector3(-fillWidth * 0.5f, 0f, 0f);
+        solidFillRenderer.transform.localPosition = new Vector3(-direction * fillWidth * 0.5f, 0f, 0f);
         solidFillRenderer.transform.localScale = new Vector3(fillWidth, height, 1f);
         solidFillRenderer.color = new Color(0f, 0f, 0f, fillOpacity);
 
-        gradientRenderer.transform.localPosition = new Vector3(fadeWidth * 0.5f, 0f, 0f);
+        gradientRenderer.transform.localPosition = new Vector3(direction * fadeWidth * 0.5f, 0f, 0f);
         gradientRenderer.transform.localScale = new Vector3(fadeWidth / (GradientTextureWidth / (float)GradientTextureHeight), height, 1f);
+        gradientRenderer.flipX = direction < 0;
         gradientRenderer.color = Color.white;
 
-        lethalCollider.offset = new Vector2(-fillWidth * 0.5f, 0f);
+        lethalCollider.offset = new Vector2(-direction * fillWidth * 0.5f, 0f);
         lethalCollider.size = new Vector2(fillWidth, height);
     }
 
@@ -419,14 +431,54 @@ public sealed class DeathWall : MonoBehaviour
         return gameplayCamera.orthographicSize * 2f * gameplayCamera.aspect;
     }
 
+    // DeathWall runs after camera follow; shake must never affect physics geometry.
+    private Vector3 CameraPosition
+    {
+        get
+        {
+            if (gameplayCamera == null)
+            {
+                return body.transform.position;
+            }
+
+            if (cameraController == null)
+            {
+                cameraController = gameplayCamera.GetComponent<CameraController>();
+            }
+
+            return cameraController != null
+                ? cameraController.UnshakenPosition
+                : gameplayCamera.transform.position;
+        }
+    }
+
     private float GetCameraLeft()
     {
-        if (gameplayCamera == null || !gameplayCamera.orthographic)
+        return GetCameraEdge(1);
+    }
+
+    private float GetCameraEdge(int chaseDirection)
+    {
+        return CameraPosition.x - chaseDirection * GetViewportWidth() * 0.5f;
+    }
+
+    public bool TryReverseDirection()
+    {
+        if (!isActiveAndEnabled || !activated || playerStats == null || playerStats.health <= 0
+            || solidFillRenderer == null || gradientRenderer == null)
         {
-            return body.position.x - GetViewportWidth() * 0.5f;
+            return false;
         }
 
-        return gameplayCamera.transform.position.x - GetViewportWidth() * 0.5f;
+        direction = -direction;
+        float safeX = playerStats.transform.position.x - direction * Mathf.Max(headStart, 0.01f);
+        float edgeX = GetCameraEdge(direction);
+        float nextX = direction > 0 ? Mathf.Min(edgeX, safeX) : Mathf.Max(edgeX, safeX);
+        body.position = new Vector2(nextX, CameraPosition.y);
+        stoppedForDeath = false;
+        waitingForCameraCatchup = false;
+        UpdatePresentationAndCollider();
+        return true;
     }
 
     private void SetPresentationVisible(bool visible)

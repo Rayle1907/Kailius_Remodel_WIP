@@ -80,7 +80,9 @@ public class Enemy : MonoBehaviour {
 
     void dropItems() {
         int numCoins = Random.Range(1, maxCoins);
-        int numHearts = Random.Range(0, maxHearts);
+        int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
+            ? GauntletHealthDropRules.GetEnemyHeartCount(Random.Range(0, 100))
+            : Random.Range(0, maxHearts);
         int numSwords = Random.Range(0, maxSwords);
         int numShields = Random.Range(0, maxShields);
 
@@ -88,7 +90,7 @@ public class Enemy : MonoBehaviour {
             Instantiate(coins, new Vector3(gameObject.transform.position.x - 1.0f, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
-        for (int i = 0; i < numHearts; i++) {
+        for (int i = 0; hearts != null && i < numHearts; i++) {
             Instantiate(hearts, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
