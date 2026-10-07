@@ -3,6 +3,13 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider2D))]
 public sealed class DeathWallDirectionTrigger : MonoBehaviour
 {
+    private enum TriggerMode
+    {
+        Reverse = 0,
+        MoveRight = 1
+    }
+
+    [SerializeField] private TriggerMode triggerMode = TriggerMode.Reverse;
     [SerializeField] private DeathWall deathWall;
     [SerializeField] private PlayerController playerController;
     [SerializeField] private CameraController gameplayCamera;
@@ -75,10 +82,18 @@ public sealed class DeathWallDirectionTrigger : MonoBehaviour
             return;
         }
 
-        if (deathWall.TryReverseDirection())
+        int previousDirection = deathWall.Direction;
+        bool succeeded = triggerMode == TriggerMode.MoveRight
+            ? deathWall.TrySetDirection(1)
+            : deathWall.TryReverseDirection();
+
+        if (succeeded)
         {
             consumed = true;
-            gameplayCamera.Shake(shakeDuration, shakeAmplitude);
+            if (deathWall.Direction != previousDirection)
+            {
+                gameplayCamera.Shake(shakeDuration, shakeAmplitude);
+            }
         }
     }
 
