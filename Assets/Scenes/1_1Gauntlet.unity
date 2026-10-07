@@ -409,6 +409,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 540955801}
     m_Modifications:
+    - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
+        type: 3}
+      propertyPath: fallbackSentence
+      value: My lord, something is chasing us! Run!
+      objectReference: {fileID: 0}
+    - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
+        type: 3}
+      propertyPath: dialogue.sentenceList.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
+        type: 3}
+      propertyPath: 'dialogue.sentenceList.Array.data[0]'
+      value: My lord, something is chasing us! Run!
+      objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200476, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: m_Name
@@ -1914,7 +1929,7 @@ PrefabInstance:
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: fallbackSentence
-      value: Is that a Soulstone up ahead?
+      value: Bind yourself to the waystone ahead, my lord.
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
@@ -1929,7 +1944,7 @@ PrefabInstance:
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: 'dialogue.sentenceList.Array.data[0]'
-      value: Is that a Soulstone up ahead?
+      value: Bind yourself to the waystone ahead, my lord.
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200476, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
