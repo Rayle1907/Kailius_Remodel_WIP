@@ -26,11 +26,9 @@ public class Enemy : MonoBehaviour {
     }
 
     public void TakeDamage(int damage) {
-        TryTakeDamage(damage);
-    }
-
-    public bool TryTakeDamage(int damage) {
-        if (isDying || health <= 0 || damage <= 0) return false;
+        if (isDying) {
+            return;
+        }
 
         this.health -= damage;
 
@@ -40,7 +38,6 @@ public class Enemy : MonoBehaviour {
         if(health <= 0) {
             Die();
         }
-        return true;
     }
 
     void Die() {

@@ -4900,7 +4900,6 @@ GameObject:
   - component: {fileID: 2369990289210757354}
   - component: {fileID: 2369990289210757355}
   - component: {fileID: 777700000000000016}
-  - component: {fileID: 777700000000000017}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -4908,30 +4907,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &777700000000000017
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2369990289210757357}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b01897ff2cdd4db1af70445d846d557e, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  glowMaterial: {fileID: 2100000, guid: b6a46e4ff49c4ef58c9f4b3375bdab10, type: 2}
-  swordTintStrength: 0.65
-  swipeMaterial: {fileID: 2100000, guid: b6a46e4ff49c4ef58c9f4b3375bdab10, type: 2}
-  attackFrames:
-  - {fileID: 21300000, guid: 1c83a8575a3c57d4ca91b6191cd70576, type: 3}
-  - {fileID: 21300000, guid: c35b583eb280a9344969d9a583d23577, type: 3}
-  - {fileID: 21300000, guid: 4d8d65f728b2ab6408ee5e1ef276d0cb, type: 3}
-  - {fileID: 21300000, guid: 55b2ae9d090ffa24cae6e75bea15b60e, type: 3}
-  - {fileID: 21300000, guid: 66cf6b90f0dfc464fbb1d91940d098c6, type: 3}
-  readyBarColor: {r: 1, g: 0.15, b: 0.15, a: 1}
-  swipeTintColor: {r: 1, g: 0.45, b: 0.45, a: 1}
-  swipeTintStrength: 0.3
 --- !u!114 &777700000000000016
 MonoBehaviour:
   m_ObjectHideFlags: 0

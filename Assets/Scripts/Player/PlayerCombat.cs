@@ -26,8 +26,6 @@ public class PlayerCombat : MonoBehaviour {
     // Update is called once per frame
     void Update() {
 
-        if (!playerStats.CanAttack) return;
-
         // Hace que no se pueda spamear 
         if(Time.time >= nextAttactTime) {
             if (Input.GetKeyDown(KeyCode.F)) {
@@ -39,7 +37,6 @@ public class PlayerCombat : MonoBehaviour {
     }
 
     void Attack() {
-        if (!playerStats.CanAttack) return;
         // Play una animacion
         animator.SetTrigger("attack");
 
@@ -54,12 +51,14 @@ public class PlayerCombat : MonoBehaviour {
             hitEnemies
         );
 
-        // Keep attacks single-target, ignoring colliders without a living damage receiver.
-        for (int i = 0; i < hitCount; i++) {
-            Enemy enemy = hitEnemies[i].GetComponentInParent<Enemy>();
-            if (enemy != null && enemy.TryTakeDamage(playerStats.GetSwordDamage())) {
-                playerStats.RegisterSuccessfulSwordHit();
-                break;
+        // Resta el daño al primer enemigo encontrado.
+        if (hitCount > 0) {
+            Collider2D enemy = hitEnemies[0];
+            enemy.GetComponent<Enemy>().TakeDamage(Stats.instance.getAttackDamage());
+
+            // Successful melee hits build Fury. The bow no longer consumes it.
+            if(playerStats.getPower() < 4) {
+                playerStats.takePower(1);
             }
         }
     }
@@ -73,7 +72,6 @@ public class PlayerCombat : MonoBehaviour {
     }
 
     public void AttackButton() {
-        if (!playerStats.CanAttack) return;
         // Hace que no se pueda spamear 
         if (Time.time >= nextAttactTime) {
             Attack();
