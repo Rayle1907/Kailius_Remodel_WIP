@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,7 +14,7 @@ public class Traps : MonoBehaviour {
         HandleHazardContact(other.gameObject);
     }
 
-    private void HandleHazardContact(GameObject contactedObject) {
+    protected void HandleHazardContact(GameObject contactedObject) {
         Stats playerStats = contactedObject.GetComponentInParent<Stats>();
         if (playerStats == null) {
             return;
