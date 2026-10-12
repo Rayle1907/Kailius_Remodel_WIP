@@ -1,11 +1,24 @@
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// Development-only button for opening the revive offer without dying.
 /// </summary>
 public sealed class ReviveOfferDebugButton : MonoBehaviour
 {
+#if UNITY_EDITOR
+    [MenuItem("Tools/Revive/Reset Onboarding")]
+    public static void ResetOnboarding()
+    {
+        PlayerPrefs.DeleteKey("research_revive_onboarding_completed");
+        PlayerPrefs.Save();
+        Debug.Log("Revive onboarding reset. It will appear on the next revive offer. If an offer is already open, close it first. Currency and research assignment are unchanged.");
+    }
+#endif
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Create()
     {

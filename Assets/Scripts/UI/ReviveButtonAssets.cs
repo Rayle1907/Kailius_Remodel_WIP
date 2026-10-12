@@ -7,8 +7,10 @@ public sealed class ReviveButtonAssets : MonoBehaviour
     [SerializeField] private LayeredButton buttonPrefab;
     [SerializeField] private LayeredButton pressMeButtonPrefab;
     [SerializeField] private TMP_FontAsset uiFont;
+    [SerializeField] private ReviveOnboardingPresenter onboardingPrefab;
 
     public LayeredButton ButtonPrefab => buttonPrefab;
     public LayeredButton PressMeButtonPrefab => pressMeButtonPrefab;
     public TMP_FontAsset UIFont => uiFont;
+    public ReviveOnboardingPresenter OnboardingPrefab => onboardingPrefab;
 }

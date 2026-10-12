@@ -7,6 +7,7 @@ public static class ResearchPlayerState
     private const string VariantKey = "research_offer_variant";
     private const string BalanceKey = "research_currency_balance";
     private const string TotalDeathsKey = "research_total_deaths";
+    private const string OnboardingKey = "research_revive_onboarding_completed";
 
     public const int InitialPremiumCurrency = 100;
     public const string PremiumCurrencyDisplayName = "Embers";
@@ -16,6 +17,14 @@ public static class ResearchPlayerState
     public static string PlayerId { get; private set; }
     public static string OfferVariant { get; private set; }
     public static int PremiumCurrencyBalance { get; private set; }
+    public static bool ReviveOnboardingCompleted => PlayerPrefs.GetInt(OnboardingKey, 0) == 1;
+
+    public static void MarkReviveOnboardingCompleted()
+    {
+        if (ReviveOnboardingCompleted) return;
+        PlayerPrefs.SetInt(OnboardingKey, 1);
+        PlayerPrefs.Save();
+    }
 
     public static void EnsureInitialized()
     {

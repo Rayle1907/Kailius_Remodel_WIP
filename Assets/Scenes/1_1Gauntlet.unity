@@ -1824,6 +1824,7 @@ MonoBehaviour:
   pressMeButtonPrefab: {fileID: 8100000000000000001, guid: 5ebed260254e783419452c0343f1513c,
     type: 3}
   uiFont: {fileID: 11400000, guid: d22c986e05eac53b8bc884c1372fa019, type: 2}
+  onboardingPrefab: {fileID: 104, guid: c4278d163c244d119e960a2bec58eb75, type: 3}
 --- !u!1001 &912064282
 PrefabInstance:
   m_ObjectHideFlags: 0
