@@ -14,6 +14,8 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
 
     public void OnProcessScene(Scene scene, BuildReport report)
     {
+        // Unity also processes scenes when entering Play Mode, without a build report.
+        if (report == null) return;
         bool isAndroid = report.summary.platform == BuildTarget.Android;
         bool isIos = report.summary.platform == BuildTarget.iOS;
         if (!isAndroid && !isIos)

@@ -3537,6 +3537,11 @@ PrefabInstance:
       propertyPath: hearts
       value: 
       objectReference: {fileID: 560887971}
+    - target: {fileID: 2369990289210757353, guid: dbcb10883e4a7dace8e37feda9a42605,
+        type: 3}
+      propertyPath: powers
+      value:
+      objectReference: {fileID: 194146000}
     - target: {fileID: 2369990289210757356, guid: dbcb10883e4a7dace8e37feda9a42605,
         type: 3}
       propertyPath: m_RootOrder
@@ -26001,3 +26006,15 @@ SceneRoots:
   - {fileID: 950000001}
   - {fileID: 540955801}
   - {fileID: 910607397}
+--- !u!114 &194146000 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1152753823471027947, guid: cb9e63bf735d5f2e5a02087bc7747703,
+    type: 3}
+  m_PrefabInstance: {fileID: 372641037}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
