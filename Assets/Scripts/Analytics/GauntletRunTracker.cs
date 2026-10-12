@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public sealed class GauntletRunTracker : MonoBehaviour
 {
-    public const string ExperimentVersion = "revive_study_v2";
+    public const string ExperimentVersion = "revive_study_v3";
 
     public static GauntletRunTracker Instance { get; private set; }
 
@@ -45,7 +45,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
         public int Price;
         public int BalanceBefore;
         public double ShownAt;
+        public double? DecisionStartedAt;
         public double ResolvedAt;
+        public float DecisionSeconds => (float)(ResolvedAt - (DecisionStartedAt ?? ShownAt));
         public bool Resolved;
         public string Response;
         public bool ShownEventRecorded;
@@ -269,12 +271,22 @@ public sealed class GauntletRunTracker : MonoBehaviour
         return pendingOffer.OfferId;
     }
 
+    public bool BeginOfferDecision()
+    {
+        if (pendingOffer == null || pendingOffer.Resolved) return false;
+        if (!pendingOffer.DecisionStartedAt.HasValue)
+            pendingOffer.DecisionStartedAt = Time.realtimeSinceStartupAsDouble;
+        return true;
+    }
+
     public bool ResolveOffer(string response)
     {
         if (pendingOffer == null || pendingOffer.Resolved || !IsValidResponse(response))
         {
             return false;
         }
+
+        if (response != "quit" && !pendingOffer.DecisionStartedAt.HasValue) return false;
 
         if (response == "accepted" && !ResearchPlayerState.TrySpendPremiumCurrency(pendingOffer.Price))
         {
@@ -488,7 +500,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
                 Response = pendingOffer.Response,
-                DecisionSeconds = (float)(pendingOffer.ResolvedAt - pendingOffer.ShownAt),
+                DecisionSeconds = pendingOffer.DecisionSeconds,
                 RevivePrice = pendingOffer.Price,
                 BalanceBefore = pendingOffer.BalanceBefore,
                 BalanceAfter = ResearchPlayerState.PremiumCurrencyBalance,

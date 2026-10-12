@@ -54,8 +54,15 @@ public class Stats : MonoBehaviour {
     private bool deathRecorded = false;
     private SpriteHurtFlash hurtFlash;
 
+    public const int FuryChargeLimit = 4;
+    public bool IsFuryReady => power >= FuryChargeLimit;
+    public bool CanAttack => health > 0 && !deathRecorded && Time.timeScale > 0f;
+    public event System.Action<int> FuryChargeChanged;
+    public event System.Action FuryConsumed;
+
     private void Awake() {
         hurtFlash = GetComponent<SpriteHurtFlash>();
+        ResetFury();
     }
 
     // Start is called before the first frame update
@@ -104,15 +111,7 @@ public class Stats : MonoBehaviour {
             }
         }
 
-        if (powers != null) {
-            switch (power) {
-            case 4: powers.sprite = fullPower; break;
-            case 3: powers.sprite = power75; break;
-            case 2: powers.sprite = power50; break;
-            case 1: powers.sprite = power25; break;
-            case 0: powers.sprite = emptyPower; break;
-            }
-        }
+        RefreshFuryBar();
 
     }
 
@@ -144,6 +143,7 @@ public class Stats : MonoBehaviour {
 
         if(healthBefore > 0 && health == 0) {
             deathRecorded = true;
+            ResetFury();
             HandleDeath(string.IsNullOrWhiteSpace(cause) ? "unknown" : cause, healthBefore);
         }
     }
@@ -157,7 +157,43 @@ public class Stats : MonoBehaviour {
     }
 
     public void takePower(int value) {
-        this.power += value;
+        SetFuryCharge(power + value);
+    }
+
+    public int GetSwordDamage() {
+        return IsFuryReady ? Mathf.FloorToInt(attackDamage * 1.5f) : attackDamage;
+    }
+
+    public void RegisterSuccessfulSwordHit() {
+        if (IsFuryReady) {
+            SetFuryCharge(0);
+            FuryConsumed?.Invoke();
+        } else {
+            SetFuryCharge(power + 1);
+        }
+    }
+
+    public void ResetFury() {
+        SetFuryCharge(0);
+    }
+
+    private void SetFuryCharge(int value) {
+        int next = Mathf.Clamp(value, 0, FuryChargeLimit);
+        bool changed = next != power;
+        power = next;
+        RefreshFuryBar();
+        if (changed) FuryChargeChanged?.Invoke(power);
+    }
+
+    private void RefreshFuryBar() {
+        if (powers == null) return;
+        switch (power) {
+            case 4: powers.sprite = fullPower; break;
+            case 3: powers.sprite = power75; break;
+            case 2: powers.sprite = power50; break;
+            case 1: powers.sprite = power25; break;
+            default: powers.sprite = emptyPower; break;
+        }
     }
 
     public int getHealth() {
@@ -178,6 +214,7 @@ public class Stats : MonoBehaviour {
     public void CompleteRevive(int restoredHealth = 200) {
         health = Mathf.Clamp(restoredHealth, 1, 200);
         deathRecorded = false;
+        ResetFury();
 
         Animator animator = GetComponent<Animator>();
         if(animator != null) {

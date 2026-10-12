@@ -1,11 +1,24 @@
 using UnityEngine;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// Development-only button for opening the revive offer without dying.
 /// </summary>
 public sealed class ReviveOfferDebugButton : MonoBehaviour
 {
+#if UNITY_EDITOR
+    [MenuItem("Tools/Revive/Reset Onboarding")]
+    public static void ResetOnboarding()
+    {
+        PlayerPrefs.DeleteKey("research_revive_onboarding_completed");
+        PlayerPrefs.Save();
+        Debug.Log("Revive onboarding reset. It will appear on the next revive offer. If an offer is already open, close it first. Currency and research assignment are unchanged.");
+    }
+#endif
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Create()
     {
@@ -64,8 +77,44 @@ public sealed class ReviveOfferDebugButton : MonoBehaviour
         label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         label.fontSize = 14;
         label.color = Color.white;
+
+        GameObject furyObject = Instantiate(buttonObject, transform, false);
+        furyObject.name = "Full Fury";
+        furyObject.GetComponent<RectTransform>().anchoredPosition = new Vector2(20f, -70f);
+        Button furyButton = furyObject.GetComponent<Button>();
+        furyButton.onClick = new Button.ButtonClickedEvent();
+        furyButton.onClick.AddListener(FillPlayerFury);
+        Text furyLabel = furyObject.GetComponentInChildren<Text>();
+        furyLabel.text = "FULL FURY";
+        furyLabel.raycastTarget = false;
 #endif
     }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    public static bool FillFury(Stats playerStats)
+    {
+        if (playerStats == null || playerStats.getHealth() <= 0) return false;
+        playerStats.takePower(Stats.FuryChargeLimit - playerStats.getPower());
+        return playerStats.IsFuryReady;
+    }
+
+    private static void FillPlayerFury()
+    {
+        var activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        Stats fallback = null;
+        foreach (Stats playerStats in FindObjectsByType<Stats>())
+        {
+            if (playerStats.getHealth() <= 0) continue;
+            if (playerStats.gameObject.scene == activeScene)
+            {
+                FillFury(playerStats);
+                return;
+            }
+            if (fallback == null) fallback = playerStats;
+        }
+        FillFury(fallback);
+    }
+#endif
 
     private static void OpenReviveOffer()
     {

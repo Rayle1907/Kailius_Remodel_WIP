@@ -14,9 +14,25 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
     private Stats playerStats;
     private GameObject overlay;
     private Button reviveButton;
+    private Button restartButton;
+    private bool offerLocked;
+    private ReviveOnboardingPresenter onboarding;
+    private Coroutine unlockRoutine;
     private TextMeshProUGUI affordabilityText;
     private Coroutine timeoutRoutine;
     private readonly System.Collections.Generic.List<GameObject> hiddenSceneCanvases = new System.Collections.Generic.List<GameObject>();
+
+    private void OnEnable() => SceneManager.activeSceneChanged += OnSceneChanged;
+    private void OnDisable()
+    {
+        SceneManager.activeSceneChanged -= OnSceneChanged;
+        CloseOverlay();
+    }
+    private void OnDestroy()
+    {
+        if (instance == this) instance = null;
+    }
+    private void OnSceneChanged(Scene previous, Scene next) => CloseOverlay();
 
     public static bool TryShow(Stats stats)
     {
@@ -119,7 +135,49 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
         reviveButton = CreateButton(buttonAssets.PressMeButtonPrefab, panel.transform, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
         reviveButton.interactable = canAfford;
-        Button restartButton = CreateButton(buttonAssets.ButtonPrefab, panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        restartButton = CreateButton(buttonAssets.ButtonPrefab, panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        if (!ResearchPlayerState.ReviveOnboardingCompleted)
+        {
+            if (buttonAssets.OnboardingPrefab != null && buttonAssets.OnboardingPrefab.IsConfigured)
+            {
+                offerLocked = true;
+                reviveButton.interactable = restartButton.interactable = false;
+                if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+                onboarding = Instantiate(buttonAssets.OnboardingPrefab, canvasObject.transform, false);
+                onboarding.transform.SetAsLastSibling();
+                onboarding.Show(buttonAssets.UIFont, (RectTransform)panel.transform, OnOnboardingDismissed);
+                return;
+            }
+            Debug.LogError("ReviveCanvas needs a complete ReviveOnboardingView prefab on ReviveButtonAssets. Showing the offer without onboarding.");
+        }
+        EnableOfferDecision();
+    }
+
+    private void OnOnboardingDismissed()
+    {
+        ResearchPlayerState.MarkReviveOnboardingCompleted();
+        unlockRoutine = StartCoroutine(UnlockAfterRelease());
+    }
+
+    private IEnumerator UnlockAfterRelease()
+    {
+        while (ReviveOnboardingPresenter.DismissalInputHeld()) yield return null;
+        yield return null;
+        // A new press during the deferred frame must also be consumed by the blocker.
+        while (ReviveOnboardingPresenter.DismissalInputHeld()) yield return null;
+        unlockRoutine = null;
+        if (overlay == null) yield break;
+        RemoveOnboarding();
+        EnableOfferDecision();
+    }
+
+    private void EnableOfferDecision()
+    {
+        if (GauntletRunTracker.Instance == null || !GauntletRunTracker.Instance.BeginOfferDecision()) return;
+        offerLocked = false;
+        bool canAfford = GauntletRunTracker.Instance.CanAffordPendingOffer;
+        reviveButton.interactable = canAfford;
+        restartButton.interactable = true;
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(canAfford ? reviveButton.gameObject : restartButton.gameObject);
@@ -139,7 +197,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private void AcceptRevive()
     {
-        if (reviveButton == null || !reviveButton.interactable)
+        if (offerLocked || reviveButton == null || !reviveButton.interactable)
         {
             return;
         }
@@ -161,9 +219,10 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private void ResolveAndRestart(string response)
     {
+        if (offerLocked) return;
         if (GauntletRunTracker.Instance != null)
         {
-            GauntletRunTracker.Instance.ResolveOffer(response);
+            if (!GauntletRunTracker.Instance.ResolveOffer(response)) return;
             GauntletRunTracker.Instance.RecordPostDecisionOutcome("run_restarted");
             GauntletRunTracker.Instance.SetNextRunStartReason("retry_button");
             GauntletRunTracker.Instance.RestartCurrentRun();
@@ -176,6 +235,13 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private void CloseOverlay()
     {
+        offerLocked = true;
+        if (unlockRoutine != null)
+        {
+            StopCoroutine(unlockRoutine);
+            unlockRoutine = null;
+        }
+        RemoveOnboarding();
         if (timeoutRoutine != null)
         {
             StopCoroutine(timeoutRoutine);
@@ -189,6 +255,14 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         }
 
         RestoreOtherSceneCanvases();
+    }
+
+    private void RemoveOnboarding()
+    {
+        if (onboarding == null) return;
+        onboarding.Close();
+        Destroy(onboarding.gameObject);
+        onboarding = null;
     }
 
     private void HideOtherSceneCanvases(GameObject reviveCanvas)
