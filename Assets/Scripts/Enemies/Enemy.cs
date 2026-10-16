@@ -46,6 +46,7 @@ public class Enemy : MonoBehaviour {
         }
 
         isDying = true;
+        GetComponent<RequiredGauntletEnemy>()?.RecordDefeat();
         Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
         if (rb != null) {
             rb.linearVelocity = Vector2.zero;
