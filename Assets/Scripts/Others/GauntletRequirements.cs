@@ -48,6 +48,8 @@ public sealed class GauntletRequirements : MonoBehaviour
         visit = new GauntletVisit(ids);
         IsConfigured &= visit.IsConfigured && visit.RequiredCount > 0;
         if (targets.Count == 0) Debug.LogError("No required enemies configured in " + gameObject.scene.name + ".", this);
+        GauntletRequirementsHud hud = gameObject.AddComponent<GauntletRequirementsHud>();
+        hud.Initialize(this);
     }
 
     public void RecordDefeat(RequiredGauntletEnemy target)
