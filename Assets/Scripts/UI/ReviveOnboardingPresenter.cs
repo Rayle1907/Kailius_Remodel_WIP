@@ -7,11 +7,16 @@ using UnityEngine.UI;
 public sealed class ReviveOnboardingPresenter : MonoBehaviour
 {
     public enum TutorialState { Typing, AwaitingDismissal, Dismissed }
-    public const string Introduction = "<b>A spark remains.</b>\n\nYou carry 100 Embers. When you fall, spend them to rise at your last checkpoint with your health restored.\n\nEach offer of another chance demands more Embers. Those you keep remain with you between runs.\n\nYou may always begin the gauntlet again, at no cost.";
+    public enum PlacementMode { Manual, AutomaticBesideOffer }
+    public const string IntroductionPageOne = "<b>A spark remains.</b>\n\nYou carry 100 Embers. When you fall, spend them to rise at your last checkpoint with your health restored.";
+    public const string IntroductionPageTwo = "Each offer of another chance demands more Embers. Those you keep remain with you between runs.\n\nYou may always begin the gauntlet again, at no cost.";
+    public const string Introduction = IntroductionPageOne + "\n\n" + IntroductionPageTwo;
 
     [SerializeField] private RectTransform content;
     [SerializeField] private RectTransform layoutRoot;
     [Header("Tutorial layout")]
+    [Tooltip("Manual: move LayoutRoot with the Rect tool (T) in the prefab, then save. Its position, anchors and scale are preserved. Automatic Beside Offer: use the offset and screen fitting settings below.")]
+    [SerializeField] private PlacementMode placement = PlacementMode.AutomaticBesideOffer;
     [Tooltip("Offset from the automatic left-side placement, in canvas units.")]
     [SerializeField] private Vector2 positionOffset;
     [Tooltip("Shrink the tutorial to fit the safe area. Never enlarges Content or changes its authored scale.")]
@@ -23,6 +28,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
     [SerializeField] private Image inputBlocker;
 
     public TutorialState State { get; private set; }
+    public int CurrentPage { get; private set; }
     public bool IsConfigured => content != null && layoutRoot != null && instructor != null && instructor.sprite != null
         && dialogueBox != null && dialogueBox.sprite != null && introductionText != null
         && continuationPrompt != null && inputBlocker != null;
@@ -55,20 +61,26 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         canvas = GetComponentInParent<Canvas>();
         contentRects = content.GetComponentsInChildren<RectTransform>(true);
         introductionText.font = continuationPrompt.font = font;
-        introductionText.text = Introduction;
+        content.gameObject.SetActive(true);
+        inputBlocker.raycastTarget = true;
+        CurrentPage = 0;
+        showing = true;
+        BeginPage();
+        RefreshLayout();
+    }
+
+    private void BeginPage()
+    {
+        introductionText.text = CurrentPage == 0 ? IntroductionPageOne : IntroductionPageTwo;
         introductionText.maxVisibleCharacters = int.MaxValue;
         introductionText.ForceMeshUpdate();
         characterCount = introductionText.textInfo.characterCount;
         introductionText.maxVisibleCharacters = 0;
         continuationPrompt.text = "Tap anywhere to continue";
         continuationPrompt.gameObject.SetActive(false);
-        content.gameObject.SetActive(true);
-        inputBlocker.raycastTarget = true;
         elapsed = 0f;
         inputArmed = false;
         State = TutorialState.Typing;
-        showing = true;
-        RefreshLayout();
     }
 
     private void Update()
@@ -96,6 +108,12 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         }
         if (!inputHeld && !inputPressed) inputArmed = true;
         if (!inputArmed || !inputPressed) return;
+        if (CurrentPage == 0)
+        {
+            CurrentPage = 1;
+            BeginPage();
+            return;
+        }
         State = TutorialState.Dismissed;
         content.gameObject.SetActive(false);
         Action callback = dismissed;
@@ -117,6 +135,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
 
     public void RefreshLayout()
     {
+        if (placement == PlacementMode.Manual) return;
         if (!showing || State == TutorialState.Dismissed || offerPanel == null || canvas == null || layoutRoot == null) return;
         RectTransform root = (RectTransform)transform;
         Camera camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;

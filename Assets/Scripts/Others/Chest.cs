@@ -17,6 +17,7 @@ public class Chest : MonoBehaviour {
     public int maxHearts = 3;
     public int maxSwords = 2;
     public int maxShields = 2;
+    [SerializeField] private string rewardSourceId;
 
     private bool range = false;
     private bool open = true;
@@ -35,8 +36,9 @@ public class Chest : MonoBehaviour {
         int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
             ? GauntletHealthDropRules.GetChestHeartCount(Random.Range(0, 100))
             : Random.Range(1, maxHearts);
-        int numSwords = Random.Range(0, maxSwords);
-        int numShields = Random.Range(0, maxShields);
+        bool canDropUpgrades = GauntletProgress.TrySpendUpgrade(gameObject.scene.name, rewardSourceId);
+        int numSwords = canDropUpgrades ? Random.Range(0, maxSwords) : 0;
+        int numShields = canDropUpgrades ? Random.Range(0, maxShields) : 0;
 
         for (int i = 0; i < numCoins; i++) {
             Instantiate(coins, new Vector3(gameObject.transform.position.x -1.0f, gameObject.transform.position.y + 3.0f, gameObject.transform.position.z), Quaternion.identity);
@@ -54,7 +56,7 @@ public class Chest : MonoBehaviour {
             Instantiate(sword, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 3.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
-        for (int i = 0; i < numSwords; i++) {
+        for (int i = 0; i < numShields; i++) {
             Instantiate(shield, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 3.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 

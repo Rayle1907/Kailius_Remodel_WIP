@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class Menu : MonoBehaviour {
 
     public void PlayGame () {
+        GauntletProgress.StartNewGame();
         Debug.Log("Menu.PlayGame loading 1_1Gauntlet");
         PlayerPrefs.SetInt("AttackDamage", 0);
         PlayerPrefs.SetInt("Defense", 0);
