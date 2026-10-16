@@ -18,6 +18,7 @@ public class Enemy : MonoBehaviour {
     public int maxHearts = 3;
     public int maxSwords = 2;
     public int maxShields = 2;
+    [SerializeField] private string rewardSourceId;
     private bool isDying;
     private SpriteHurtFlash hurtFlash;
 
@@ -63,7 +64,7 @@ public class Enemy : MonoBehaviour {
         }
 
         // Añadir puntuacion 
-        ScoreManager.instance.ChangeScore(100);
+        if (ScoreManager.instance != null) ScoreManager.instance.ChangeScore(100);
 
         // Stop enemy logic/collisions across the whole hierarchy while the death animation finishes.
         foreach (Collider2D enemyCollider in GetComponentsInChildren<Collider2D>()) {
@@ -84,8 +85,9 @@ public class Enemy : MonoBehaviour {
         int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
             ? GauntletHealthDropRules.GetEnemyHeartCount(Random.Range(0, 100))
             : Random.Range(0, maxHearts);
-        int numSwords = Random.Range(0, maxSwords);
-        int numShields = Random.Range(0, maxShields);
+        bool canDropUpgrades = GauntletProgress.TrySpendUpgrade(gameObject.scene.name, rewardSourceId);
+        int numSwords = canDropUpgrades ? Random.Range(0, maxSwords) : 0;
+        int numShields = canDropUpgrades ? Random.Range(0, maxShields) : 0;
 
         for (int i = 0; i < numCoins; i++) {
             Instantiate(coins, new Vector3(gameObject.transform.position.x - 1.0f, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
