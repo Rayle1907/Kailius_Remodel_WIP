@@ -970,16 +970,6 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 4294967295
       objectReference: {fileID: 0}
-    - target: {fileID: 3917909862097576309, guid: e5666b6704fb3124fb71be5b7201cfae,
-        type: 3}
-      propertyPath: m_SortingLayer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3917909862097576309, guid: e5666b6704fb3124fb71be5b7201cfae,
-        type: 3}
-      propertyPath: m_SortingLayerID
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3917909862097576310, guid: e5666b6704fb3124fb71be5b7201cfae,
         type: 3}
       propertyPath: m_RootOrder
@@ -36571,16 +36561,6 @@ PrefabInstance:
     - target: {fileID: 9020108510297927845, guid: 8fc447860762eb34bb98494ba8778d94,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9020108510297927846, guid: 8fc447860762eb34bb98494ba8778d94,
-        type: 3}
-      propertyPath: m_SortingLayer
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9020108510297927846, guid: 8fc447860762eb34bb98494ba8778d94,
-        type: 3}
-      propertyPath: m_SortingLayerID
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9020108510297927847, guid: 8fc447860762eb34bb98494ba8778d94,
