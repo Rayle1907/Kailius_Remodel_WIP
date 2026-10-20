@@ -7,7 +7,9 @@ public class TimeItems : MonoBehaviour {
     public float time;
 
     void Start() {
-      Destroy(gameObject, time);  
+        if (GetComponent<RewardMagnet>() == null) {
+            Destroy(gameObject, time);
+        }
     }
 
 }

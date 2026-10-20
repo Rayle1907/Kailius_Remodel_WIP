@@ -1,20 +1,31 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class Heart : MonoBehaviour {
+public class Heart : MonoBehaviour, IRewardPickup {
     public int heartValue = 25;
     public int scoreValue = 10;
     public GameObject sonido;
 
-    public void OnTriggerEnter2D(Collider2D collision) {
-        if(collision.gameObject.CompareTag("Player")) {
-            ScoreManager.instance.ChangeScore(scoreValue);
-            Stats.instance.setHealth(heartValue);
-            OneShotAudioPool.Play(sonido, transform.position);
+    private bool collected;
+
+    public bool TryCollect(Stats player) {
+        if (collected || player == null || !player.isActiveAndEnabled || !player.CanAttack || ScoreManager.instance == null) {
+            return false;
         }
 
-        if (collision.gameObject.CompareTag("Water")) {
+        collected = true;
+        ScoreManager.instance.ChangeScore(scoreValue);
+        player.setHealth(heartValue);
+        OneShotAudioPool.Play(sonido, transform.position);
+        Destroy(gameObject);
+        return true;
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision) {
+        if (collision.gameObject.CompareTag("Player")) {
+            TryCollect(RewardMagnet.ResolvePlayer(collision));
+        }
+
+        if (collision.gameObject.CompareTag("Water") && GetComponent<RewardMagnet>() == null) {
             Destroy(gameObject);
         }
     }

@@ -93,20 +93,25 @@ public class Enemy : MonoBehaviour {
         int numShields = canDropUpgrades ? Random.Range(0, maxShields) : 0;
 
         for (int i = 0; i < numCoins; i++) {
-            Instantiate(coins, new Vector3(gameObject.transform.position.x - 1.0f, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
+            SpawnReward(coins, new Vector3(gameObject.transform.position.x - 1.0f, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
         for (int i = 0; hearts != null && i < numHearts; i++) {
-            Instantiate(hearts, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
+            SpawnReward(hearts, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
         for (int i = 0; i < numSwords; i++) {
-            Instantiate(sword, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
+            SpawnReward(sword, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
 
         for (int i = 0; i < numShields; i++) {
-            Instantiate(shield, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
+            SpawnReward(shield, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
+    }
+
+    private void SpawnReward(GameObject prefab, Vector3 position, Quaternion rotation) {
+        GameObject reward = Instantiate(prefab, position, rotation);
+        RewardMagnet.Attach(reward, gameObject.scene.name);
     }
 
     private bool HasAnimatorParameter(string parameterName, AnimatorControllerParameterType parameterType) {

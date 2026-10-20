@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour {
@@ -128,6 +128,12 @@ public class PlayerController : MonoBehaviour {
 
     // Scores
     private void OnTriggerEnter2D(Collider2D collision) {
+        IRewardPickup reward = collision.GetComponent<IRewardPickup>();
+        if (reward != null) {
+            reward.TryCollect(playerStats);
+            return;
+        }
+
         if (collision.gameObject.CompareTag("Coins")) {
             Destroy(collision.gameObject);
         }
