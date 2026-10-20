@@ -368,6 +368,7 @@ MonoBehaviour:
     lowlight: {fileID: 21300000, guid: 422caa4da9b8f9d4b8fa1c62e7b96fe7, type: 3}
   focusLabelColor: {r: 1, g: 0.82, b: 0.35, a: 1}
   disabledOpacity: 0.45
+  popUpPrefab: {fileID: 1512155683, guid: 0e003984a3494d44b202de19228615e5, type: 3}
 --- !u!1 &7144470993961193149
 GameObject:
   m_ObjectHideFlags: 0

@@ -69,11 +69,12 @@ public sealed class InGameSettings : MonoBehaviour
 
     private void Update()
     {
-        if (menu != null && Input.GetKeyDown(KeyCode.Escape)) Toggle();
+        if (!GauntletReplayPrompt.BlocksSettings && menu != null && Input.GetKeyDown(KeyCode.Escape)) Toggle();
     }
 
     public void Toggle()
     {
+        if (GauntletReplayPrompt.BlocksSettings) return;
         if (isOpen)
         {
             Resume();

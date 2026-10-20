@@ -26,6 +26,10 @@ public sealed class LayeredButton : Button
     [SerializeField] private Color focusLabelColor = new Color(1f, 0.82f, 0.35f, 1f);
     [SerializeField, Range(0f, 1f)] private float disabledOpacity = 0.45f;
 
+    [SerializeField] private RectTransform popUpPrefab;
+
+    public RectTransform PopUpPrefab => popUpPrefab;
+
     public void SetLabel(string text)
     {
         label.text = text;

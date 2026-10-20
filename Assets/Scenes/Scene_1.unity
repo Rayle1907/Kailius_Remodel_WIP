@@ -7133,6 +7133,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6132865271515353127, guid: 9f1b3d5e7a9c2b4d6f8e0a1c3b5d7f9e,
+        type: 3}
+      propertyPath: confirmReplayWhenCleared
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6132865271515353127, guid: 9f1b3d5e7a9c2b4d6f8e0a1c3b5d7f9e,
+        type: 3}
+      propertyPath: replayButtonTemplate
+      value: 
+      objectReference: {fileID: 7106431089791104508, guid: b0b92fef0172a2d4c91c7c1885472d61, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

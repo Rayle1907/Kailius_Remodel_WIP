@@ -12,7 +12,7 @@ public sealed class LayeredButtonEditor : ButtonEditor
         foreach (string field in new[]
         {
             "fillImage", "grassImage", "highlightImage", "lowlightImage", "outlineImage", "label",
-            "visualGroup", "normalSprites", "pressedSprites", "focusLabelColor", "disabledOpacity"
+            "visualGroup", "normalSprites", "pressedSprites", "focusLabelColor", "disabledOpacity", "popUpPrefab"
         })
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty(field), true);

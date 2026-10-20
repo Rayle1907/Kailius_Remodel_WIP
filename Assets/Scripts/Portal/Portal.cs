@@ -9,6 +9,13 @@ public class Portal : MonoBehaviour {
     private bool returnToEntryPortal;
     [SerializeField, Tooltip("Safe arrival position outside this entrance's trigger when returning from a gauntlet.")]
     private Transform returnPoint;
+    [SerializeField] private bool confirmReplayWhenCleared;
+    [SerializeField] private LayeredButton replayButtonTemplate;
+    [SerializeField, Min(0f)] private float replayPromptCooldown = 5f;
+    private double nextReplayPromptTime = double.NegativeInfinity;
+    private readonly HashSet<Collider2D> playerOverlaps = new HashSet<Collider2D>();
+    private GauntletReplayPrompt replayPrompt;
+    private bool promptedThisVisit;
     private bool transitioning;
     private static string entryScenePath;
     private static Vector3 entryPosition;
@@ -49,7 +56,40 @@ public class Portal : MonoBehaviour {
 
     private void OnTriggerEnter2D(Collider2D plyr) {
         if (!plyr.CompareTag("Player") && plyr.GetComponentInParent<PlayerController>() == null) return;
+        playerOverlaps.RemoveWhere(item => item == null || !item.enabled || !item.gameObject.activeInHierarchy);
+        if (playerOverlaps.Count == 0) promptedThisVisit = false;
+        playerOverlaps.Add(plyr);
+        if (transitioning || promptedThisVisit) return;
+        if (confirmReplayWhenCleared && GauntletProgress.IsCleared(nextSceneName)) {
+            if (Time.timeAsDouble < nextReplayPromptTime) {
+                promptedThisVisit = true;
+                return;
+            }
+            if (GauntletReplayPrompt.BlocksSettings || Time.timeScale <= 0f) return;
+            replayPrompt = GauntletReplayPrompt.Show(replayButtonTemplate, () => {
+                replayPrompt = null;
+                if (this != null && isActiveAndEnabled) Transition();
+            }, () => {
+                replayPrompt = null;
+                nextReplayPromptTime = Time.timeAsDouble + Mathf.Max(0f, replayPromptCooldown);
+            });
+            promptedThisVisit = replayPrompt != null;
+            return;
+        }
         Transition();
+    }
+
+    private void OnTriggerExit2D(Collider2D player) {
+        playerOverlaps.Remove(player);
+        playerOverlaps.RemoveWhere(item => item == null || !item.enabled || !item.gameObject.activeInHierarchy);
+        if (playerOverlaps.Count == 0) promptedThisVisit = false;
+    }
+
+    private void OnDisable() {
+        if (replayPrompt != null) replayPrompt.Dismiss();
+        replayPrompt = null;
+        playerOverlaps.Clear();
+        promptedThisVisit = false;
     }
 
     private void Transition() {
