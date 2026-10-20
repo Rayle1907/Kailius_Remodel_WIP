@@ -223,10 +223,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public static bool ShouldShowOffer(int deathNumberInGauntlet)
     {
-        return deathNumberInGauntlet == 3
-            || deathNumberInGauntlet == 4
-            || deathNumberInGauntlet == 6
-            || (deathNumberInGauntlet >= 8 && deathNumberInGauntlet % 2 == 0);
+        return deathNumberInGauntlet > 0;
     }
 
     public static int GetRevivePrice(int zeroBasedOfferIndex)
