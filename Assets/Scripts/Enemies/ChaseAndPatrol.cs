@@ -9,9 +9,10 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 	public float chaseRange = 15f;
 	public float verticalChaseRange = 1.5f;
 	public float ledgeCheckDistance = 1.2f;
+	public float ledgeLookAhead = 0.35f;
 	public LayerMask groundLayer;
 
-	private Transform groundDetection;
+	private Collider2D bodyCollider;
 	private Transform player;
 	private Rigidbody2D rb;
 	private NpcFacing facing;
@@ -22,7 +23,7 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		player = GameObject.FindGameObjectWithTag("Player").transform;
 		rb = animator.GetComponent<Rigidbody2D>();
 		facing = animator.GetComponent<NpcFacing>();
-		groundDetection = animator.transform.Find("GroundDetection");
+		bodyCollider = animator.GetComponent<Collider2D>();
 		if (groundLayer.value == 0)
 		{
 			groundLayer = LayerMask.GetMask("Ground", "Water");
@@ -37,11 +38,10 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		if (Vector2.Distance(player.position, rb.position) <= chaseRange
 			&& Mathf.Abs(player.position.y - rb.position.y) <= verticalChaseRange)
 		{
-			facing.LookAtPlayer();
+			FaceMovementDirection(Mathf.Sign(player.position.x - rb.position.x));
 
 			float movementDirection = Mathf.Sign(player.position.x - rb.position.x);
-			Vector2 ledgeOrigin = (Vector2)rb.position
-				+ new Vector2(movementDirection * 0.55f, 0f);
+			Vector2 ledgeOrigin = GroundProbeOrigin(movementDirection);
 			if (HasGroundAhead(ledgeOrigin))
 			{
 				Vector2 target = new Vector2(player.position.x, rb.position.y);
@@ -72,16 +72,52 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 
 	private void Patrol(Animator animator)
 	{
-		facing.FaceDirection(patrolDirection);
-		Vector2 origin = (Vector2)rb.position + new Vector2(patrolDirection * 0.55f, 0f);
+		Vector2 origin = GroundProbeOrigin(patrolDirection);
 		if (!HasGroundAhead(origin))
 		{
+			Vector2 oppositeOrigin = GroundProbeOrigin(-patrolDirection);
+			if (!HasGroundAhead(oppositeOrigin))
+			{
+				rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+				return;
+			}
+
 			patrolDirection *= -1f;
+		}
+
+		FaceMovementDirection(patrolDirection);
+		Vector2 patrolTarget = rb.position + Vector2.right * patrolDirection;
+		rb.MovePosition(Vector2.MoveTowards(rb.position, patrolTarget, speed * Time.fixedDeltaTime));
+	}
+
+	private void FaceMovementDirection(float direction)
+	{
+		if (bodyCollider == null)
+		{
+			facing.FaceDirection(direction);
 			return;
 		}
 
-		Vector2 patrolTarget = rb.position + Vector2.right * patrolDirection;
-		rb.MovePosition(Vector2.MoveTowards(rb.position, patrolTarget, speed * Time.fixedDeltaTime));
+		Vector2 center = bodyCollider.bounds.center;
+		bool wasFlipped = facing.isFlipped;
+		facing.FaceDirection(direction);
+		if (wasFlipped != facing.isFlipped)
+		{
+			Physics2D.SyncTransforms();
+			rb.position += center - (Vector2)bodyCollider.bounds.center;
+			Physics2D.SyncTransforms();
+		}
+	}
+
+	private Vector2 GroundProbeOrigin(float direction)
+	{
+		if (bodyCollider == null)
+		{
+			return rb.position + new Vector2(direction * 0.55f, 0f);
+		}
+
+		Bounds bounds = bodyCollider.bounds;
+		return new Vector2(bounds.center.x + direction * (bounds.extents.x + Mathf.Max(ledgeLookAhead, speed * Time.fixedDeltaTime)), bounds.min.y + 0.05f);
 	}
 
 	private bool HasGroundAhead(Vector2 origin)
@@ -89,12 +125,13 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		RaycastHit2D[] hits = Physics2D.RaycastAll(
 			origin,
 			Vector2.down,
-			ledgeCheckDistance,
+			Mathf.Min(ledgeCheckDistance, 0.2f),
 			groundLayer
 		);
 		foreach (RaycastHit2D hit in hits)
 		{
-			if (hit.collider != null)
+			if (hit.collider != null && !hit.collider.isTrigger
+				&& hit.rigidbody != rb && hit.normal.y > 0.5f)
 			{
 				return true;
 			}
