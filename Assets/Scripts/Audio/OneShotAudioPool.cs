@@ -3,18 +3,41 @@ using UnityEngine;
 public static class OneShotAudioPool {
     private const int PoolSize = 12;
 
+    private static GameObject poolObject;
     private static AudioSource[] sources;
     private static int nextSource;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize() {
-        GameObject poolObject = new GameObject("One Shot Audio Pool");
+        if (poolObject == null) {
+            poolObject = GameObject.Find("One Shot Audio Pool");
+        }
+        if (poolObject == null) {
+            poolObject = new GameObject("One Shot Audio Pool");
+        }
         Object.DontDestroyOnLoad(poolObject);
 
+        AudioSource[] existingSources = poolObject.GetComponents<AudioSource>();
         sources = new AudioSource[PoolSize];
+        nextSource = 0;
         for (int i = 0; i < sources.Length; i++) {
-            sources[i] = poolObject.AddComponent<AudioSource>();
+            sources[i] = i < existingSources.Length
+                ? existingSources[i] : poolObject.AddComponent<AudioSource>();
             sources[i].playOnAwake = false;
+        }
+    }
+
+    private static void EnsureInitialized() {
+        if (poolObject == null || sources == null || sources.Length != PoolSize) {
+            Initialize();
+            return;
+        }
+
+        foreach (AudioSource source in sources) {
+            if (source == null) {
+                Initialize();
+                return;
+            }
         }
     }
 
@@ -36,6 +59,7 @@ public static class OneShotAudioPool {
     }
 
     private static AudioSource GetAvailableSource() {
+        EnsureInitialized();
         for (int i = 0; i < sources.Length; i++) {
             int index = (nextSource + i) % sources.Length;
             if (!sources[index].isPlaying) {

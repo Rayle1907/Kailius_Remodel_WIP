@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour {
@@ -57,17 +57,7 @@ public class PlayerController : MonoBehaviour {
 
         if(!dead && !controllerMobile.activeSelf) {
 
-            if(Input.GetKeyDown(KeyCode.Escape)) {
-                if(!menu.activeSelf) {
-                    stats.SetActive(false);
-                    menu.SetActive(true);
-                    Time.timeScale = 0;
-                } else {
-                    menu.SetActive(false);
-                    stats.SetActive(true);
-                    Time.timeScale = 1;
-                }
-            }
+            if (Time.timeScale <= 0f) return;
 
             canJump = jumpController.getJump();
             canDoubleJump = jumpController.getDoubleJump();

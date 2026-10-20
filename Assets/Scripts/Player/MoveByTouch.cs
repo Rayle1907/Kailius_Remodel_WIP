@@ -24,11 +24,12 @@ public class MoveByTouch : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
-        
+        gameObject.AddComponent<InGameSettings>().Initialize(this);
     }
 
     // Update is called once per frame
     void Update() {
+        if (Time.timeScale <= 0f) return;
         if (ControlesMoviles.activeSelf) {
             canJump = GetComponentInChildren<PlayerControllerUP>().getJump();
             canDoubleJump = GetComponentInChildren<PlayerControllerUP>().getDoubleJump();
@@ -68,6 +69,7 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     public void saltar() {
+        if (Time.timeScale <= 0f) return;
         if (ControlesMoviles.activeSelf) {
             if (canJump) {
                 CreateDust();
@@ -83,17 +85,7 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     public void settings() {
-        if (ControlesMoviles.activeSelf) {
-            if (!menu.activeSelf) {
-                stats.SetActive(false);
-                menu.SetActive(true);
-                Time.timeScale = 0;
-            } else {
-                menu.SetActive(false);
-                stats.SetActive(true);
-                Time.timeScale = 1;
-            }
-        }
+        GetComponent<InGameSettings>().Toggle();
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {

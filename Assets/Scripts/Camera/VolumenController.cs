@@ -1,25 +1,24 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class VolumenController: MonoBehaviour {
-    private AudioSource AudioSrc;
- 
-    private float AudioVolume = 1f;
- 
-    void Start () {
-        AudioSrc = GetComponent<AudioSource>();
-        if (PlayerPrefs.GetFloat("AudioVolume", 0) > 0) {
-            AudioVolume = PlayerPrefs.GetFloat("AudioVolume", 0);
-        } else {
-            PlayerPrefs.SetFloat("AudioVolume", AudioVolume);
-        }
-        AudioSrc.volume = AudioVolume;
+public class VolumenController : MonoBehaviour
+{
+    public static float Volume => Mathf.Clamp01(PlayerPrefs.GetFloat("AudioVolume", 1f));
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RestoreVolume()
+    {
+        AudioListener.volume = Volume;
     }
- 
-    public void SetVolume(float vol) {
-        AudioVolume = vol;
-        AudioSrc.volume = AudioVolume;
-        PlayerPrefs.SetFloat("AudioVolume", AudioVolume);
+
+    public void SetVolume(float volume)
+    {
+        ApplyVolume(volume);
+    }
+
+    public static void ApplyVolume(float volume)
+    {
+        volume = Mathf.Clamp01(volume);
+        AudioListener.volume = volume;
+        PlayerPrefs.SetFloat("AudioVolume", volume);
     }
 }

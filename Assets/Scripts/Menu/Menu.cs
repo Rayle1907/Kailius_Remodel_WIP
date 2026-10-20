@@ -7,14 +7,14 @@ public class Menu : MonoBehaviour {
 
     public void PlayGame () {
         GauntletProgress.StartNewGame();
-        Debug.Log("Menu.PlayGame loading 1_1Gauntlet");
+        Debug.Log("Menu.PlayGame loading Scene_1");
         PlayerPrefs.SetInt("AttackDamage", 0);
         PlayerPrefs.SetInt("Defense", 0);
         PlayerPrefs.SetInt("Score", 0);
         PlayerPrefs.SetInt("ScoreCoins", 0);
         PlayerPrefs.SetInt("ScoreGems", 0);
         PlayerPrefs.SetInt("ScoreStars", 0);
-        SceneManager.LoadScene("1_1Gauntlet");
+        SceneManager.LoadScene("Scene_1");
     }
 
     public void ResumeGame() {
