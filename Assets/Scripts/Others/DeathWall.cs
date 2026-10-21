@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [DefaultExecutionOrder(100)]
@@ -13,6 +14,8 @@ public sealed class DeathWall : MonoBehaviour
     [SerializeField] private SpriteRenderer gradientRenderer;
     [SerializeField, Min(0f)] private float speed = 10f;
     [SerializeField, Min(0f)] private float headStart = 8f;
+    [SerializeField, Min(0f)] private float directionChangeRetreatDuration = 0.4f;
+    [SerializeField, Min(0f)] private float directionChangeRetreatDistance = 2f;
     [SerializeField, Range(0.01f, 0.5f)] private float gradientViewportFraction = 0.15f;
     [SerializeField, Range(0f, 0.25f)] private float fillOverscanViewportFraction = 0.05f;
     [SerializeField, Min(0f)] private float verticalOverscan = 2f;
@@ -36,6 +39,19 @@ public sealed class DeathWall : MonoBehaviour
     private bool activated;
     private bool stoppedForDeath;
     private bool waitingForCameraCatchup;
+    private readonly List<RetreatingWall> retreatingWalls = new List<RetreatingWall>();
+
+    private sealed class RetreatingWall
+    {
+        public Transform Root;
+        public SpriteRenderer SolidFill;
+        public SpriteRenderer Gradient;
+        public int Direction;
+        public float StartOffset;
+        public float EndOffset;
+        public float Duration;
+        public float Elapsed;
+    }
 
     private void Awake()
     {
@@ -94,6 +110,7 @@ public sealed class DeathWall : MonoBehaviour
 
     private void OnDisable()
     {
+        ClearRetreatingWalls();
         if (playerController != null)
         {
             playerController.CheckpointTouched -= HandleCheckpointTouched;
@@ -103,6 +120,7 @@ public sealed class DeathWall : MonoBehaviour
 
     private void OnDestroy()
     {
+        ClearRetreatingWalls();
         DestroyGeneratedObject(generatedSolidSprite);
         DestroyGeneratedObject(generatedSolidTexture);
         DestroyGeneratedObject(generatedGradientSprite);
@@ -121,6 +139,7 @@ public sealed class DeathWall : MonoBehaviour
 
     private void HandleCheckpointRespawned(Transform checkpoint)
     {
+        ClearRetreatingWalls();
         if (!activated || checkpoint == null)
         {
             return;
@@ -214,6 +233,7 @@ public sealed class DeathWall : MonoBehaviour
 
         if (gameplayCamera == null)
         {
+            UpdateRetreatingWalls(Time.deltaTime);
             return;
         }
 
@@ -221,6 +241,8 @@ public sealed class DeathWall : MonoBehaviour
         {
             PauseAtCheckpointOnDeath();
         }
+
+        UpdateRetreatingWalls(Time.deltaTime);
 
         if (waitingForCameraCatchup)
         {
@@ -256,6 +278,7 @@ public sealed class DeathWall : MonoBehaviour
 
     private void PauseAtCheckpointOnDeath()
     {
+        ClearRetreatingWalls();
         if (stoppedForDeath)
         {
             return;
@@ -399,26 +422,127 @@ public sealed class DeathWall : MonoBehaviour
             return;
         }
 
+        float fillWidth = UpdatePresentation(body.position.x, direction, solidFillRenderer, gradientRenderer);
+        lethalCollider.offset = new Vector2(-direction * fillWidth * 0.5f, 0f);
+        lethalCollider.size = new Vector2(fillWidth, solidFillRenderer.transform.localScale.y);
+    }
+
+    private float UpdatePresentation(float frontierX, int chaseDirection, SpriteRenderer solidFill, SpriteRenderer gradient)
+    {
         float viewportWidth = GetViewportWidth();
         float viewportHeight = gameplayCamera != null
             ? gameplayCamera.orthographicSize * 2f
             : 100f;
         float height = viewportHeight + verticalOverscan;
-        float trailingEdge = GetCameraEdge(direction) - direction * viewportWidth * fillOverscanViewportFraction;
-        float fillWidth = Mathf.Max(0.01f, (body.position.x - trailingEdge) * direction);
+        float trailingEdge = GetCameraEdge(chaseDirection) - chaseDirection * viewportWidth * fillOverscanViewportFraction;
+        float fillWidth = Mathf.Max(0.01f, (frontierX - trailingEdge) * chaseDirection);
         float fadeWidth = Mathf.Max(0.01f, viewportWidth * gradientViewportFraction);
 
-        solidFillRenderer.transform.localPosition = new Vector3(-direction * fillWidth * 0.5f, 0f, 0f);
-        solidFillRenderer.transform.localScale = new Vector3(fillWidth, height, 1f);
-        solidFillRenderer.color = new Color(0f, 0f, 0f, fillOpacity);
+        solidFill.transform.localPosition = new Vector3(-chaseDirection * fillWidth * 0.5f, 0f, 0f);
+        solidFill.transform.localScale = new Vector3(fillWidth, height, 1f);
+        solidFill.color = new Color(0f, 0f, 0f, fillOpacity);
 
-        gradientRenderer.transform.localPosition = new Vector3(direction * fadeWidth * 0.5f, 0f, 0f);
-        gradientRenderer.transform.localScale = new Vector3(fadeWidth / (GradientTextureWidth / (float)GradientTextureHeight), height, 1f);
-        gradientRenderer.flipX = direction < 0;
-        gradientRenderer.color = Color.white;
+        gradient.transform.localPosition = new Vector3(chaseDirection * fadeWidth * 0.5f, 0f, 0f);
+        gradient.transform.localScale = new Vector3(fadeWidth / (GradientTextureWidth / (float)GradientTextureHeight), height, 1f);
+        gradient.flipX = chaseDirection < 0;
+        gradient.color = Color.white;
 
-        lethalCollider.offset = new Vector2(-direction * fillWidth * 0.5f, 0f);
-        lethalCollider.size = new Vector2(fillWidth, height);
+        return fillWidth;
+    }
+
+    private void BeginRetreat()
+    {
+        if (directionChangeRetreatDuration <= 0f)
+        {
+            return;
+        }
+
+        Transform root = new GameObject("DeathWallRetreat").transform;
+        root.gameObject.hideFlags = HideFlags.DontSave;
+        root.SetParent(transform.parent, false);
+        root.SetPositionAndRotation(transform.position, transform.rotation);
+        root.localScale = transform.localScale;
+        float startOffset = (body.position.x - CameraPosition.x) * direction;
+        retreatingWalls.Add(new RetreatingWall
+        {
+            Root = root,
+            SolidFill = CopyRenderer(solidFillRenderer, root),
+            Gradient = CopyRenderer(gradientRenderer, root),
+            Direction = direction,
+            StartOffset = startOffset,
+            EndOffset = startOffset - directionChangeRetreatDistance,
+            Duration = directionChangeRetreatDuration
+        });
+    }
+
+    private static SpriteRenderer CopyRenderer(SpriteRenderer source, Transform parent)
+    {
+        SpriteRenderer copy = new GameObject(source.name, typeof(SpriteRenderer)).GetComponent<SpriteRenderer>();
+        copy.transform.SetParent(parent, false);
+        copy.transform.localPosition = source.transform.localPosition;
+        copy.transform.localRotation = source.transform.localRotation;
+        copy.transform.localScale = source.transform.localScale;
+        copy.sprite = source.sprite;
+        copy.sharedMaterials = source.sharedMaterials;
+        copy.sortingLayerID = source.sortingLayerID;
+        copy.sortingOrder = source.sortingOrder;
+        copy.color = source.color;
+        copy.flipX = source.flipX;
+        copy.flipY = source.flipY;
+        copy.enabled = source.enabled;
+        return copy;
+    }
+
+    private void UpdateRetreatingWalls(float deltaTime)
+    {
+        if (retreatingWalls.Count == 0)
+        {
+            return;
+        }
+
+        Vector3 cameraPosition = CameraPosition;
+        float viewportWidth = GetViewportWidth();
+        float offscreenOffset = -viewportWidth * (0.5f + fillOverscanViewportFraction)
+            - Mathf.Max(0.01f, viewportWidth * gradientViewportFraction);
+
+        for (int i = retreatingWalls.Count - 1; i >= 0; i--)
+        {
+            RetreatingWall wall = retreatingWalls[i];
+            if (wall.Root == null)
+            {
+                retreatingWalls.RemoveAt(i);
+                continue;
+            }
+
+            wall.Elapsed += deltaTime;
+            wall.EndOffset = Mathf.Min(wall.EndOffset, offscreenOffset);
+            float progress = Mathf.Clamp01(wall.Elapsed / wall.Duration);
+            float offset = Mathf.Lerp(wall.StartOffset, wall.EndOffset, Mathf.SmoothStep(0f, 1f, progress));
+            float frontierX = cameraPosition.x + wall.Direction * offset;
+            wall.Root.position = new Vector3(frontierX, cameraPosition.y, wall.Root.position.z);
+            UpdatePresentation(frontierX, wall.Direction, wall.SolidFill, wall.Gradient);
+
+            if (progress >= 1f)
+            {
+                wall.Root.gameObject.SetActive(false);
+                DestroyGeneratedObject(wall.Root.gameObject);
+                retreatingWalls.RemoveAt(i);
+            }
+        }
+    }
+
+    private void ClearRetreatingWalls()
+    {
+        foreach (RetreatingWall wall in retreatingWalls)
+        {
+            if (wall.Root != null)
+            {
+                wall.Root.gameObject.SetActive(false);
+                DestroyGeneratedObject(wall.Root.gameObject);
+            }
+        }
+
+        retreatingWalls.Clear();
     }
 
     private float GetViewportWidth()
@@ -483,9 +607,11 @@ public sealed class DeathWall : MonoBehaviour
             return true;
         }
 
+        BeginRetreat();
         direction = newDirection;
         float safeX = playerStats.transform.position.x - direction * Mathf.Max(headStart, 0.01f);
-        float edgeX = GetCameraEdge(direction);
+        float fadeWidth = Mathf.Max(0.01f, GetViewportWidth() * gradientViewportFraction);
+        float edgeX = GetCameraEdge(direction) - direction * fadeWidth;
         float nextX = direction > 0 ? Mathf.Min(edgeX, safeX) : Mathf.Max(edgeX, safeX);
         body.position = new Vector2(nextX, CameraPosition.y);
         stoppedForDeath = false;
