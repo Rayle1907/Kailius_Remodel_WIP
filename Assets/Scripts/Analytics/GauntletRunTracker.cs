@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public sealed class GauntletRunTracker : MonoBehaviour
 {
-    public const string ExperimentVersion = "revive_study_v3";
+    public const string ExperimentVersion = "revive_study_v4";
 
     public static GauntletRunTracker Instance { get; private set; }
 
@@ -15,6 +15,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
     public bool IsCurrentSceneGauntlet { get; private set; }
     public int DeathsInCurrentRun => deathsInRun;
     public int DeathsInCurrentGauntletSession => deathsInGauntletSession;
+    public bool HasPendingOffer => pendingOffer != null && !pendingOffer.Resolved;
     public int CurrentOfferPrice => pendingOffer == null ? 0 : pendingOffer.Price;
     public bool CanAffordPendingOffer => pendingOffer != null
         && CanAffordRevive(ResearchPlayerState.PremiumCurrencyBalance, pendingOffer.Price);
@@ -26,7 +27,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
     private int deathsInSegment;
     private int deathsInRun;
     private int deathsInGauntletSession;
-    private int offersShownInRun;
     private int acceptedRevives;
     private int lastDeathTotal;
     // These survive scene object recreation while the application remains in
@@ -43,6 +43,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
     {
         public string OfferId;
         public int Price;
+        public int OfferNumber;
         public int BalanceBefore;
         public double ShownAt;
         public double? DecisionStartedAt;
@@ -243,7 +244,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public int GetNextRevivePrice()
     {
-        return GetRevivePrice(offersShownInRun);
+        return GetRevivePrice(ResearchPlayerState.GetGauntletOfferCount(currentGauntletId));
     }
 
     public string RecordOfferShown()
@@ -258,10 +259,10 @@ public sealed class GauntletRunTracker : MonoBehaviour
         {
             OfferId = Guid.NewGuid().ToString("N"),
             Price = price,
+            OfferNumber = ResearchPlayerState.AdvanceGauntletOfferCount(currentGauntletId),
             BalanceBefore = ResearchPlayerState.PremiumCurrencyBalance,
             ShownAt = Time.realtimeSinceStartupAsDouble
         };
-        offersShownInRun++;
 
         TryRecordPendingOfferEvents();
 
@@ -339,11 +340,24 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
         if (ResearchAnalyticsBootstrap.IsReady && startEventRecorded)
         {
+            Stats player = null;
+            GauntletRequirements requirements = null;
+            foreach (Stats candidate in FindObjectsByType<Stats>())
+                if (candidate.gameObject.scene.name == currentSceneName) { player = candidate; break; }
+            foreach (GauntletRequirements candidate in FindObjectsByType<GauntletRequirements>())
+                if (candidate.gameObject.scene.name == currentSceneName) { requirements = candidate; break; }
             GauntletRunEndedEvent endedEvent = new GauntletRunEndedEvent
             {
                 RunId = CurrentRunId,
                 GauntletSessionId = CurrentGauntletSessionId,
                 GauntletId = currentGauntletId,
+                PlaythroughId = ResearchPlayerState.PlaythroughId,
+                OffersShown = ResearchPlayerState.GetGauntletOfferCount(currentGauntletId),
+                NextRevivePrice = GetNextRevivePrice(),
+                ExitCheckpoint = CurrentSegmentId,
+                ExitHealth = player == null ? -1 : player.health,
+                DefeatedRequiredEnemies = requirements == null ? -1 : requirements.DefeatedCount,
+                TotalRequiredEnemies = requirements == null ? -1 : requirements.RequiredCount,
                 EndReason = string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
                 RunDuration = (float)(Time.realtimeSinceStartupAsDouble - runStartedAt),
                 RunDeaths = deathsInRun,
@@ -413,7 +427,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
             persistentGauntletDeaths = 0;
             CurrentGauntletSessionId = persistentGauntletSessionId;
             deathsInGauntletSession = 0;
-            offersShownInRun = 0;
         }
         else if (IsCurrentSceneGauntlet)
         {
@@ -426,7 +439,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
             persistentGauntletSessionId = null;
             persistentGauntletDeaths = 0;
             deathsInGauntletSession = 0;
-            offersShownInRun = 0;
         }
         if (continuingRun)
         {
@@ -481,7 +493,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 DeathInSegment = deathsInSegment,
                 Balance = pendingOffer.BalanceBefore,
                 RevivePrice = pendingOffer.Price,
-                OfferNumber = offersShownInRun,
+                OfferNumber = pendingOffer.OfferNumber,
                 CanAfford = pendingOffer.BalanceBefore >= pendingOffer.Price,
                 Variant = ResearchPlayerState.OfferVariant,
                 ExperimentVersion = ExperimentVersion
@@ -523,6 +535,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
             SceneName = currentSceneName,
             SegmentId = CurrentSegmentId,
             Balance = ResearchPlayerState.PremiumCurrencyBalance,
+            PlaythroughId = ResearchPlayerState.PlaythroughId,
+            OffersShown = ResearchPlayerState.GetGauntletOfferCount(currentGauntletId),
+            NextRevivePrice = GetNextRevivePrice(),
             RunStartReason = currentRunStartReason,
             Variant = ResearchPlayerState.OfferVariant,
             ExperimentVersion = ExperimentVersion

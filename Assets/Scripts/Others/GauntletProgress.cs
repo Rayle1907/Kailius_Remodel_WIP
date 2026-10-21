@@ -48,10 +48,18 @@ public static class GauntletProgress
 
     public static void MarkCleared(string sceneName)
     {
-        if (Array.IndexOf(RequiredScenes, sceneName) < 0) return;
+        if (!GauntletHealthDropRules.IsGauntletScene(sceneName)) return;
         GauntletProgressData data = Read();
         if (data.clearedGauntlets.Contains(sceneName)) return;
         data.clearedGauntlets.Add(sceneName);
+        Write(data);
+    }
+
+    public static void MarkUncleared(string sceneName)
+    {
+        if (!GauntletHealthDropRules.IsGauntletScene(sceneName)) return;
+        GauntletProgressData data = Read();
+        if (!data.clearedGauntlets.Remove(sceneName)) return;
         Write(data);
     }
 
@@ -71,6 +79,7 @@ public static class GauntletProgress
 
     public static void StartNewGame()
     {
+        ResearchPlayerState.ResetGauntletOfferCounts();
         PlayerPrefs.DeleteKey(SaveKey);
         PlayerPrefs.Save();
     }

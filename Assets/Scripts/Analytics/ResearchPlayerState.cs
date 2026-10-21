@@ -9,6 +9,42 @@ public static class ResearchPlayerState
     private const string TotalDeathsKey = "research_total_deaths";
     private const string OnboardingKey = "research_revive_onboarding_completed";
 
+    private const string PlaythroughKey = "research_playthrough_id";
+    private const string OfferCountPrefix = "research_gauntlet_offers_v1_";
+
+    public static string PlaythroughId
+    {
+        get
+        {
+            if (!PlayerPrefs.HasKey(PlaythroughKey))
+            {
+                PlayerPrefs.SetString(PlaythroughKey, Guid.NewGuid().ToString("N"));
+                PlayerPrefs.Save();
+            }
+            return PlayerPrefs.GetString(PlaythroughKey);
+        }
+    }
+
+    public static int GetGauntletOfferCount(string gauntletId)
+    {
+        return Mathf.Max(0, PlayerPrefs.GetInt(OfferCountPrefix + PlaythroughId + "_" + gauntletId, 0));
+    }
+
+    public static int AdvanceGauntletOfferCount(string gauntletId)
+    {
+        int count = GetGauntletOfferCount(gauntletId);
+        if (count < int.MaxValue) count++;
+        PlayerPrefs.SetInt(OfferCountPrefix + PlaythroughId + "_" + gauntletId, count);
+        PlayerPrefs.Save();
+        return count;
+    }
+
+    public static void ResetGauntletOfferCounts()
+    {
+        PlayerPrefs.SetString(PlaythroughKey, Guid.NewGuid().ToString("N"));
+        PlayerPrefs.Save();
+    }
+
     public const int InitialPremiumCurrency = 100;
     public const string PremiumCurrencyDisplayName = "Embers";
 
