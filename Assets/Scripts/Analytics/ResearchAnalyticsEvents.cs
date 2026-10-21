@@ -3,6 +3,10 @@ using Unity.Services.Analytics;
 internal sealed class GauntletRunStartedEvent : Unity.Services.Analytics.Event
 {
     public GauntletRunStartedEvent() : base("gauntlet_run_started") { }
+    public string PlaythroughId { set => SetParameter("playthrough_id", value); }
+    public int OffersShown { set => SetParameter("offers_shown_in_gauntlet", value); }
+    public int NextRevivePrice { set => SetParameter("next_revive_price_int", value); }
+
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string GauntletId { set => SetParameter("gauntlet_id", value); }
@@ -105,6 +109,14 @@ internal sealed class ReviveOutcomeObservedEvent : Unity.Services.Analytics.Even
 internal sealed class GauntletRunEndedEvent : Unity.Services.Analytics.Event
 {
     public GauntletRunEndedEvent() : base("gauntlet_run_ended") { }
+    public string PlaythroughId { set => SetParameter("playthrough_id", value); }
+    public int OffersShown { set => SetParameter("offers_shown_in_gauntlet", value); }
+    public int NextRevivePrice { set => SetParameter("next_revive_price_int", value); }
+    public string ExitCheckpoint { set => SetParameter("exit_checkpoint_id", value); }
+    public int ExitHealth { set => SetParameter("exit_health", value); }
+    public int DefeatedRequiredEnemies { set => SetParameter("defeated_required_enemies", value); }
+    public int TotalRequiredEnemies { set => SetParameter("total_required_enemies", value); }
+
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string GauntletId { set => SetParameter("gauntlet_id", value); }

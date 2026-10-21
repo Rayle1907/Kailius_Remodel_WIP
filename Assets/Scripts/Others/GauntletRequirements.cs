@@ -7,6 +7,8 @@ public sealed class GauntletRequirements : MonoBehaviour
 {
     public event Action Changed;
     public IReadOnlyList<RequiredGauntletEnemy> Targets => targets;
+    public int DefeatedCount => visit == null ? 0 : visit.DefeatedCount;
+    public int RequiredCount => visit == null ? 0 : visit.RequiredCount;
     public bool IsConfigured { get; private set; }
     public bool IsCleared => GauntletProgress.IsCleared(gameObject.scene.name);
     private readonly List<RequiredGauntletEnemy> targets = new List<RequiredGauntletEnemy>();
