@@ -105,7 +105,7 @@ MonoBehaviour:
   width: 0.65
   lowHeight: 0.75
   spikeHeight: 7
-  crystalFramesPerSecond: 10
+  crystalFramesPerSecond: 2
   crystalVisual: {fileID: 21200002}
   flameVisual: {fileID: 21200001}
   crystalFrames:
@@ -148,8 +148,8 @@ Transform:
   m_GameObject: {fileID: 100001}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3.5, z: 0}
-  m_LocalScale: {x: 0.65, y: 0.6363636, z: 1}
+  m_LocalPosition: {x: 0, y: 3.875, z: 0}
+  m_LocalScale: {x: 0.65, y: 0.5681818, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 400000}

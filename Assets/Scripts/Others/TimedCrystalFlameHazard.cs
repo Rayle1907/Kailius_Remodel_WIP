@@ -23,7 +23,7 @@ public sealed class TimedCrystalFlameHazard : MonoBehaviour
     [SerializeField, Min(0.01f)] private float width = 0.65f;
     [SerializeField, Min(0.01f)] private float lowHeight = 0.75f;
     [SerializeField, Min(0.01f)] private float spikeHeight = 7f;
-    [SerializeField, Min(0.01f)] private float crystalFramesPerSecond = 10f;
+    [SerializeField, Min(0.01f)] private float crystalFramesPerSecond = 2f;
     [SerializeField] private SpriteRenderer crystalVisual;
     [SerializeField] private SpriteRenderer flameVisual;
     [SerializeField] private Sprite[] crystalFrames;
@@ -151,14 +151,15 @@ public sealed class TimedCrystalFlameHazard : MonoBehaviour
             : flameInit;
         Sprite sprite = flameVisual.sprite;
         Transform visual = flameVisual.transform;
+        float flameHeight = Mathf.Max(0.01f, spikeHeight - lowHeight);
         visual.localScale = new Vector3(
             width * sprite.pixelsPerUnit / sprite.rect.width,
-            spikeHeight * sprite.pixelsPerUnit / sprite.rect.height,
+            flameHeight * sprite.pixelsPerUnit / sprite.rect.height,
             1f);
         visual.localRotation = Quaternion.identity;
         visual.localPosition = new Vector3(
             (sprite.pivot.x / sprite.rect.width - 0.5f) * width,
-            sprite.pivot.y / sprite.rect.height * spikeHeight,
+            lowHeight + sprite.pivot.y / sprite.rect.height * flameHeight,
             visual.localPosition.z);
     }
 
