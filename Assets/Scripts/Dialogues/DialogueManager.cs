@@ -11,6 +11,9 @@ public class DialogueManager : MonoBehaviour {
     public float typingSpeed = 0.05f;
     [Min(0.1f)]
     public float interactionRadius = 5f;
+    [Tooltip("World-space offset from the top of the instructor to the bottom of the bubble.")]
+    public Vector2 bubbleOffset = new Vector2(0f, 0.25f);
+    public Vector2 bubbleSizeMultiplier = Vector2.one;
     [TextArea(2, 4)]
     public string fallbackSentence;
     [SerializeField] private string requiredClearedGauntlet = "";
@@ -18,6 +21,7 @@ public class DialogueManager : MonoBehaviour {
 
     Queue<string> sentences;
     string activeSentence;
+    private static readonly Dictionary<RectTransform, Vector2> originalBubbleSizes = new Dictionary<RectTransform, Vector2>();
     //AudioSource myAudio;
 
     void Awake() {
@@ -103,9 +107,7 @@ public class DialogueManager : MonoBehaviour {
 
             Canvas canvas = dialoguePanel.GetComponentInParent<Canvas>(true);
             if (canvas != null && canvas.renderMode == RenderMode.WorldSpace) {
-                Vector3 position = transform.position + Vector3.up * 3f;
-                position.z = dialoguePanel.transform.position.z;
-                dialoguePanel.transform.position = position;
+                PositionBubble(dialoguePanel.transform as RectTransform);
             }
 
             dialoguePanel.SetActive(true);
@@ -134,6 +136,41 @@ public class DialogueManager : MonoBehaviour {
         if (displayText != null && displayText.text == activeSentence) {
             DisplayNextSentence();
         }
+    }
+
+    public Vector3 BubbleAnchor {
+        get {
+            SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+            Vector3 anchor = transform.position;
+            if (sprite != null && sprite.sprite != null) {
+                anchor.x = sprite.bounds.center.x;
+                anchor.y = sprite.bounds.max.y;
+            }
+            return anchor + (Vector3)bubbleOffset;
+        }
+    }
+
+    public void PositionBubble(RectTransform panel) {
+        if (panel == null) return;
+        if (!originalBubbleSizes.TryGetValue(panel, out Vector2 originalSize)) {
+            originalSize = panel.rect.size;
+            originalBubbleSizes[panel] = originalSize;
+        }
+        panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, originalSize.x * Mathf.Max(0.1f, bubbleSizeMultiplier.x));
+        panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, originalSize.y * Mathf.Max(0.1f, bubbleSizeMultiplier.y));
+        Vector3 bottomCenter = panel.TransformPoint(new Vector3(panel.rect.center.x, panel.rect.yMin, 0f));
+        Vector3 offset = BubbleAnchor - bottomCenter;
+        offset.z = 0f;
+        panel.position += offset;
+    }
+
+    public static void ForgetBubbleSize(RectTransform panel) {
+        if (panel != null) originalBubbleSizes.Remove(panel);
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetBubbleSizes() {
+        originalBubbleSizes.Clear();
     }
 
     private void ResolveDialogueReferences() {
