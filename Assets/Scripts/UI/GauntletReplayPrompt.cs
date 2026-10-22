@@ -24,17 +24,25 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
 
     public static GauntletReplayPrompt Show(LayeredButton buttonTemplate, Action onReplay, Action onDismiss = null)
     {
-        if (BlocksSettings || Time.timeScale <= 0f) return null;
+        if (Time.timeScale <= 0f) return null;
+        return ShowConfirmation(buttonTemplate, "Replay this gauntlet?", "Replay", "Keep exploring", onReplay, onDismiss, bodyFontSize: 32f);
+    }
+
+    public static GauntletReplayPrompt ShowConfirmation(LayeredButton buttonTemplate, string message,
+        string confirmLabel, string cancelLabel, Action onConfirm, Action onCancel = null, string heading = null,
+        float bodyFontSize = 28f)
+    {
+        if (BlocksSettings) return null;
         if (buttonTemplate == null || buttonTemplate.PopUpPrefab == null || EventSystem.current == null)
         {
-            Debug.LogError("Gauntlet replay needs a button template with a PopUp prefab and an active EventSystem.");
+            Debug.LogError("Gauntlet confirmation needs a button template with a PopUp prefab and an active EventSystem.");
             return null;
         }
         GameObject root = new GameObject("Gauntlet Replay Prompt", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         GauntletReplayPrompt prompt = root.AddComponent<GauntletReplayPrompt>();
         active = prompt;
-        prompt.replay = onReplay;
-        prompt.dismissed = onDismiss;
+        prompt.replay = onConfirm;
+        prompt.dismissed = onCancel;
         prompt.previousSelection = EventSystem.current.currentSelectedGameObject;
         prompt.previousTimeScale = Time.timeScale;
         Canvas canvas = root.GetComponent<Canvas>();
@@ -61,12 +69,35 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
         TMP_Text templateText = buttonTemplate.GetComponentInChildren<TMP_Text>(true);
         title.font = templateText.font;
         title.fontSharedMaterial = templateText.fontSharedMaterial;
-        title.text = "Replay this gauntlet?";
-        title.fontSize = 44f;
+        title.text = message;
+        title.enableAutoSizing = true;
+        title.fontSizeMin = 18f;
+        title.fontSizeMax = bodyFontSize;
+        titleRect.sizeDelta = new Vector2(1000f, 150f);
+        titleRect.anchoredPosition = new Vector2(0f, -90f);
+        title.fontSize = bodyFontSize;
         title.alignment = TextAlignmentOptions.Center;
         title.raycastTarget = false;
-        Button replayButton = prompt.CreateButton(buttonTemplate, panel, "Replay", -215f, true);
-        Button exploreButton = prompt.CreateButton(buttonTemplate, panel, "Keep exploring", 215f, false);
+        if (!string.IsNullOrEmpty(heading))
+        {
+            GameObject headingObject = new GameObject("Heading", typeof(RectTransform), typeof(TextMeshProUGUI));
+            RectTransform headingRect = (RectTransform)headingObject.transform;
+            headingRect.SetParent(panel, false);
+            headingRect.anchorMin = new Vector2(0.5f, 1f);
+            headingRect.anchorMax = new Vector2(0.5f, 1f);
+            headingRect.sizeDelta = new Vector2(1000f, -110f);
+            headingRect.anchoredPosition = new Vector2(0f, -350f);
+            TMP_Text headingText = headingObject.GetComponent<TMP_Text>();
+            headingText.font = templateText.font;
+            headingText.fontSharedMaterial = templateText.fontSharedMaterial;
+            headingText.text = heading;
+            headingText.enableAutoSizing = false;
+            headingText.fontSize = 56f;
+            headingText.alignment = TextAlignmentOptions.Center;
+            headingText.raycastTarget = false;
+        }
+        Button replayButton = prompt.CreateButton(buttonTemplate, panel, confirmLabel, -260f, true);
+        Button exploreButton = prompt.CreateButton(buttonTemplate, panel, cancelLabel, 260f, false);
         Navigation replayNavigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnRight = exploreButton, selectOnDown = exploreButton };
         Navigation exploreNavigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = replayButton, selectOnUp = replayButton };
         replayButton.navigation = replayNavigation;
@@ -94,7 +125,7 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
         RectTransform rect = (RectTransform)button.transform;
         rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
         rect.localScale = Vector3.one;
-        rect.sizeDelta = new Vector2(390f, 100f);
+        rect.sizeDelta = new Vector2(420f, 64f);
         rect.anchoredPosition = new Vector2(x, -190f);
         TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
         text.enableAutoSizing = true;
