@@ -11,7 +11,10 @@ public sealed class GauntletRequirements : MonoBehaviour
     public int RequiredCount => visit == null ? 0 : visit.RequiredCount;
     public bool IsConfigured { get; private set; }
     public bool IsCleared => GauntletProgress.IsCleared(gameObject.scene.name);
-    private readonly List<RequiredGauntletEnemy> targets = new List<RequiredGauntletEnemy>();
+    [SerializeField] private List<RequiredGauntletEnemy> targets = new List<RequiredGauntletEnemy>();
+    [SerializeField] private List<int> defeatedIds = new List<int>();
+    [SerializeField] private bool initialized;
+    [SerializeField] private bool configured;
     private GauntletVisit visit;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -26,7 +29,18 @@ public sealed class GauntletRequirements : MonoBehaviour
         if (!GauntletHealthDropRules.IsGauntletScene(scene.name)) return;
         GameObject root = new GameObject("Gauntlet Requirements");
         SceneManager.MoveGameObjectToScene(root, scene);
+        root.AddComponent<GauntletEarnings>();
         root.AddComponent<GauntletRequirements>();
+    }
+
+    private void OnEnable()
+    {
+        if (!initialized) return;
+        var ids = new List<int>();
+        for (int i = 0; i < targets.Count; i++) ids.Add(i);
+        visit = new GauntletVisit(ids);
+        foreach (int id in defeatedIds) visit.RecordDefeat(id);
+        IsConfigured = configured;
     }
 
     private void Start()
@@ -49,14 +63,34 @@ public sealed class GauntletRequirements : MonoBehaviour
         }
         visit = new GauntletVisit(ids);
         IsConfigured &= visit.IsConfigured && visit.RequiredCount > 0;
+        configured = IsConfigured;
+        initialized = true;
         if (targets.Count == 0) Debug.LogError("No required enemies configured in " + gameObject.scene.name + ".", this);
-        GauntletRequirementsHud hud = gameObject.AddComponent<GauntletRequirementsHud>();
+        GauntletRequirementsHud hud = null;
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+        {
+            foreach (GauntletRequirementsHud candidate in root.GetComponentsInChildren<GauntletRequirementsHud>(true))
+            {
+                if (hud != null)
+                {
+                    Debug.LogError("Gauntlet scene must contain exactly one authored GauntletRequirementsHud.", this);
+                    return;
+                }
+                hud = candidate;
+            }
+        }
+        if (hud == null)
+        {
+            Debug.LogError("Gauntlet scene is missing its authored GauntletRequirementsHud.", this);
+            return;
+        }
         hud.Initialize(this);
     }
 
     public void RecordDefeat(RequiredGauntletEnemy target)
     {
         if (visit == null || !targets.Contains(target) || !visit.RecordDefeat(target.VisitId)) return;
+        defeatedIds.Add(target.VisitId);
         if (IsConfigured && visit.IsComplete) GauntletProgress.MarkCleared(gameObject.scene.name);
         Changed?.Invoke();
     }
