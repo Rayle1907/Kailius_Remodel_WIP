@@ -36,13 +36,22 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     public static bool TryShow(Stats stats)
     {
-        if (stats == null || GauntletRunTracker.Instance == null)
+        if (stats == null || GauntletRunTracker.Instance == null || !GauntletRunTracker.Instance.IsCurrentSceneGauntlet)
         {
             return false;
         }
 
-        string offerId = GauntletRunTracker.Instance.RecordOfferShown();
-        if (string.IsNullOrEmpty(offerId))
+        GameObject canvas = FindSceneCanvasRoot();
+        ReviveButtonAssets assets = canvas == null ? null : canvas.GetComponent<ReviveButtonAssets>();
+        Transform panel = canvas == null ? null : FindChild(canvas.transform, "Panel");
+        if (assets == null || assets.ButtonPrefab == null || assets.PressMeButtonPrefab == null
+            || assets.UIFont == null || panel == null || EventSystem.current == null)
+        {
+            Debug.LogError("Revive offer UI is unavailable or incomplete. Continuing normal death handling.");
+            return false;
+        }
+
+        if (GauntletRunTracker.Instance.HasPendingOffer)
         {
             return false;
         }
@@ -54,8 +63,17 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             instance = host.AddComponent<ReviveOfferPrototype>();
         }
 
-        instance.Show(stats);
-        return true;
+        try
+        {
+            instance.Show(stats);
+            return instance.overlay != null;
+        }
+        catch (System.Exception exception)
+        {
+            instance.CloseOverlay();
+            Debug.LogError($"Revive offer UI could not be shown: {exception}");
+            return false;
+        }
     }
 
     private void Show(Stats stats)
@@ -66,7 +84,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             CloseOverlay();
         }
 
-        int price = GauntletRunTracker.Instance.CurrentOfferPrice;
+        int price = GauntletRunTracker.Instance.GetNextRevivePrice();
         int balance = ResearchPlayerState.PremiumCurrencyBalance;
         bool canAfford = balance >= price;
 
@@ -136,6 +154,11 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         reviveButton = CreateButton(buttonAssets.PressMeButtonPrefab, panel.transform, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
         reviveButton.interactable = canAfford;
         restartButton = CreateButton(buttonAssets.ButtonPrefab, panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        if (string.IsNullOrEmpty(GauntletRunTracker.Instance.RecordOfferShown()))
+        {
+            CloseOverlay();
+            return;
+        }
         if (!ResearchPlayerState.ReviveOnboardingCompleted)
         {
             if (buttonAssets.OnboardingPrefab != null && buttonAssets.OnboardingPrefab.IsConfigured)
