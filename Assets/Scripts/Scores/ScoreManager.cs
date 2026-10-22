@@ -15,6 +15,29 @@ public class ScoreManager : MonoBehaviour {
     private int scoreCoins;
     private int scoreGems;
     private int scoreStars;
+    private int sceneCoinsCollected;
+    private int sceneCoinsAvailable;
+    private int sceneGemsCollected;
+    private int sceneGemsAvailable;
+    private readonly Dictionary<Coin, int> placedCoins = new Dictionary<Coin, int>();
+    private readonly Dictionary<Gem, int> placedGems = new Dictionary<Gem, int>();
+
+    private void Awake() {
+        if (GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) return;
+
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
+            foreach (Coin coin in root.GetComponentsInChildren<Coin>(true)) {
+                int value = Mathf.Max(0, coin.coinValue);
+                placedCoins.Add(coin, value);
+                sceneCoinsAvailable += value;
+            }
+            foreach (Gem gem in root.GetComponentsInChildren<Gem>(true)) {
+                int value = Mathf.Max(0, gem.gemValue);
+                placedGems.Add(gem, value);
+                sceneGemsAvailable += value;
+            }
+        }
+    }
 
     private void OnEnable() {
         if (instance == null) instance = this;
@@ -36,6 +59,20 @@ public class ScoreManager : MonoBehaviour {
         this.scoreStars = (int)PlayerPrefs.GetInt("ScoreStars", 0);
 
        
+        UpdateScoreText();
+    }
+
+    public void RecordCoinCollection(Coin coin) {
+        if (coin == null || !placedCoins.TryGetValue(coin, out int value)) return;
+        placedCoins.Remove(coin);
+        sceneCoinsCollected += value;
+        UpdateScoreText();
+    }
+
+    public void RecordGemCollection(Gem gem) {
+        if (gem == null || !placedGems.TryGetValue(gem, out int value)) return;
+        placedGems.Remove(gem);
+        sceneGemsCollected += value;
         UpdateScoreText();
     }
 
@@ -72,13 +109,13 @@ public class ScoreManager : MonoBehaviour {
             textScore.text = "" + score.ToString();
         }
         if (textCoins != null && !GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) {
-            textCoins.text = "150/" + scoreCoins.ToString();
+            textCoins.text = sceneCoinsCollected + "/" + sceneCoinsAvailable;
         }
         if (textGems != null && !GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) {
-            textGems.text = "60/" + scoreGems.ToString();
+            textGems.text = sceneGemsCollected + "/" + sceneGemsAvailable;
         }
         if (textStars != null) {
-            textStars.text = "3/" + scoreStars.ToString();
+            textStars.text = scoreStars + "/3";
         }
     }
 

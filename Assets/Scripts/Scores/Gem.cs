@@ -13,6 +13,7 @@ public class Gem : MonoBehaviour, IRewardPickup {
         }
 
         collected = true;
+        ScoreManager.instance.RecordGemCollection(this);
         ScoreManager.instance.ChangeScore(scoreValue);
         ScoreManager.instance.ChangeScoreGem(gemValue);
         GauntletEarnings.ForScene(gameObject.scene)?.RecordCollection(0, gemValue);

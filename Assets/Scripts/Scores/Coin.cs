@@ -13,6 +13,7 @@ public class Coin : MonoBehaviour, IRewardPickup {
         }
 
         collected = true;
+        ScoreManager.instance.RecordCoinCollection(this);
         ScoreManager.instance.ChangeScore(scoreValue);
         ScoreManager.instance.ChangeScoreCoin(coinValue);
         GauntletEarnings.ForScene(gameObject.scene)?.RecordCollection(coinValue, 0);
