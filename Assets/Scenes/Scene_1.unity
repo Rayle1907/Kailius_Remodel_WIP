@@ -574,6 +574,11 @@ PrefabInstance:
       objectReference: {fileID: 1607715850}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
+      propertyPath: bubbleOffset.x
+      value: 2.2811203
+      objectReference: {fileID: 0}
+    - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
+        type: 3}
       propertyPath: requiredClearedGauntlet
       value: 1_2Gauntlet
       objectReference: {fileID: 0}
@@ -34188,6 +34193,11 @@ PrefabInstance:
       propertyPath: dialoguePanel
       value: 
       objectReference: {fileID: 1607715850}
+    - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
+        type: 3}
+      propertyPath: bubbleOffset.x
+      value: 2.2563252
+      objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200476, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: m_Name
@@ -34354,7 +34364,8 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2024589688}
     m_Modifications:
-    - target: {fileID: 5258459664706711136, guid: 82edd45f0faa72e4c8198bb7b0d63258, type: 3}
+    - target: {fileID: 5258459664706711136, guid: 82edd45f0faa72e4c8198bb7b0d63258,
+        type: 3}
       propertyPath: rewardSourceId
       value: 1243a608786f5f7b8484295020250696
       objectReference: {fileID: 0}
