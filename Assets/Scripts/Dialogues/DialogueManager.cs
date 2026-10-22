@@ -13,11 +13,19 @@ public class DialogueManager : MonoBehaviour {
     public float interactionRadius = 5f;
     [TextArea(2, 4)]
     public string fallbackSentence;
+    [SerializeField] private string requiredClearedGauntlet = "";
     //public AudioClip speakSound; 
 
     Queue<string> sentences;
     string activeSentence;
     //AudioSource myAudio;
+
+    void Awake() {
+        if (!string.IsNullOrWhiteSpace(requiredClearedGauntlet)
+            && !GauntletProgress.IsCleared(requiredClearedGauntlet)) {
+            gameObject.SetActive(false);
+        }
+    }
 
     // Start is called before the first frame update
     void Start() {
@@ -91,6 +99,13 @@ public class DialogueManager : MonoBehaviour {
             ResolveDialogueReferences();
             if (dialoguePanel == null || displayText == null) {
                 return;
+            }
+
+            Canvas canvas = dialoguePanel.GetComponentInParent<Canvas>(true);
+            if (canvas != null && canvas.renderMode == RenderMode.WorldSpace) {
+                Vector3 position = transform.position + Vector3.up * 3f;
+                position.z = dialoguePanel.transform.position.z;
+                dialoguePanel.transform.position = position;
             }
 
             dialoguePanel.SetActive(true);
