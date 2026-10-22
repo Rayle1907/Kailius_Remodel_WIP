@@ -16,6 +16,14 @@ public class ScoreManager : MonoBehaviour {
     private int scoreGems;
     private int scoreStars;
 
+    private void OnEnable() {
+        if (instance == null) instance = this;
+    }
+
+    private void OnDestroy() {
+        if (instance == this) instance = null;
+    }
+
     // Start is called before the first frame update
     void Start() {
         if(instance == null) {
@@ -63,10 +71,10 @@ public class ScoreManager : MonoBehaviour {
         if (textScore != null) {
             textScore.text = "" + score.ToString();
         }
-        if (textCoins != null) {
+        if (textCoins != null && !GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) {
             textCoins.text = "150/" + scoreCoins.ToString();
         }
-        if (textGems != null) {
+        if (textGems != null && !GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) {
             textGems.text = "60/" + scoreGems.ToString();
         }
         if (textStars != null) {

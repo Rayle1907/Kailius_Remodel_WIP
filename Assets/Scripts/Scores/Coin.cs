@@ -5,7 +5,7 @@ public class Coin : MonoBehaviour, IRewardPickup {
     public int scoreValue = 10;
     public GameObject sonido;
 
-    private bool collected;
+    [SerializeField] private bool collected;
 
     public bool TryCollect(Stats player) {
         if (collected || player == null || !player.isActiveAndEnabled || !player.CanAttack || ScoreManager.instance == null) {
@@ -15,6 +15,7 @@ public class Coin : MonoBehaviour, IRewardPickup {
         collected = true;
         ScoreManager.instance.ChangeScore(scoreValue);
         ScoreManager.instance.ChangeScoreCoin(coinValue);
+        GauntletEarnings.ForScene(gameObject.scene)?.RecordCollection(coinValue, 0);
         OneShotAudioPool.Play(sonido, transform.position);
         Destroy(gameObject);
         return true;

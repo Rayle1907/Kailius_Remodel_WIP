@@ -5,7 +5,7 @@ public class Gem : MonoBehaviour, IRewardPickup {
     public int scoreValue = 15;
     public GameObject sonido;
 
-    private bool collected;
+    [SerializeField] private bool collected;
 
     public bool TryCollect(Stats player) {
         if (collected || player == null || !player.isActiveAndEnabled || !player.CanAttack || ScoreManager.instance == null) {
@@ -15,6 +15,7 @@ public class Gem : MonoBehaviour, IRewardPickup {
         collected = true;
         ScoreManager.instance.ChangeScore(scoreValue);
         ScoreManager.instance.ChangeScoreGem(gemValue);
+        GauntletEarnings.ForScene(gameObject.scene)?.RecordCollection(0, gemValue);
         OneShotAudioPool.Play(sonido, transform.position);
         Destroy(gameObject);
         return true;
