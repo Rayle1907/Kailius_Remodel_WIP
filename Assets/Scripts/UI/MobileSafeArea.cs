@@ -4,7 +4,7 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Canvas))]
 public sealed class MobileSafeArea : MonoBehaviour
 {
-    private RectTransform container;
+    [SerializeField] private RectTransform container;
     private Rect lastSafeArea;
     private Vector2Int lastScreenSize;
     public RectTransform ContentRoot => container;
