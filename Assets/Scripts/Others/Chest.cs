@@ -22,15 +22,30 @@ public class Chest : MonoBehaviour {
     private bool range = false;
     private bool open = true;
 
+    private void Awake() {
+        if (!OpenWorldChestProgress.IsOpenWorldScene(gameObject.scene.name)) return;
+        if (string.IsNullOrWhiteSpace(rewardSourceId)) {
+            open = false;
+            Debug.LogError("Open-world chest is missing a stable reward ID. Assign chest IDs in the editor.", this);
+            return;
+        }
+        if (OpenWorldChestProgress.IsOpened(gameObject.scene.path, rewardSourceId)) {
+            open = false;
+            gameObject.GetComponent<SpriteRenderer>().sprite = openChestSprite;
+        }
+    }
+
     void Update() {
         if (Input.GetKeyDown(KeyCode.E) && range && open) {
-            gameObject.GetComponent<SpriteRenderer>().sprite = openChestSprite;
-            generar();
-            open = false;
+            openChest();
         }
     }
 
     public void generar() {
+        openChest();
+    }
+
+    private void SpawnRewards() {
         int numCoins = Random.Range(1, maxCoins);
         int numGems = Random.Range(1, maxGems);
         int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
@@ -74,10 +89,15 @@ public class Chest : MonoBehaviour {
     }
 
     public void openChest() {
-        if (open) {
-            gameObject.GetComponent<SpriteRenderer>().sprite = openChestSprite;
-            generar();
+        if (!open) return;
+        if (OpenWorldChestProgress.IsOpenWorldScene(gameObject.scene.name)
+            && !OpenWorldChestProgress.TryOpen(gameObject.scene.path, rewardSourceId)) {
             open = false;
+            gameObject.GetComponent<SpriteRenderer>().sprite = openChestSprite;
+            return;
         }
+        open = false;
+        gameObject.GetComponent<SpriteRenderer>().sprite = openChestSprite;
+        SpawnRewards();
     }
 }

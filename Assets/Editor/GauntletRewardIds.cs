@@ -23,6 +23,20 @@ public static class GauntletRewardIds
         }
     }
 
+    [MenuItem("Tools/Open World/Assign Chest IDs in Open Scenes")]
+    public static void AssignOpenWorldChests()
+    {
+        if (Application.isPlaying) return;
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (!scene.isLoaded || !OpenWorldChestProgress.IsOpenWorldScene(scene.name)) continue;
+            var used = new HashSet<string>();
+            foreach (GameObject root in scene.GetRootGameObjects())
+                foreach (Chest chest in root.GetComponentsInChildren<Chest>(true)) Assign(chest, used);
+        }
+    }
+
     private static void Assign(Component source, HashSet<string> used)
     {
         SerializedObject serialized = new SerializedObject(source);
@@ -31,7 +45,7 @@ public static class GauntletRewardIds
         string id = GlobalObjectId.GetGlobalObjectIdSlow(source).ToString();
         if (!used.Add(id))
         {
-            Debug.LogError("Could not assign a unique gauntlet reward ID. Save the scene first.", source);
+            Debug.LogError("Could not assign a unique reward ID. Save the scene first.", source);
             return;
         }
         property.stringValue = id;

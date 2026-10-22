@@ -80,6 +80,7 @@ public static class GauntletProgress
     public static void StartNewGame()
     {
         ResearchPlayerState.ResetGauntletOfferCounts();
+        OpenWorldChestProgress.Reset();
         PlayerPrefs.DeleteKey(SaveKey);
         PlayerPrefs.Save();
     }
