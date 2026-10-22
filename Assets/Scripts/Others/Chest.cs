@@ -64,7 +64,7 @@ public class Chest : MonoBehaviour {
 
     private void SpawnReward(GameObject prefab, Vector3 position, Quaternion rotation) {
         GameObject reward = Instantiate(prefab, position, rotation);
-        RewardMagnet.Attach(reward, gameObject.scene.name);
+        RewardMagnet.Attach(reward);
     }
 
     void OnTriggerEnter2D(Collider2D collision) {
