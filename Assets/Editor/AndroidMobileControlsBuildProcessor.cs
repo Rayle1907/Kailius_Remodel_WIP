@@ -60,6 +60,21 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
             return;
         }
 
+        if (isAndroid && scene.name == "Scene_1" &&
+            System.IO.Path.GetFileName(report.summary.outputPath) == "Scene1Only.apk")
+        {
+            var exits = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Portal>(true))
+                .Where(portal => portal.nextSceneName == "Scene_2")
+                .ToArray();
+            if (exits.Length != 1)
+            {
+                throw new BuildFailedException("Scene 1 playtest requires exactly one Scene 2 exit portal.");
+            }
+            exits[0].nextSceneName = "Menu";
+            Debug.Log("SCENE 1 PLAYTEST: Scene 2 exit redirected to Menu in build data.");
+        }
+
         try
         {
             ConfigureAndValidate(scene, isAndroid);
