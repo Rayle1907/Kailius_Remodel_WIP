@@ -5,6 +5,8 @@ using UnityEngine;
 
 
 public class Chest : MonoBehaviour {
+    public event System.Action<Chest> Opened;
+    public bool IsOpened => !open;
     public GameObject coins;
     public GameObject gems;
     public GameObject hearts;
@@ -79,6 +81,12 @@ public class Chest : MonoBehaviour {
 
     private void SpawnReward(GameObject prefab, Vector3 position, Quaternion rotation) {
         GameObject reward = Instantiate(prefab, position, rotation);
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(reward, gameObject.scene);
+        OptionalLootProgress progress = OptionalLootProgress.ForScene(gameObject.scene);
+        Coin coin = reward.GetComponent<Coin>();
+        Gem gem = reward.GetComponent<Gem>();
+        if (coin != null) coin.SetChestLootOwner(progress);
+        if (gem != null) gem.SetChestLootOwner(progress);
         RewardMagnet.Attach(reward);
     }
 
@@ -99,5 +107,6 @@ public class Chest : MonoBehaviour {
         open = false;
         gameObject.GetComponent<SpriteRenderer>().sprite = openChestSprite;
         SpawnRewards();
+        Opened?.Invoke(this);
     }
 }

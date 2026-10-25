@@ -5,6 +5,9 @@ public class Coin : MonoBehaviour, IRewardPickup {
     public int scoreValue = 10;
     public GameObject sonido;
 
+    private OptionalLootProgress chestLootOwner;
+    public void SetChestLootOwner(OptionalLootProgress owner) => chestLootOwner = owner;
+
     [SerializeField] private bool collected;
 
     public bool TryCollect(Stats player) {
@@ -13,6 +16,7 @@ public class Coin : MonoBehaviour, IRewardPickup {
         }
 
         collected = true;
+        if (chestLootOwner != null) chestLootOwner.RecordCollection(coinValue, 0);
         ScoreManager.instance.RecordCoinCollection(this);
         ScoreManager.instance.ChangeScore(scoreValue);
         ScoreManager.instance.ChangeScoreCoin(coinValue);
