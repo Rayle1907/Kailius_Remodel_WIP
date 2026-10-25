@@ -110,7 +110,14 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
         move.joystick = joystick;
         move.row = FindUniqueChild(player, "RowPoint", sceneName);
         move.menu = FindUniqueObject(scene, "MenuIn-Game");
-        move.stats = FindUniqueObject(scene, "Estadisticas");
+        if (move.stats == null)
+        {
+            move.stats = FindUniqueObject(scene, "Estadisticas");
+        }
+        else if (move.stats.scene != scene)
+        {
+            Fail(sceneName, "MoveByTouch.stats must reference a HUD object in the same scene.");
+        }
         var dustObject = FindUniqueChild(player, "DustPS", sceneName);
         move.dust = dustObject.GetComponent<ParticleSystem>();
         if (move.dust == null)

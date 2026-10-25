@@ -12,6 +12,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private static ReviveOfferPrototype instance;
     private Stats playerStats;
+    private readonly List<DeathWall> hiddenDeathWalls = new List<DeathWall>();
     private GameObject overlay;
     private Button reviveButton;
     private Button restartButton;
@@ -128,6 +129,12 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             overlay = null;
             RestoreOtherSceneCanvases();
             return;
+        }
+
+        foreach (DeathWall wall in FindObjectsByType<DeathWall>(FindObjectsSortMode.None))
+        {
+            hiddenDeathWalls.Add(wall);
+            wall.SetRevivePresentationHidden(true);
         }
 
         Image panel = panelTransform.GetComponent<Image>();
@@ -277,6 +284,14 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             overlay = null;
         }
 
+        foreach (DeathWall wall in hiddenDeathWalls)
+        {
+            if (wall != null)
+            {
+                wall.SetRevivePresentationHidden(false);
+            }
+        }
+        hiddenDeathWalls.Clear();
         RestoreOtherSceneCanvases();
     }
 
