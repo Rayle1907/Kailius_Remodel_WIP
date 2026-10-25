@@ -15,6 +15,7 @@ public sealed class ReviveOnboardingPageTests
     [SetUp]
     public void SetUp()
     {
+        dismissals = 0;
         root = new GameObject("Onboarding test", typeof(RectTransform), typeof(Canvas));
         root.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/UI/ReviveOnboardingView.prefab");
