@@ -7,27 +7,39 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public static class CodexIOSBuild
+public static class IOSBuild
 {
-    [MenuItem("Build/Export iOS Development Xcode Project")]
+    [MenuItem("Build/Export iOS project")]
     public static void BuildForDevice()
     {
-        string[] scenes = EditorBuildSettings.scenes
-            .Where(scene => scene.enabled)
-            .Select(scene => scene.path)
-            .OrderBy(path => path == "Assets/Scenes/Menu.unity" ? 0 :
-                path == "Assets/Scenes/1_1Gauntlet.unity" ? 1 : 2)
-            .ToArray();
-
-        if (scenes.Length < 2 || scenes[0] != "Assets/Scenes/Menu.unity" ||
-            scenes[1] != "Assets/Scenes/1_1Gauntlet.unity")
+        string[] scenes =
         {
-            throw new Exception("iOS build stopped: Menu and 1_1Gauntlet must be enabled as the first two scenes.");
+            "Assets/Scenes/Menu.unity",
+            "Assets/Scenes/Scene_1.unity",
+            "Assets/Scenes/1_1Gauntlet.unity",
+            "Assets/Scenes/1_2Gauntlet.unity",
+            "Assets/Scenes/1_3Gauntlet.unity"
+        };
+        foreach (string scene in scenes)
+        {
+            if (!File.Exists(scene) || !EditorBuildSettings.scenes.Any(item => item.enabled && item.path == scene))
+            {
+                throw new BuildFailedException("iOS export requires an enabled scene: " + scene);
+            }
         }
 
-        EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
+        if (!EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS))
+        {
+            throw new BuildFailedException("Could not switch to the iOS build target.");
+        }
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, "com.kailius.gauntlet11");
-        PlayerSettings.productName = "Gauntlet 1.1";
+        PlayerSettings.productName = "Kailius";
+        PlayerSettings.bundleVersion = "2";
+        if (!int.TryParse(PlayerSettings.iOS.buildNumber, out int previousBuildNumber) || previousBuildNumber < 0)
+        {
+            throw new BuildFailedException("The iOS build number must be a non-negative integer.");
+        }
+        PlayerSettings.iOS.buildNumber = Math.Max(2, checked(previousBuildNumber + 1)).ToString();
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.iOS, ScriptingImplementation.IL2CPP);
         PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneAndiPad;
         PlayerSettings.iOS.sdkVersion = iOSSdkVersion.DeviceSDK;
@@ -40,7 +52,7 @@ public static class CodexIOSBuild
         PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.iOS, false);
         PlayerSettings.SetGraphicsAPIs(BuildTarget.iOS, new[] { GraphicsDeviceType.Metal });
 
-        const string outputPath = "Builds/iOS/Gauntlet";
+        const string outputPath = "Builds/iOS/Kailius";
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
         BuildReport report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
@@ -48,7 +60,8 @@ public static class CodexIOSBuild
             locationPathName = outputPath,
             target = BuildTarget.iOS,
             targetGroup = BuildTargetGroup.iOS,
-            options = BuildOptions.Development | BuildOptions.CleanBuildCache
+            options = BuildOptions.CleanBuildCache,
+            extraScriptingDefines = new[] { "KAILIUS_IOS_TESTER" }
         });
 
         if (report.summary.result != BuildResult.Succeeded)

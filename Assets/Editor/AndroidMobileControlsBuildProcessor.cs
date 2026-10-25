@@ -112,9 +112,22 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
         move.menu = FindUniqueObject(scene, "MenuIn-Game");
         if (move.stats == null)
         {
-            move.stats = FindUniqueObject(scene, "Estadisticas");
+            var controller = player.GetComponent<PlayerController>();
+            if (controller != null)
+            {
+                move.stats = controller.stats;
+            }
         }
-        else if (move.stats.scene != scene)
+        if (move.stats == null)
+        {
+            string hudName = "Estadisticas";
+            if (scene.name == "Scene_1")
+            {
+                hudName = "OpenWorldHud";
+            }
+            move.stats = FindUniqueObject(scene, hudName);
+        }
+        if (move.stats.scene != scene)
         {
             Fail(sceneName, "MoveByTouch.stats must reference a HUD object in the same scene.");
         }

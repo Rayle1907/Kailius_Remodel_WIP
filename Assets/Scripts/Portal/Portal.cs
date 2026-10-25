@@ -106,6 +106,11 @@ public class Portal : MonoBehaviour {
                 GauntletGateNotice.Show("Scene 2 locked\nClear: " + string.Join(", ", unfinished));
                 return;
             }
+#if UNITY_IOS && KAILIUS_IOS_TESTER
+            if (gameObject.scene.name == "Scene_1") {
+                destination = "Menu";
+            }
+#endif
         }
         if (string.IsNullOrEmpty(destination) || !Application.CanStreamedLevelBeLoaded(destination)) {
             Debug.LogError("Portal destination is unavailable: " + destination, this);
