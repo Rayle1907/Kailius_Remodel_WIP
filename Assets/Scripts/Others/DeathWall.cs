@@ -39,6 +39,8 @@ public sealed class DeathWall : MonoBehaviour
     private bool activated;
     private bool stoppedForDeath;
     private bool waitingForCameraCatchup;
+    private bool hiddenForRevive;
+    private readonly Dictionary<SpriteRenderer, bool> reviveRendererStates = new Dictionary<SpriteRenderer, bool>();
     private readonly List<RetreatingWall> retreatingWalls = new List<RetreatingWall>();
 
     private sealed class RetreatingWall
@@ -473,6 +475,12 @@ public sealed class DeathWall : MonoBehaviour
             EndOffset = startOffset - directionChangeRetreatDistance,
             Duration = directionChangeRetreatDuration
         });
+        if (hiddenForRevive)
+        {
+            RetreatingWall wall = retreatingWalls[retreatingWalls.Count - 1];
+            HideReviveRenderer(wall.SolidFill);
+            HideReviveRenderer(wall.Gradient);
+        }
     }
 
     private static SpriteRenderer CopyRenderer(SpriteRenderer source, Transform parent)
@@ -587,6 +595,42 @@ public sealed class DeathWall : MonoBehaviour
     }
 
     public int Direction => direction;
+
+    public void SetRevivePresentationHidden(bool hidden)
+    {
+        hiddenForRevive = hidden;
+        if (hidden)
+        {
+            HideReviveRenderer(solidFillRenderer);
+            HideReviveRenderer(gradientRenderer);
+            foreach (RetreatingWall wall in retreatingWalls)
+            {
+                HideReviveRenderer(wall.SolidFill);
+                HideReviveRenderer(wall.Gradient);
+            }
+            return;
+        }
+
+        foreach (KeyValuePair<SpriteRenderer, bool> state in reviveRendererStates)
+        {
+            if (state.Key != null)
+            {
+                state.Key.forceRenderingOff = state.Value;
+            }
+        }
+        reviveRendererStates.Clear();
+    }
+
+    private void HideReviveRenderer(SpriteRenderer renderer)
+    {
+        if (renderer == null || reviveRendererStates.ContainsKey(renderer))
+        {
+            return;
+        }
+
+        reviveRendererStates.Add(renderer, renderer.forceRenderingOff);
+        renderer.forceRenderingOff = true;
+    }
 
     public bool TryReverseDirection()
     {

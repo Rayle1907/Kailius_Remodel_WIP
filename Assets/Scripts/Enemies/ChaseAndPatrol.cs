@@ -16,6 +16,7 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 	private Transform player;
 	private Rigidbody2D rb;
 	private NpcFacing facing;
+	private BossWeapon weapon;
 	private float patrolDirection = 1f;
 
 	// OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
@@ -23,6 +24,7 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		player = GameObject.FindGameObjectWithTag("Player").transform;
 		rb = animator.GetComponent<Rigidbody2D>();
 		facing = animator.GetComponent<NpcFacing>();
+		weapon = animator.GetComponent<BossWeapon>();
 		bodyCollider = animator.GetComponent<Collider2D>();
 		if (groundLayer.value == 0)
 		{
@@ -38,13 +40,41 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		if (Vector2.Distance(player.position, rb.position) <= chaseRange
 			&& Mathf.Abs(player.position.y - rb.position.y) <= verticalChaseRange)
 		{
-			FaceMovementDirection(Mathf.Sign(player.position.x - rb.position.x));
+			float bodyCenterX = rb.position.x;
+			if (bodyCollider != null)
+			{
+				bodyCenterX = bodyCollider.bounds.center.x;
+			}
+			float horizontalOffset = player.position.x - bodyCenterX;
+			float movementDirection = 0f;
+			if (Mathf.Abs(horizontalOffset) > 0.1f)
+			{
+				movementDirection = Mathf.Sign(horizontalOffset);
+			}
+			FaceMovementDirection(movementDirection);
 
-			float movementDirection = Mathf.Sign(player.position.x - rb.position.x);
+			float stoppingRange = attackRange;
+			if (weapon != null)
+			{
+				stoppingRange = Mathf.Min(stoppingRange, weapon.attackRange);
+			}
+			if (Vector2.Distance(player.position, rb.position) <= stoppingRange)
+			{
+				rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+				animator.SetTrigger("attack");
+				return;
+			}
+
+			if (movementDirection == 0f)
+			{
+				rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+				return;
+			}
+
 			Vector2 ledgeOrigin = GroundProbeOrigin(movementDirection);
 			if (HasGroundAhead(ledgeOrigin))
 			{
-				Vector2 target = new Vector2(player.position.x, rb.position.y);
+				Vector2 target = new Vector2(rb.position.x + horizontalOffset, rb.position.y);
 				Vector2 newPos = Vector2.MoveTowards(
 					rb.position,
 					target,
@@ -57,11 +87,6 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 			{
 				rb.linearVelocity = Vector2.zero;
 				patrolDirection = -movementDirection;
-			}
-
-			if (Vector2.Distance(player.position, rb.position) <= attackRange)
-			{
-				animator.SetTrigger("attack");
 			}
 		}
 		else

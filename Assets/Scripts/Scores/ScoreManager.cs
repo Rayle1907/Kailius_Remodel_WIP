@@ -15,9 +15,9 @@ public class ScoreManager : MonoBehaviour {
     private int scoreCoins;
     private int scoreGems;
     private int scoreStars;
-    private int sceneCoinsCollected;
+    private static int sceneCoinsCollected;
     private int sceneCoinsAvailable;
-    private int sceneGemsCollected;
+    private static int sceneGemsCollected;
     private int sceneGemsAvailable;
     private readonly Dictionary<Coin, int> placedCoins = new Dictionary<Coin, int>();
     private readonly Dictionary<Gem, int> placedGems = new Dictionary<Gem, int>();

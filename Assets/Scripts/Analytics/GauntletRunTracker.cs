@@ -55,7 +55,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
         public bool ResolvedEventRecorded;
     }
 
-    private void Awake()
+    private void OnEnable()
     {
         if (Instance != null && Instance != this)
         {
@@ -70,7 +70,16 @@ public sealed class GauntletRunTracker : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         SceneManager.activeSceneChanged += OnActiveSceneChanged;
         ResearchAnalyticsBootstrap.AnalyticsReady += OnAnalyticsReady;
-        StartRunForScene(SceneManager.GetActiveScene(), "application_start");
+        if (string.IsNullOrEmpty(CurrentRunId))
+        {
+            StartRunForScene(SceneManager.GetActiveScene(), "application_start");
+        }
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+        ResearchAnalyticsBootstrap.AnalyticsReady -= OnAnalyticsReady;
     }
 
     private void OnDestroy()
