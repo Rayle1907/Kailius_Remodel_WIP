@@ -34,6 +34,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         DontDestroyOnLoad(bootstrapObject);
         instance = bootstrapObject.AddComponent<ResearchAnalyticsBootstrap>();
         bootstrapObject.AddComponent<GauntletRunTracker>();
+        bootstrapObject.AddComponent<ResearchSurvey>();
     }
 
     public static void BeginShutdown()
