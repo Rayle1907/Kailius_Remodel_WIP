@@ -16,6 +16,7 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 	private Transform player;
 	private Rigidbody2D rb;
 	private NpcFacing facing;
+	private BossWeapon weapon;
 	private float patrolDirection = 1f;
 
 	// OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
@@ -23,6 +24,7 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		player = GameObject.FindGameObjectWithTag("Player").transform;
 		rb = animator.GetComponent<Rigidbody2D>();
 		facing = animator.GetComponent<NpcFacing>();
+		weapon = animator.GetComponent<BossWeapon>();
 		bodyCollider = animator.GetComponent<Collider2D>();
 		if (groundLayer.value == 0)
 		{
@@ -51,7 +53,12 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 			}
 			FaceMovementDirection(movementDirection);
 
-			if (Vector2.Distance(player.position, rb.position) <= attackRange)
+			float stoppingRange = attackRange;
+			if (weapon != null)
+			{
+				stoppingRange = Mathf.Min(stoppingRange, weapon.attackRange);
+			}
+			if (Vector2.Distance(player.position, rb.position) <= stoppingRange)
 			{
 				rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 				animator.SetTrigger("attack");
