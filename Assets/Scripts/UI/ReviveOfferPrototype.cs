@@ -21,8 +21,46 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
     private Coroutine unlockRoutine;
     private TextMeshProUGUI affordabilityText;
     private Coroutine timeoutRoutine;
+    private bool applicationPaused;
+    private bool applicationFocused;
+    private bool waitingForInputRelease;
+    private int interruptionFrame;
+    private double lastDecisionTick;
     private readonly System.Collections.Generic.List<GameObject> hiddenSceneCanvases = new System.Collections.Generic.List<GameObject>();
+    private bool Interrupted => applicationPaused || !applicationFocused;
 
+    private void Awake() => applicationFocused = Application.isFocused;
+
+    private void OnApplicationPause(bool paused)
+    {
+        applicationPaused = paused;
+        ResetInterruptionInput();
+    }
+
+    private void OnApplicationFocus(bool focused)
+    {
+        applicationFocused = focused;
+        ResetInterruptionInput();
+    }
+
+    private void ResetInterruptionInput()
+    {
+        lastDecisionTick = Time.realtimeSinceStartupAsDouble;
+        if (overlay == null) return;
+        waitingForInputRelease = true;
+        interruptionFrame = Time.frameCount;
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    private void Update()
+    {
+        if (overlay == null || Interrupted || !waitingForInputRelease
+            || Time.frameCount <= interruptionFrame || ReviveOnboardingPresenter.DismissalInputHeld()
+            || Input.GetMouseButtonUp(0)) return;
+        waitingForInputRelease = false;
+        if (!offerLocked && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(reviveButton.interactable ? reviveButton.gameObject : restartButton.gameObject);
+    }
     private void OnEnable() => SceneManager.activeSceneChanged += OnSceneChanged;
     private void OnDisable()
     {
@@ -87,8 +125,6 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
         int price = GauntletRunTracker.Instance.GetNextRevivePrice();
         int balance = ResearchPlayerState.PremiumCurrencyBalance;
-        bool canAfford = balance >= price;
-
         GameObject canvasObject = FindSceneCanvasRoot();
         if (canvasObject == null)
         {
@@ -105,17 +141,11 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
         HideOtherSceneCanvases(canvasObject);
         canvasObject.SetActive(true);
-        CanvasScaler sceneScaler = canvasObject.GetComponent<CanvasScaler>();
-        if (sceneScaler != null)
-        {
-            sceneScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            sceneScaler.referenceResolution = new Vector2(1920f, 1080f);
-            sceneScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            sceneScaler.matchWidthOrHeight = 0.5f;
-        }
+        MobileDialogLayout.Configure(canvasObject);
         Transform safeArea = FindChild(canvasObject.transform, "SafeArea");
         if (safeArea != null)
         {
+            safeArea.localScale = Vector3.one;
             safeArea.gameObject.SetActive(true);
         }
 
@@ -131,7 +161,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             return;
         }
 
-        foreach (DeathWall wall in FindObjectsByType<DeathWall>(FindObjectsSortMode.None))
+        foreach (DeathWall wall in FindObjectsByType<DeathWall>())
         {
             hiddenDeathWalls.Add(wall);
             wall.SetRevivePresentationHidden(true);
@@ -143,24 +173,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             panel = panelTransform.gameObject.AddComponent<Image>();
         }
 
-        RemoveGeneratedChildren(panel.transform);
-
-        TextMeshProUGUI heading = CreateText(panel.transform, "ReviveHeading", "REVIVE?", 46f, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        AnchorTop(heading.rectTransform, 350f, -110f, 1000f);
-
-        TextMeshProUGUI explanation = CreateText(panel.transform, "Explanation", "Continue this gauntlet from the last checkpoint.", 20f, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        AnchorTop(explanation.rectTransform, 425f, -130f, 1000f);
-
-        TextMeshProUGUI cost = CreateText(panel.transform, "Cost", $"Cost: {price} Embers\nYou have: {balance} Embers", 28f, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        AnchorTop(cost.rectTransform, 475f, -150f, 1000f);
-
-        affordabilityText = CreateText(panel.transform, "Affordability", canAfford ? "" : "Not enough Embers", 22f, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        affordabilityText.color = new Color(1f, 0.72f, 0.25f);
-        AnchorTop(affordabilityText.rectTransform, 385f, 45f, 1000f);
-
-        reviveButton = CreateButton(buttonAssets.PressMeButtonPrefab, panel.transform, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
-        reviveButton.interactable = canAfford;
-        restartButton = CreateButton(buttonAssets.ButtonPrefab, panel.transform, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        BuildOffer((RectTransform)panel.transform, buttonAssets, price, balance);
         if (string.IsNullOrEmpty(GauntletRunTracker.Instance.RecordOfferShown()))
         {
             CloseOverlay();
@@ -183,6 +196,32 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         EnableOfferDecision();
     }
 
+    private void BuildOffer(RectTransform panel, ReviveButtonAssets buttonAssets, int price, int balance)
+    {
+        bool canAfford = balance >= price;
+        RemoveGeneratedChildren(panel);
+        MobileDialogLayout.Panel(panel);
+
+        TextMeshProUGUI heading = CreateText(panel, "ReviveHeading", "REVIVE?", MobileDialogLayout.HeadingSize, TextAlignmentOptions.Center, buttonAssets.UIFont);
+        MobileDialogLayout.Place(heading.rectTransform, new Vector2(0.06f, 0.78f), new Vector2(0.94f, 0.91f));
+
+        TextMeshProUGUI explanation = CreateText(panel, "Explanation", "Continue this gauntlet from the last checkpoint.", MobileDialogLayout.BodySize, TextAlignmentOptions.Center, buttonAssets.UIFont);
+        MobileDialogLayout.ReadingArea(explanation, panel, new Vector2(0.08f, 0.53f), new Vector2(0.92f, 0.69f));
+
+        TextMeshProUGUI cost = CreateText(panel, "Cost", $"Cost: {price} Embers\nYou have: {balance} Embers", MobileDialogLayout.BodySize, TextAlignmentOptions.Center, buttonAssets.UIFont);
+        MobileDialogLayout.Place(cost.rectTransform, new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.55f));
+
+        affordabilityText = CreateText(panel, "Affordability", canAfford ? "" : "Not enough Embers", MobileDialogLayout.SecondarySize, TextAlignmentOptions.Center, buttonAssets.UIFont);
+        affordabilityText.color = new Color(1f, 0.72f, 0.25f);
+        MobileDialogLayout.Place(affordabilityText.rectTransform, new Vector2(0.08f, 0.26f), new Vector2(0.92f, 0.34f));
+
+        reviveButton = CreateButton(buttonAssets.PressMeButtonPrefab, panel, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
+        reviveButton.interactable = canAfford;
+        restartButton = CreateButton(buttonAssets.ButtonPrefab, panel, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
+        MobileDialogLayout.Button(reviveButton, new Vector2(0.08f, 0.08f), new Vector2(0.48f, 0.23f));
+        MobileDialogLayout.Button(restartButton, new Vector2(0.52f, 0.08f), new Vector2(0.92f, 0.23f));
+    }
+
     private void OnOnboardingDismissed()
     {
         ResearchPlayerState.MarkReviveOnboardingCompleted();
@@ -191,10 +230,10 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private IEnumerator UnlockAfterRelease()
     {
-        while (ReviveOnboardingPresenter.DismissalInputHeld()) yield return null;
+        while (Interrupted || waitingForInputRelease || ReviveOnboardingPresenter.DismissalInputHeld()) yield return null;
         yield return null;
         // A new press during the deferred frame must also be consumed by the blocker.
-        while (ReviveOnboardingPresenter.DismissalInputHeld()) yield return null;
+        while (Interrupted || waitingForInputRelease || ReviveOnboardingPresenter.DismissalInputHeld()) yield return null;
         unlockRoutine = null;
         if (overlay == null) yield break;
         RemoveOnboarding();
@@ -218,7 +257,15 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private IEnumerator ResolveTimeout()
     {
-        yield return new WaitForSecondsRealtime(DecisionTimeoutSeconds);
+        double remainingSeconds = DecisionTimeoutSeconds;
+        lastDecisionTick = Time.realtimeSinceStartupAsDouble;
+        while (remainingSeconds > 0d)
+        {
+            yield return null;
+            double now = Time.realtimeSinceStartupAsDouble;
+            if (!Interrupted) remainingSeconds -= now - lastDecisionTick;
+            lastDecisionTick = now;
+        }
         if (overlay != null)
         {
             ResolveAndRestart("ignored");
@@ -227,7 +274,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private void AcceptRevive()
     {
-        if (offerLocked || reviveButton == null || !reviveButton.interactable)
+        if (Interrupted || waitingForInputRelease || offerLocked || reviveButton == null || !reviveButton.interactable)
         {
             return;
         }
@@ -244,6 +291,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
     private void DeclineRevive()
     {
+        if (Interrupted || waitingForInputRelease) return;
         ResolveAndRestart("declined");
     }
 
@@ -266,6 +314,9 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
     private void CloseOverlay()
     {
         offerLocked = true;
+        waitingForInputRelease = false;
+        interruptionFrame = 0;
+        lastDecisionTick = 0d;
         if (unlockRoutine != null)
         {
             StopCoroutine(unlockRoutine);
@@ -373,6 +424,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         {
             "ReviveHeading",
             "Explanation",
+            "Explanation Reading Area",
             "Cost",
             "Affordability",
             "Revive",
@@ -399,7 +451,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         label.font = font;
         label.fontSharedMaterial = font.material;
         label.text = text;
-        label.fontSize = size;
+        MobileDialogLayout.Text(label, size);
         label.alignment = alignment;
         label.color = Color.white;
         label.textWrappingMode = TextWrappingModes.Normal;
@@ -411,7 +463,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         LayeredButton button = Instantiate(prefab, parent, false);
         button.name = name;
         RectTransform rect = (RectTransform)button.transform;
-        SetSize(rect, width, 64f);
+        SetSize(rect, width, MobileDialogLayout.ButtonHeight);
         rect.anchoredPosition = position;
         button.SetLabel(labelText);
         button.onClick.AddListener(action);
@@ -426,11 +478,4 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         rect.anchoredPosition = Vector2.zero;
     }
 
-    private static void AnchorTop(RectTransform rect, float y, float height, float width)
-    {
-        rect.anchorMin = new Vector2(0.5f, 1f);
-        rect.anchorMax = new Vector2(0.5f, 1f);
-        rect.sizeDelta = new Vector2(width, height);
-        rect.anchoredPosition = new Vector2(0f, -y);
-    }
 }
