@@ -90,13 +90,13 @@ public sealed class InGameSettings : MonoBehaviour
 
     private void Update()
     {
-        if (ResearchSurveyPrompt.IsOpen) return;
+        if (ResearchSurveyPrompt.IsOpen || MobilePrivacyControls.IsOpen) return;
         if (!GauntletReplayPrompt.BlocksSettings && menu != null && Input.GetKeyDown(KeyCode.Escape)) Toggle();
     }
 
     public void Toggle()
     {
-        if (ResearchSurveyPrompt.IsOpen) return;
+        if (ResearchSurveyPrompt.IsOpen || MobilePrivacyControls.IsOpen) return;
         if (GauntletReplayPrompt.BlocksSettings) return;
         if (isOpen)
         {
