@@ -1,0 +1,284 @@
+{
+  "format": "reference_only_not_dashboard_import",
+  "setup": "In Unity Analytics Event Manager, create and enable these custom events in development, assign the listed parameters, then copy the definitions to production. Reuse existing shared parameters with their existing types. Answer parameters must be optional.",
+  "identity": "Unity supplies userID from the existing ResearchPlayerState.PlayerId through UnityServices.ExternalUserId. Do not add userID as a custom parameter. Join gameplay by userID and playthrough_id.",
+  "missing_answers": "Omit unanswered item parameters. Zero is a neutral response, not missing data.",
+  "scoring": "Keep Experience and Skill separate from PXI. Calculate a PXI construct mean only when all three construct items are answered. No scores or answer timing are recorded.",
+  "events": [
+    {
+      "parameters": [
+        {
+          "description": "GUID shared by one invitation and its questionnaire; deduplicate submissions by this value.",
+          "required": true,
+          "type": "string",
+          "name": "survey_id"
+        },
+        {
+          "description": "pxi_selected_v1",
+          "required": true,
+          "type": "string",
+          "name": "survey_version"
+        },
+        {
+          "description": "Existing playthrough ID captured when the invitation opens.",
+          "required": true,
+          "type": "string",
+          "name": "playthrough_id"
+        },
+        {
+          "description": "Existing assigned A or B variant.",
+          "required": true,
+          "type": "string",
+          "name": "offer_variant"
+        },
+        {
+          "description": "Existing experiment version captured when the invitation opens.",
+          "required": true,
+          "type": "string",
+          "name": "experiment_version"
+        },
+        {
+          "description": "Gameplay scene where Quit was selected.",
+          "required": true,
+          "type": "string",
+          "name": "scene_name"
+        }
+      ],
+      "name": "survey_invitation_shown",
+      "trigger": "The eligible pause-menu Quit invitation becomes visible."
+    },
+    {
+      "parameters": [
+        {
+          "description": "GUID shared by one invitation and its questionnaire; deduplicate submissions by this value.",
+          "required": true,
+          "type": "string",
+          "name": "survey_id"
+        },
+        {
+          "description": "pxi_selected_v1",
+          "required": true,
+          "type": "string",
+          "name": "survey_version"
+        },
+        {
+          "description": "Existing playthrough ID captured when the invitation opens.",
+          "required": true,
+          "type": "string",
+          "name": "playthrough_id"
+        },
+        {
+          "description": "Existing assigned A or B variant.",
+          "required": true,
+          "type": "string",
+          "name": "offer_variant"
+        },
+        {
+          "description": "Existing experiment version captured when the invitation opens.",
+          "required": true,
+          "type": "string",
+          "name": "experiment_version"
+        },
+        {
+          "description": "Gameplay scene where Quit was selected.",
+          "required": true,
+          "type": "string",
+          "name": "scene_name"
+        },
+        {
+          "allowed_values": [
+            "accepted",
+            "declined"
+          ],
+          "required": true,
+          "type": "string",
+          "name": "survey_invitation_response"
+        }
+      ],
+      "name": "survey_invitation_resolved",
+      "trigger": "The player accepts or declines the invitation."
+    },
+    {
+      "parameters": [
+        {
+          "description": "GUID shared by one invitation and its questionnaire; deduplicate submissions by this value.",
+          "required": true,
+          "type": "string",
+          "name": "survey_id"
+        },
+        {
+          "description": "pxi_selected_v1",
+          "required": true,
+          "type": "string",
+          "name": "survey_version"
+        },
+        {
+          "description": "Existing playthrough ID captured when the invitation opens.",
+          "required": true,
+          "type": "string",
+          "name": "playthrough_id"
+        },
+        {
+          "description": "Existing assigned A or B variant.",
+          "required": true,
+          "type": "string",
+          "name": "offer_variant"
+        },
+        {
+          "description": "Existing experiment version captured when the invitation opens.",
+          "required": true,
+          "type": "string",
+          "name": "experiment_version"
+        },
+        {
+          "description": "Gameplay scene where Quit was selected.",
+          "required": true,
+          "type": "string",
+          "name": "scene_name"
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_autonomy_1",
+          "question": "I felt free to play the game in my own way."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_autonomy_2",
+          "question": "I felt like I had choices regarding how I wanted to play this game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_autonomy_3",
+          "question": "I felt a sense of freedom about how I wanted to play this game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_mastery_1",
+          "question": "I felt I was good at playing this game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_mastery_2",
+          "question": "I felt capable while playing the game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_mastery_3",
+          "question": "I felt a sense of mastery playing this game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_challenge_1",
+          "question": "The game was not too easy and not too hard to play."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_challenge_2",
+          "question": "The game was challenging but not too challenging."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_challenge_3",
+          "question": "The challenges in the game were at the right level of difficulty for me."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_progress_feedback_1",
+          "question": "The game informed me of my progress in the game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_progress_feedback_2",
+          "question": "I could easily assess how I was performing in the game."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "pxi_progress_feedback_3",
+          "question": "The game gave clear feedback on my progress towards the goals."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "background_experience_skill_1",
+          "question": "I play video games regularly."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "background_experience_skill_2",
+          "question": "I have experience playing games similar to this one."
+        },
+        {
+          "maximum": 3,
+          "minimum": -3,
+          "required": false,
+          "type": "integer",
+          "name": "background_experience_skill_3",
+          "question": "I consider myself skilled at video games."
+        },
+        {
+          "maximum": 15,
+          "required": true,
+          "type": "integer",
+          "name": "survey_answered_count",
+          "minimum": 1
+        },
+        {
+          "maximum": 12,
+          "required": true,
+          "type": "integer",
+          "name": "survey_pxi_answered_count",
+          "minimum": 0
+        },
+        {
+          "description": "True only when all 15 items are answered.",
+          "required": true,
+          "type": "boolean",
+          "name": "survey_complete"
+        }
+      ],
+      "name": "survey_submitted",
+      "trigger": "Explicit submission with at least one answer; local SDK acceptance is not server delivery confirmation."
+    }
+  ]
+}

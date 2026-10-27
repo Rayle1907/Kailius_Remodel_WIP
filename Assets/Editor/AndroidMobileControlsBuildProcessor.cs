@@ -22,25 +22,38 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
             return;
         }
 
-        if (isIos)
+        foreach (var canvas in scene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<Canvas>(true)))
         {
-            foreach (var canvas in scene.GetRootGameObjects()
-                .SelectMany(root => root.GetComponentsInChildren<Canvas>(true)))
+            if (isIos && canvas.isRootCanvas && canvas.renderMode != RenderMode.WorldSpace &&
+                canvas.GetComponent<MobileSafeArea>() == null)
             {
-                if (canvas.isRootCanvas && canvas.renderMode != RenderMode.WorldSpace &&
-                    canvas.GetComponent<MobileSafeArea>() == null)
-                {
-                    canvas.gameObject.AddComponent<MobileSafeArea>();
-                }
-
-                if (canvas.isRootCanvas &&
-                    (scene.name == "Menu" || canvas.name == "MenuIn-Game") &&
-                    canvas.GetComponent<MobilePrivacyControls>() == null)
-                {
-                    canvas.gameObject.AddComponent<MobilePrivacyControls>();
-                }
+                canvas.gameObject.AddComponent<MobileSafeArea>();
             }
 
+            if (canvas.isRootCanvas &&
+                (scene.name == "Menu" || canvas.name == "MenuIn-Game"))
+            {
+                var legacy = canvas.GetComponent<MobilePrivacyControls>();
+                if (legacy != null) UnityEngine.Object.DestroyImmediate(legacy);
+                var instances = canvas.GetComponentsInChildren<MobilePrivacyControls>(true);
+                if (instances.Length > 1) throw new BuildFailedException("Menu canvas contains duplicate privacy controls.");
+                var privacy = instances.SingleOrDefault();
+                if (privacy == null)
+                {
+                    var prefab = AssetDatabase.LoadAssetAtPath<MobilePrivacyControls>("Assets/Prefabs/UI/PrivacyControls.prefab");
+                    if (prefab == null || !prefab.HasRequiredReferences)
+                        throw new BuildFailedException("PrivacyControls prefab is missing or has incomplete UI references.");
+                    privacy = UnityEngine.Object.Instantiate(prefab, canvas.transform, false);
+                    privacy.name = "PrivacyControls";
+                }
+                if (!privacy.HasRequiredReferences)
+                    throw new BuildFailedException("Privacy controls have incomplete UI references.");
+            }
+        }
+
+        if (isIos)
+        {
             foreach (var button in scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<Button>(true)))
             {
@@ -58,6 +71,21 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
         if (scene.name == "Menu")
         {
             return;
+        }
+
+        if (isAndroid && scene.name == "Scene_1" &&
+            System.IO.Path.GetFileName(report.summary.outputPath) == "Scene1Only.apk")
+        {
+            var exits = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Portal>(true))
+                .Where(portal => portal.nextSceneName == "Scene_2")
+                .ToArray();
+            if (exits.Length != 1)
+            {
+                throw new BuildFailedException("Scene 1 playtest requires exactly one Scene 2 exit portal.");
+            }
+            exits[0].nextSceneName = "Menu";
+            Debug.Log("SCENE 1 PLAYTEST: Scene 2 exit redirected to Menu in build data.");
         }
 
         try

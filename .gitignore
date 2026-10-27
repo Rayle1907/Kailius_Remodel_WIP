@@ -43,6 +43,10 @@ desktop.ini
 *.aab
 *.unitypackage
 *.app
+*.keystore
+*.jks
+*.keystore.meta
+*.jks.meta
 
 # Local working files
 .utmp/

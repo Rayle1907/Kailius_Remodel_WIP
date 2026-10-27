@@ -1,60 +1,113 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public sealed class MobilePrivacyControls : MonoBehaviour
 {
-    private GameObject panel;
-    private TextMeshProUGUI status;
+    private const string SeenKey = "research_privacy_prompt_seen_v1";
+    [SerializeField] private Button entryButton;
+    [SerializeField] private GameObject overlay;
+    [SerializeField] private TMP_Text status;
+    [SerializeField] private Button allowButton;
+    [SerializeField] private Button disableButton;
+    [SerializeField] private Button deleteButton;
+    [SerializeField] private Button closeButton;
+    [SerializeField] private RectTransform entryArea;
+    private static MobilePrivacyControls active;
+    private GameObject previousSelection;
+    private float previousTimeScale;
+    private Rect lastSafeArea;
+    private Vector2Int lastScreenSize;
+    public static bool IsOpen => active != null;
+    public bool HasRequiredReferences => entryButton != null && overlay != null && status != null
+        && allowButton != null && disableButton != null && deleteButton != null
+        && closeButton != null && entryArea != null;
 
-    private void OnEnable()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetState() => active = null;
+
+    private void Awake()
     {
-        if (panel != null)
+        if (!HasRequiredReferences)
         {
+            Debug.LogError("Privacy controls prefab has missing UI references.", this);
+            enabled = false;
             return;
         }
+        overlay.SetActive(false);
+        overlay.transform.SetParent(null, false);
+        entryButton.onClick.AddListener(Open);
+        allowButton.onClick.AddListener(AllowAnalytics);
+        disableButton.onClick.AddListener(DisableAnalytics);
+        deleteButton.onClick.AddListener(DeleteAnalytics);
+        closeButton.onClick.AddListener(Close);
+    }
 
-        MobileSafeArea safeArea = GetComponent<MobileSafeArea>();
-        Transform parent = safeArea != null && safeArea.ContentRoot != null
-            ? safeArea.ContentRoot : transform;
+    private void Start()
+    {
+        UpdateEntrySafeArea();
+        if (gameObject.scene.name == "Menu") StartCoroutine(ShowFirstLaunch());
+    }
 
-        Button open = CreateButton(parent, "Privacy", "PRIVACY", new Vector2(-118f, -36f),
-            new Vector2(210f, 56f), new Vector2(1f, 1f), () =>
-            {
-                RefreshStatus();
-                panel.SetActive(true);
-            });
-        open.transform.SetAsLastSibling();
+    private IEnumerator ShowFirstLaunch()
+    {
+        yield return null;
+        while (EventSystem.current == null) yield return null;
+        if (!PlayerPrefs.HasKey(SeenKey)) Open();
+    }
 
-        panel = new GameObject("Privacy Settings", typeof(RectTransform), typeof(Image));
-        panel.transform.SetParent(parent, false);
-        RectTransform rect = (RectTransform)panel.transform;
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = rect.anchorMin;
-        rect.sizeDelta = new Vector2(560f, 350f);
-        panel.GetComponent<Image>().color = new Color(0.07f, 0.08f, 0.12f, 0.97f);
-        status = CreateText(panel.transform, "Consent Status", new Vector2(0f, 115f),
-            new Vector2(520f, 60f));
+    private void Update()
+    {
+        UpdateEntrySafeArea();
+        if (active == this && Input.GetKeyDown(KeyCode.Escape)) Close();
+    }
 
-        CreateButton(panel.transform, "Allow Analytics", "ALLOW ANALYTICS", new Vector2(0f, 48f),
-            new Vector2(440f, 55f), new Vector2(0.5f, 0.5f), () => SetConsent(true));
-        CreateButton(panel.transform, "Disable Analytics", "DISABLE ANALYTICS", new Vector2(0f, -18f),
-            new Vector2(440f, 55f), new Vector2(0.5f, 0.5f), () => SetConsent(false));
-        CreateButton(panel.transform, "Delete Analytics", "DELETE ANALYTICS DATA", new Vector2(0f, -84f),
-            new Vector2(440f, 55f), new Vector2(0.5f, 0.5f), () =>
-            {
-                ResearchAnalyticsBootstrap.RequestPlayerDataDeletion();
-                RefreshStatus();
-            });
-        CreateButton(panel.transform, "Close Privacy", "CLOSE", new Vector2(0f, -145f),
-            new Vector2(240f, 50f), new Vector2(0.5f, 0.5f), () => panel.SetActive(false));
-        panel.SetActive(false);
+    private void UpdateEntrySafeArea()
+    {
+        if (entryArea == null || Screen.width <= 0 || Screen.height <= 0) return;
+        if (lastScreenSize.x == Screen.width && lastScreenSize.y == Screen.height && lastSafeArea == Screen.safeArea) return;
+        lastSafeArea = Screen.safeArea;
+        lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+        entryArea.anchorMin = new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height);
+        entryArea.anchorMax = new Vector2(lastSafeArea.xMax / Screen.width, lastSafeArea.yMax / Screen.height);
+        entryArea.offsetMin = entryArea.offsetMax = Vector2.zero;
+    }
+
+    private void Open()
+    {
+        if (!HasRequiredReferences || IsOpen || ResearchSurveyPrompt.IsOpen ||
+            GauntletReplayPrompt.BlocksSettings || EventSystem.current == null) return;
+        active = this;
+        previousSelection = EventSystem.current.currentSelectedGameObject;
+        previousTimeScale = Time.timeScale;
+        RefreshStatus();
+        overlay.SetActive(true);
+        Time.timeScale = 0f;
+        EventSystem.current.SetSelectedGameObject(closeButton.gameObject);
+    }
+
+    private void AllowAnalytics() => SetConsent(true);
+    private void DisableAnalytics() => SetConsent(false);
+
+    private void DeleteAnalytics()
+    {
+        ResearchAnalyticsBootstrap.RequestPlayerDataDeletion();
+        RefreshStatus();
     }
 
     private void SetConsent(bool granted)
     {
         ResearchAnalyticsBootstrap.SetAnalyticsConsent(granted);
+        MarkSeen();
         RefreshStatus();
+    }
+
+    private static void MarkSeen()
+    {
+        PlayerPrefs.SetInt(SeenKey, 1);
+        PlayerPrefs.Save();
     }
 
     private void RefreshStatus()
@@ -63,40 +116,32 @@ public sealed class MobilePrivacyControls : MonoBehaviour
             ? "Research analytics: ON" : "Research analytics: OFF";
     }
 
-    private static TextMeshProUGUI CreateText(Transform parent, string name,
-        Vector2 position, Vector2 size)
+    private void Close()
     {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer),
-            typeof(TextMeshProUGUI));
-        go.transform.SetParent(parent, false);
-        RectTransform rect = (RectTransform)go.transform;
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = position;
-        rect.sizeDelta = size;
-        TextMeshProUGUI text = go.GetComponent<TextMeshProUGUI>();
-        text.fontSize = 27f;
-        text.color = Color.white;
-        text.alignment = TextAlignmentOptions.Center;
-        text.raycastTarget = false;
-        return text;
+        MarkSeen();
+        Release();
     }
 
-    private static Button CreateButton(Transform parent, string name, string caption,
-        Vector2 position, Vector2 size, Vector2 anchor, UnityEngine.Events.UnityAction action)
+    private void OnDisable() => Release();
+
+    private void Release()
     {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-        go.transform.SetParent(parent, false);
-        RectTransform rect = (RectTransform)go.transform;
-        rect.anchorMin = rect.anchorMax = anchor;
-        rect.anchoredPosition = position;
-        rect.sizeDelta = size;
-        Image image = go.GetComponent<Image>();
-        image.color = new Color(0.18f, 0.25f, 0.36f, 1f);
-        Button button = go.GetComponent<Button>();
-        button.onClick.AddListener(action);
-        TextMeshProUGUI label = CreateText(go.transform, "Label", Vector2.zero, size);
-        label.text = caption;
-        label.fontSize = 23f;
-        return button;
+        if (active != this) return;
+        active = null;
+        if (overlay != null) overlay.SetActive(false);
+        Time.timeScale = previousTimeScale;
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(previousSelection != null && previousSelection.activeInHierarchy
+                ? previousSelection : null);
+    }
+
+    private void OnDestroy()
+    {
+        if (entryButton != null) entryButton.onClick.RemoveListener(Open);
+        if (allowButton != null) allowButton.onClick.RemoveListener(AllowAnalytics);
+        if (disableButton != null) disableButton.onClick.RemoveListener(DisableAnalytics);
+        if (deleteButton != null) deleteButton.onClick.RemoveListener(DeleteAnalytics);
+        if (closeButton != null) closeButton.onClick.RemoveListener(Close);
+        if (overlay != null && overlay.transform.parent == null) Destroy(overlay);
     }
 }

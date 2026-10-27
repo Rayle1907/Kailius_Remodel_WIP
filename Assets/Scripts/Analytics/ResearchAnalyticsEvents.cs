@@ -1,5 +1,49 @@
 using Unity.Services.Analytics;
 
+internal abstract class ResearchSurveyEvent : Unity.Services.Analytics.Event
+{
+    protected ResearchSurveyEvent(string eventName, ResearchSurveyResponse response) : base(eventName)
+    {
+        SetParameter("survey_id", response.SurveyId);
+        SetParameter("survey_version", ResearchSurveyResponse.Version);
+        SetParameter("playthrough_id", response.PlaythroughId);
+        SetParameter("offer_variant", response.OfferVariant);
+        SetParameter("experiment_version", response.ExperimentVersion);
+        SetParameter("scene_name", response.SceneName);
+    }
+}
+
+internal sealed class SurveyInvitationShownEvent : ResearchSurveyEvent
+{
+    public SurveyInvitationShownEvent(ResearchSurveyResponse response)
+        : base("survey_invitation_shown", response) { }
+}
+
+internal sealed class SurveyInvitationResolvedEvent : ResearchSurveyEvent
+{
+    public SurveyInvitationResolvedEvent(ResearchSurveyResponse response, bool accepted)
+        : base("survey_invitation_resolved", response)
+    {
+        SetParameter("survey_invitation_response", accepted ? "accepted" : "declined");
+    }
+}
+
+internal sealed class SurveySubmittedEvent : ResearchSurveyEvent
+{
+    public SurveySubmittedEvent(ResearchSurveyResponse response) : base("survey_submitted", response)
+    {
+        if (response.AnsweredCount == 0) throw new System.ArgumentException("A submission needs at least one answer.", nameof(response));
+        for (int index = 0; index < ResearchSurveyResponse.ItemCount; index++)
+        {
+            int? answer = response.Answer(index);
+            if (answer.HasValue) SetParameter(ResearchSurveyResponse.ParameterName(index), answer.Value);
+        }
+        SetParameter("survey_answered_count", response.AnsweredCount);
+        SetParameter("survey_pxi_answered_count", response.PxiAnsweredCount);
+        SetParameter("survey_complete", response.Complete);
+    }
+}
+
 internal sealed class GauntletRunStartedEvent : Unity.Services.Analytics.Event
 {
     public GauntletRunStartedEvent() : base("gauntlet_run_started") { }

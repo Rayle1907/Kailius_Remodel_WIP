@@ -90,11 +90,13 @@ public sealed class InGameSettings : MonoBehaviour
 
     private void Update()
     {
+        if (ResearchSurveyPrompt.IsOpen || MobilePrivacyControls.IsOpen) return;
         if (!GauntletReplayPrompt.BlocksSettings && menu != null && Input.GetKeyDown(KeyCode.Escape)) Toggle();
     }
 
     public void Toggle()
     {
+        if (ResearchSurveyPrompt.IsOpen || MobilePrivacyControls.IsOpen) return;
         if (GauntletReplayPrompt.BlocksSettings) return;
         if (isOpen)
         {
@@ -154,6 +156,15 @@ public sealed class InGameSettings : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
+        if (transitioning || ResearchSurveyPrompt.IsOpen) return;
+        if (Application.CanStreamedLevelBeLoaded("Menu") && GauntletRunTracker.Instance != null
+            && GauntletRunTracker.Instance.IsCurrentSceneGauntlet)
+        {
+            GauntletRunTracker.Instance.RecordPostDecisionOutcome("returned_to_menu");
+            GauntletRunTracker.Instance.EndCurrentRun("returned_to_menu");
+        }
+        if (ResearchSurvey.TryShowInvitation(() => Leave("Menu", "returned_to_menu"),
+            resume.GetComponentInChildren<TMP_Text>(true).font)) return;
         Leave("Menu", "returned_to_menu");
     }
 
