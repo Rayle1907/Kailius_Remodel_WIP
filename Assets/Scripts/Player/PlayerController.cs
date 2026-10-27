@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour {
     public event System.Action<Transform> CheckpointRespawned;
     public Transform CurrentRespawnCheckpoint => currentRespawn;
 
+    public SpikeRecovery SpikeRecovery { get; private set; }
+
     public float moveSpeed;
     public float jumpHeight;
   
@@ -40,6 +42,8 @@ public class PlayerController : MonoBehaviour {
     private bool isMoving;
 
     void Awake() {
+        SpikeRecovery = GetComponent<SpikeRecovery>();
+        if (SpikeRecovery == null) SpikeRecovery = gameObject.AddComponent<SpikeRecovery>();
         body = GetComponent<Rigidbody2D>();
         mainCollider = GetComponent<Collider2D>();
         playerAnimator = GetComponent<Animator>();
@@ -57,7 +61,7 @@ public class PlayerController : MonoBehaviour {
 
         if(!dead && !controllerMobile.activeSelf) {
 
-            if (Time.timeScale <= 0f) return;
+            if (Time.timeScale <= 0f || SpikeRecovery.IsMovementLocked) return;
 
             canJump = jumpController.getJump();
             canDoubleJump = jumpController.getDoubleJump();
@@ -266,6 +270,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void Revive() {
+        SpikeRecovery.ResetRecovery();
         dead = false;
     }
 

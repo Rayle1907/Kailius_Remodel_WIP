@@ -16,6 +16,19 @@ public class MoveByTouch : MonoBehaviour {
     public Joystick joystick;
     public ParticleSystem dust;
 
+    private SpikeRecovery spikeRecovery;
+
+    private void Awake() {
+        spikeRecovery = GetComponent<SpikeRecovery>();
+    }
+
+    private bool RecoveryBlocksMovement {
+        get {
+            if (spikeRecovery == null) spikeRecovery = GetComponent<SpikeRecovery>();
+            return spikeRecovery != null && spikeRecovery.IsMovementLocked;
+        }
+    }
+
     private bool canJump;
     private bool canDoubleJump;
     private bool rotacionA = false;
@@ -29,7 +42,7 @@ public class MoveByTouch : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if (Time.timeScale <= 0f) return;
+        if (Time.timeScale <= 0f || RecoveryBlocksMovement) return;
         if (ControlesMoviles.activeSelf) {
             canJump = GetComponentInChildren<PlayerControllerUP>().getJump();
             canDoubleJump = GetComponentInChildren<PlayerControllerUP>().getDoubleJump();
@@ -69,7 +82,7 @@ public class MoveByTouch : MonoBehaviour {
     }
 
     public void saltar() {
-        if (Time.timeScale <= 0f) return;
+        if (Time.timeScale <= 0f || RecoveryBlocksMovement) return;
         if (ControlesMoviles.activeSelf) {
             if (canJump) {
                 CreateDust();

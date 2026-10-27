@@ -18138,6 +18138,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 25
+  recoveryMode: 1
+  localRecoveryTiles:
+  - {fileID: 11400000, guid: eac8f6a75f838024081e33df39517378, type: 2}
+  safePosition: {fileID: 0}
+  recoveryPoints: []
+  spikeDamage: 50
 --- !u!1 &2728079665457413511
 GameObject:
   m_ObjectHideFlags: 0

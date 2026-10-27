@@ -142,6 +142,7 @@ public class Stats : MonoBehaviour {
         }
 
         if(healthBefore > 0 && health == 0) {
+            GetComponentInParent<SpikeRecovery>()?.ResetRecovery();
             deathRecorded = true;
             ResetFury();
             HandleDeath(string.IsNullOrWhiteSpace(cause) ? "unknown" : cause, healthBefore);
