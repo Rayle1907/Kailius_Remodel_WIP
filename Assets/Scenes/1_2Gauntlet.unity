@@ -1289,12 +1289,12 @@ PrefabInstance:
     - target: {fileID: 4930142433679705523, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -30.08
+      value: -53.14
       objectReference: {fileID: 0}
     - target: {fileID: 4930142433679705523, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -19.13
+      value: -19.08
       objectReference: {fileID: 0}
     - target: {fileID: 4930142433679705523, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
         type: 3}
@@ -1345,6 +1345,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardSourceId
       value: cc7c4dd1877d573c9103e5e4814db07f
+      objectReference: {fileID: 0}
+    - target: {fileID: 4930142433679705527, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
+        type: 3}
+      propertyPath: isSectionRecoveryChest
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2213,12 +2218,12 @@ PrefabInstance:
     - target: {fileID: 6320161623713302214, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 1
+      value: 1.3
       objectReference: {fileID: 0}
     - target: {fileID: 6320161623713302214, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 1
+      value: 1.3
       objectReference: {fileID: 0}
     - target: {fileID: 6320161623713302214, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
@@ -4096,6 +4101,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Traps
   damage: 25
+  recoveryMode: 1
+  localRecoveryTiles:
+  - {fileID: 11400000, guid: eac8f6a75f838024081e33df39517378, type: 2}
+  safePosition: {fileID: 0}
+  recoveryPoints:
+  - cell: {x: 138, y: 1, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 139, y: 1, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 140, y: 1, z: 0}
+    safePosition: {fileID: 908700002}
+  spikeDamage: 50
 --- !u!4 &1936823270 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: d28feac6a625417aa7183198b3b58d72,
@@ -22230,6 +22247,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 25
+  recoveryMode: 1
+  localRecoveryTiles:
+  - {fileID: 11400000, guid: eac8f6a75f838024081e33df39517378, type: 2}
+  safePosition: {fileID: 0}
+  recoveryPoints:
+  - cell: {x: 138, y: 1, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 139, y: 1, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 140, y: 1, z: 0}
+    safePosition: {fileID: 908700002}
+  spikeDamage: 50
 --- !u!1839735485 &2728079664890703129
 Tilemap:
   m_ObjectHideFlags: 0
@@ -23278,7 +23307,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 908700002}
   m_Father: {fileID: 2728079664934844043}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!19719996 &2728079664890703135
@@ -27751,3 +27781,34 @@ SceneRoots:
   - {fileID: 950000001}
   - {fileID: 540955801}
   - {fileID: 910607397}
+--- !u!1 &908700001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 908700002}
+  m_Layer: 0
+  m_Name: SpikeRecoveryLedge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &908700002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 908700001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 135, y: -7.75, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2728079664890703131}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

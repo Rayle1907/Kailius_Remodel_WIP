@@ -186,7 +186,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af6f14625523bbf448fe0ce8210d13c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackDamage: 20
+  attackDamage: 45
   attackOffset: {x: 0, y: 0, z: 0}
   attackRange: 2.2
   attackMask:
@@ -204,7 +204,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 500
+  health: 650
   timeDestroy: 1.5
   animator: {fileID: 8676605311916295584}
   sonidoMuerte: {fileID: 2812445330462051315, guid: 31a6ac8d64cd5904a9107b5706f1c6a4,

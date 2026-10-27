@@ -8630,7 +8630,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 908700002}
+  - {fileID: 908700004}
   m_Father: {fileID: 771080512}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!483693784 &777738961
@@ -8852,6 +8854,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 25
+  recoveryMode: 1
+  localRecoveryTiles:
+  - {fileID: 11400000, guid: eac8f6a75f838024081e33df39517378, type: 2}
+  safePosition: {fileID: 0}
+  recoveryPoints:
+  - cell: {x: 52, y: -10, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 53, y: -10, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 54, y: -10, z: 0}
+    safePosition: {fileID: 908700002}
+  - cell: {x: 55, y: -10, z: 0}
+    safePosition: {fileID: 908700004}
+  - cell: {x: 56, y: -10, z: 0}
+    safePosition: {fileID: 908700004}
+  - cell: {x: 57, y: -10, z: 0}
+    safePosition: {fileID: 908700004}
+  spikeDamage: 50
 --- !u!19719996 &777738964
 TilemapCollider2D:
   m_ObjectHideFlags: 0
@@ -10592,11 +10612,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8676605311916295588, guid: bf30cc82774b4f64a86585367cf9b1bf,
-        type: 3}
-      propertyPath: attackDamage
-      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 8676605311916295589, guid: bf30cc82774b4f64a86585367cf9b1bf,
         type: 3}
@@ -30525,11 +30540,6 @@ PrefabInstance:
       propertyPath: attackRange
       value: 2.2
       objectReference: {fileID: 0}
-    - target: {fileID: 8676605311916295588, guid: bf30cc82774b4f64a86585367cf9b1bf,
-        type: 3}
-      propertyPath: attackDamage
-      value: 35
-      objectReference: {fileID: 0}
     - target: {fileID: 8676605311916295589, guid: bf30cc82774b4f64a86585367cf9b1bf,
         type: 3}
       propertyPath: player
@@ -35374,3 +35384,65 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name:
   m_EditorClassIdentifier:
+--- !u!1 &908700001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 908700002}
+  m_Layer: 0
+  m_Name: SpikeRecoveryLeft
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &908700002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 908700001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 49.5, y: -4.75, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 777738960}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &908700003
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 908700004}
+  m_Layer: 0
+  m_Name: SpikeRecoveryRight
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &908700004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 908700003}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 59.5, y: -4.75, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 777738960}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
