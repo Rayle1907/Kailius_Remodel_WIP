@@ -7,20 +7,12 @@ using UnityEngine.UI;
 public sealed class ReviveOnboardingPresenter : MonoBehaviour
 {
     public enum TutorialState { Typing, AwaitingDismissal, Dismissed }
-    public enum PlacementMode { Manual, AutomaticBesideOffer }
     public const string IntroductionPageOne = "<b>A spark remains.</b>\n\nYou carry 100 Embers. When you fall, spend them to rise at your last checkpoint with your health restored.";
     public const string IntroductionPageTwo = "Each offer of another chance demands more Embers. Those you keep remain with you between runs.\n\nYou may always begin the gauntlet again, at no cost.";
     public const string Introduction = IntroductionPageOne + "\n\n" + IntroductionPageTwo;
 
     [SerializeField] private RectTransform content;
     [SerializeField] private RectTransform layoutRoot;
-    [Header("Tutorial layout")]
-    [Tooltip("Manual: move LayoutRoot with the Rect tool (T) in the prefab, then save. Its position, anchors and scale are preserved. Automatic Beside Offer: use the offset and screen fitting settings below.")]
-    [SerializeField] private PlacementMode placement = PlacementMode.AutomaticBesideOffer;
-    [Tooltip("Offset from the automatic left-side placement, in canvas units.")]
-    [SerializeField] private Vector2 positionOffset;
-    [Tooltip("Shrink the tutorial to fit the safe area. Never enlarges Content or changes its authored scale.")]
-    [SerializeField] private bool autoFitToScreen = true;
     [SerializeField] private Image instructor;
     [SerializeField] private Image dialogueBox;
     [SerializeField] private TextMeshProUGUI introductionText;
@@ -38,35 +30,51 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
     private int characterCount;
     private bool inputArmed;
     private bool showing;
-    private RectTransform offerPanel;
-    private Canvas canvas;
-    private RectTransform[] contentRects;
-    private readonly Vector3[] corners = new Vector3[4];
+    private bool applicationPaused;
+    private bool applicationFocused;
+    private bool waitingForInputRelease;
+    private int interruptionFrame;
 
-    public Vector2 PositionOffset
+    private void Awake() => applicationFocused = Application.isFocused;
+
+    private void OnApplicationPause(bool paused)
     {
-        get => positionOffset;
-        set { positionOffset = value; RefreshLayout(); }
+        applicationPaused = paused;
+        ResetInterruptionInput();
     }
-    public bool AutoFitToScreen
+
+    private void OnApplicationFocus(bool focused)
     {
-        get => autoFitToScreen;
-        set { autoFitToScreen = value; RefreshLayout(); }
+        applicationFocused = focused;
+        ResetInterruptionInput();
     }
+
+    private void ResetInterruptionInput()
+    {
+        if (!showing) return;
+        inputArmed = false;
+        waitingForInputRelease = true;
+        interruptionFrame = Time.frameCount;
+    }
+    private RectTransform offerPanel;
+    private Rect lastSafeArea;
+    private Vector2Int lastScreenSize;
+    private bool offerWasVisible;
 
     public void Show(TMP_FontAsset font, RectTransform panel, Action onDismissed)
     {
+        RestoreOffer();
         dismissed = onDismissed;
         offerPanel = panel;
-        canvas = GetComponentInParent<Canvas>();
-        contentRects = content.GetComponentsInChildren<RectTransform>(true);
         introductionText.font = continuationPrompt.font = font;
         content.gameObject.SetActive(true);
         inputBlocker.raycastTarget = true;
         CurrentPage = 0;
         showing = true;
-        BeginPage();
         RefreshLayout();
+        BeginPage();
+        offerWasVisible = panel != null && !transform.IsChildOf(panel) && panel.gameObject.activeSelf;
+        if (offerWasVisible) panel.gameObject.SetActive(false);
     }
 
     private void BeginPage()
@@ -85,8 +93,8 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
 
     private void Update()
     {
-        if (!showing) return;
-        RefreshLayout();
+        if (!showing || applicationPaused || !applicationFocused) return;
+        if (lastSafeArea != Screen.safeArea || lastScreenSize.x != Screen.width || lastScreenSize.y != Screen.height) RefreshLayout();
         Advance(Time.unscaledDeltaTime, DismissalInputHeld(), DismissalInputPressed());
     }
 
@@ -94,6 +102,12 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
     public void Advance(float unscaledSeconds, bool inputHeld, bool inputPressed)
     {
         if (!showing || State == TutorialState.Dismissed) return;
+        if (waitingForInputRelease)
+        {
+            if (Time.frameCount <= interruptionFrame || inputHeld || inputPressed) return;
+            waitingForInputRelease = false;
+            return;
+        }
         if (State == TutorialState.Typing)
         {
             elapsed += Mathf.Max(0f, unscaledSeconds);
@@ -116,6 +130,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         }
         State = TutorialState.Dismissed;
         content.gameObject.SetActive(false);
+        RestoreOffer();
         Action callback = dismissed;
         dismissed = null;
         callback?.Invoke();
@@ -135,64 +150,39 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
 
     public void RefreshLayout()
     {
-        if (placement == PlacementMode.Manual) return;
-        if (!showing || State == TutorialState.Dismissed || offerPanel == null || canvas == null || layoutRoot == null) return;
+        if (!showing || layoutRoot == null) return;
         RectTransform root = (RectTransform)transform;
-        Camera camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(root, Screen.safeArea.min, camera, out Vector2 min);
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(root, Screen.safeArea.max, camera, out Vector2 max);
-        // Measure authored child rectangles, including the hidden continuation prompt.
-        // Converting into wrapper space cancels its runtime scale and preserves Content edits.
-        Vector2 boundsMin = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
-        Vector2 boundsMax = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
-        foreach (RectTransform rect in contentRects)
-        {
-            if (rect == null) continue;
-            rect.GetWorldCorners(corners);
-            foreach (Vector3 corner in corners)
-            {
-                Vector2 point = layoutRoot.InverseTransformPoint(corner);
-                boundsMin = Vector2.Min(boundsMin, point);
-                boundsMax = Vector2.Max(boundsMax, point);
-            }
-        }
-        Vector2 size = boundsMax - boundsMin;
-        float scale = autoFitToScreen
-            ? Mathf.Min(1f, Mathf.Max(0.001f, Mathf.Min((max.x - min.x) / Mathf.Max(1f, size.x), (max.y - min.y) / Mathf.Max(1f, size.y))))
-            : 1f;
-        layoutRoot.localScale = Vector3.one * scale;
+        lastSafeArea = Screen.safeArea;
+        lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+        if (Screen.width > 0 && Screen.height > 0)
+            MobileDialogLayout.Place(root,
+                new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height),
+                new Vector2(lastSafeArea.xMax / Screen.width, lastSafeArea.yMax / Screen.height));
+        MobileDialogLayout.Place(layoutRoot, Vector2.zero, Vector2.one);
+        MobileDialogLayout.Panel(content);
+        MobileDialogLayout.Place(dialogueBox.rectTransform, new Vector2(0.2f, 0f), Vector2.one);
+        MobileDialogLayout.Place(instructor.rectTransform, new Vector2(0f, 0.12f), new Vector2(0.22f, 0.58f));
+        instructor.preserveAspect = true;
+        MobileDialogLayout.Text(introductionText, MobileDialogLayout.BodySize);
+        introductionText.alignment = TextAlignmentOptions.TopLeft;
+        MobileDialogLayout.Place(introductionText.rectTransform, new Vector2(0.1f, 0.2f), new Vector2(0.9f, 0.88f));
+        MobileDialogLayout.Text(continuationPrompt, MobileDialogLayout.SecondarySize);
+        continuationPrompt.transform.SetParent(content, false);
+        continuationPrompt.color = Color.white;
+        continuationPrompt.alignment = TextAlignmentOptions.Center;
+        MobileDialogLayout.Place(continuationPrompt.rectTransform, new Vector2(0.24f, 0.01f), new Vector2(0.98f, 0.10f));
+        inputBlocker.color = new Color(0f, 0f, 0f, 0.85f);
+    }
 
-        offerPanel.GetWorldCorners(corners);
-        float panelLeft = float.PositiveInfinity;
-        float panelBottom = float.PositiveInfinity, panelTop = float.NegativeInfinity;
-        foreach (Vector3 corner in corners)
-        {
-            Vector3 point = root.InverseTransformPoint(corner);
-            panelLeft = Mathf.Min(panelLeft, point.x);
-            panelBottom = Mathf.Min(panelBottom, point.y);
-            panelTop = Mathf.Max(panelTop, point.y);
-        }
-        dialogueBox.rectTransform.GetWorldCorners(corners);
-        float dialogueMinX = float.PositiveInfinity, dialogueMaxX = float.NegativeInfinity;
-        foreach (Vector3 corner in corners)
-        {
-            float x = layoutRoot.InverseTransformPoint(corner).x;
-            dialogueMinX = Mathf.Min(dialogueMinX, x);
-            dialogueMaxX = Mathf.Max(dialogueMaxX, x);
-        }
-        Vector2 position = new Vector2(
-            panelLeft + (dialogueMaxX - dialogueMinX) * scale * 0.1f - dialogueMaxX * scale,
-            (panelBottom + panelTop) * 0.5f - (boundsMin.y + boundsMax.y) * scale * 0.5f) + positionOffset;
-        if (autoFitToScreen)
-        {
-            position.x = Mathf.Clamp(position.x, min.x - boundsMin.x * scale, max.x - boundsMax.x * scale);
-            position.y = Mathf.Clamp(position.y, min.y - boundsMin.y * scale, max.y - boundsMax.y * scale);
-        }
-        layoutRoot.position = root.TransformPoint(position);
+    private void RestoreOffer()
+    {
+        if (offerWasVisible && offerPanel != null) offerPanel.gameObject.SetActive(true);
+        offerWasVisible = false;
     }
 
     public void Close()
     {
+        RestoreOffer();
         showing = false;
         dismissed = null;
         offerPanel = null;
@@ -201,7 +191,10 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
 
     private void OnDisable()
     {
+        RestoreOffer();
         showing = false;
         dismissed = null;
+        waitingForInputRelease = false;
+        interruptionFrame = 0;
     }
 }
