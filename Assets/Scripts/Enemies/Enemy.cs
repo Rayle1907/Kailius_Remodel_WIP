@@ -86,7 +86,7 @@ public class Enemy : MonoBehaviour {
     void dropItems() {
         int numCoins = Random.Range(1, maxCoins);
         int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
-            ? GauntletHealthDropRules.GetEnemyHeartCount(Random.Range(0, 100))
+            ? 0
             : Random.Range(0, maxHearts);
         bool canDropUpgrades = GauntletProgress.TrySpendUpgrade(gameObject.scene.name, rewardSourceId);
         int numSwords = canDropUpgrades ? Random.Range(0, maxSwords) : 0;
