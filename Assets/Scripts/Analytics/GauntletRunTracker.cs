@@ -106,20 +106,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
         TryRecordDuringShutdown(() => EndCurrentRun("application_quit"));
     }
 
-    private void OnApplicationPause(bool paused)
-    {
-        if (!paused || pendingOffer == null || pendingOffer.Resolved)
-        {
-            return;
-        }
-
-        // Backgrounding can be the only observable indication that the app
-        // was closed while a revive offer was open. Resolution remains
-        // best-effort because the operating system may suspend the process
-        // before Unity Analytics can upload the event.
-        TryRecordDuringShutdown(() => ResolveOffer("quit"));
-    }
-
     private static void TryRecordDuringShutdown(Action recordAction)
     {
         try
