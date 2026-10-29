@@ -1714,12 +1714,12 @@ PrefabInstance:
     - target: {fileID: 6320161622774438905, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
       propertyPath: m_fontSize
-      value: 33.333332
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 6320161622774438905, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
       propertyPath: m_fontSizeBase
-      value: 33.333332
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 6320161622774438905, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
@@ -2016,12 +2016,12 @@ PrefabInstance:
     - target: {fileID: 6320161622774438905, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
       propertyPath: m_fontSize
-      value: 33.333332
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 6320161622774438905, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}
       propertyPath: m_fontSizeBase
-      value: 33.333332
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 6320161622774438905, guid: 5371a829583918b439d1ee619bbe0485,
         type: 3}

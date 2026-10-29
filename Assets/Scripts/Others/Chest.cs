@@ -20,6 +20,7 @@ public class Chest : MonoBehaviour {
     public int maxSwords = 2;
     public int maxShields = 2;
     [SerializeField] private string rewardSourceId;
+    [SerializeField] private bool isSectionRecoveryChest;
 
     private bool range = false;
     private bool open = true;
@@ -51,8 +52,8 @@ public class Chest : MonoBehaviour {
         int numCoins = Random.Range(1, maxCoins);
         int numGems = Random.Range(1, maxGems);
         int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
-            ? GauntletHealthDropRules.GetChestHeartCount(Random.Range(0, 100))
-            : Random.Range(1, maxHearts);
+            ? GauntletHealthDropRules.GetChestHeartCount(isSectionRecoveryChest)
+            : OpenWorldChestProgress.IsOpenWorldScene(gameObject.scene.name) ? 1 : Random.Range(1, maxHearts);
         bool canDropUpgrades = GauntletProgress.TrySpendUpgrade(gameObject.scene.name, rewardSourceId);
         int numSwords = canDropUpgrades ? Random.Range(0, maxSwords) : 0;
         int numShields = canDropUpgrades ? Random.Range(0, maxShields) : 0;
