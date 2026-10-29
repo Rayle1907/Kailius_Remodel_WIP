@@ -58,7 +58,7 @@ public static class CodexAndroidBuild
         }
     }
 
-    [MenuItem("Tools/Build/Scene 1 Playtest APK")]
+    [MenuItem("Tools/Build/Kailius Playtest APK")]
     public static void BuildScene1Only()
     {
         const string outputDir = "Builds/Android";
@@ -86,7 +86,7 @@ public static class CodexAndroidBuild
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.kailius.gauntlet11");
-        PlayerSettings.productName = "Kailius Scene 1 Test";
+        PlayerSettings.productName = "Kailius";
         EditorUserBuildSettings.buildAppBundle = false;
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
         PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;

@@ -38,6 +38,7 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         }
         overlay.SetActive(false);
         overlay.transform.SetParent(null, false);
+        MobileDialogLayout.Configure(overlay);
         entryButton.onClick.AddListener(Open);
         allowButton.onClick.AddListener(AllowAnalytics);
         disableButton.onClick.AddListener(DisableAnalytics);

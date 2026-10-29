@@ -13,7 +13,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 
     public static bool IsReady { get; private set; }
     public static bool IsShuttingDown { get; private set; }
-    public static bool HasAnalyticsConsent => PlayerPrefs.GetInt(ConsentKey, 0) == 1;
+    public static bool HasAnalyticsConsent => PlayerPrefs.GetInt(ConsentKey, 1) == 1;
     public static double SessionElapsedSeconds => Time.realtimeSinceStartupAsDouble - sessionStartedAt;
     public static event Action AnalyticsReady;
 
@@ -142,11 +142,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 
     private static void ApplyStoredConsentBeforeInitialization()
     {
-#if UNITY_EDITOR
-        ApplyConsent(true);
-#else
-        ApplyConsent(PlayerPrefs.GetInt(ConsentKey, 0) == 1);
-#endif
+        ApplyConsent(HasAnalyticsConsent);
     }
 
     private static void ApplyConsent(bool granted)

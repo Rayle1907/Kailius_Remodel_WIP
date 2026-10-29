@@ -67,16 +67,17 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 300;
-        CanvasScaler scaler = root.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+        MobileDialogLayout.Configure(root);
         GameObject blocker = new GameObject("Survey Input Blocker", typeof(RectTransform), typeof(Image));
         blocker.transform.SetParent(root.transform, false);
         blocker.GetComponent<Image>().color = PanelColor;
         blocker.AddComponent<MobileSafeAreaFullScreen>();
         Stretch((RectTransform)blocker.transform, Vector2.zero, Vector2.one);
-        prompt.content = root.AddComponent<MobileSafeArea>().ContentRoot;
+        RectTransform safeArea = root.AddComponent<MobileSafeArea>().ContentRoot;
+        RectTransform panel = (RectTransform)new GameObject("Survey Content", typeof(RectTransform)).transform;
+        panel.SetParent(safeArea, false);
+        MobileDialogLayout.Panel(panel, true);
+        prompt.content = panel;
         Time.timeScale = 0f;
         prompt.ShowInvitation();
         return true;
@@ -85,11 +86,11 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
     private void ShowInvitation()
     {
         Text("Survey invitation", "Would you like to answer a short survey?",
-            new Vector2(0.08f, 0.59f), new Vector2(0.92f, 0.82f), 54f);
+            new Vector2(0.08f, 0.72f), new Vector2(0.92f, 0.94f), MobileDialogLayout.HeadingSize);
         Text("Survey description", "15 questions about your experience. About 3-5 minutes.\nYou may leave questions unanswered and submit the answers you have given.",
-            new Vector2(0.12f, 0.37f), new Vector2(0.88f, 0.59f), 32f);
-        Button accept = Button("Answer survey", new Vector2(0.12f, 0.18f), new Vector2(0.48f, 0.31f), () => ResolveInvitation(true));
-        Button("No thanks", new Vector2(0.52f, 0.18f), new Vector2(0.88f, 0.31f), () => ResolveInvitation(false));
+            new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.69f), MobileDialogLayout.BodySize);
+        Button accept = Button("Answer survey", new Vector2(0.08f, 0.12f), new Vector2(0.48f, 0.29f), () => ResolveInvitation(true));
+        Button("No thanks", new Vector2(0.52f, 0.12f), new Vector2(0.92f, 0.29f), () => ResolveInvitation(false));
         ConfigureNavigation(buttons);
         EventSystem.current.SetSelectedGameObject(accept.gameObject);
     }
@@ -103,6 +104,11 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
             Close();
             return;
         }
+        ShowQuestionnaire();
+    }
+
+    private void ShowQuestionnaire()
+    {
         questionnaire = true;
         buttons.Clear();
         foreach (Transform child in content)
@@ -110,25 +116,26 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
             child.gameObject.SetActive(false);
             Destroy(child.gameObject);
         }
-        heading = Text("Survey progress", "", new Vector2(0.04f, 0.88f), new Vector2(0.96f, 0.97f), 36f);
-        question = Text("Survey question", "", new Vector2(0.05f, 0.68f), new Vector2(0.95f, 0.86f), 44f);
+        heading = Text("Survey progress", "", new Vector2(0.02f, 0.92f), new Vector2(0.98f, 0.99f), MobileDialogLayout.SecondarySize);
+        question = Text("Survey question", "", new Vector2(0.02f, 0.80f), new Vector2(0.98f, 0.91f), MobileDialogLayout.BodySize);
         for (int index = 0; index < choices.Length; index++)
         {
             int value = index - 3;
-            float left = 0.035f + index * 0.134f;
-            choices[index] = Button(ResponseLabels[index], new Vector2(left, 0.39f),
-                new Vector2(left + 0.126f, 0.63f), () => Choose(value), 27f);
+            bool firstRow = index < 4;
+            float left = firstRow ? 0.035f + index * 0.235f : 0.1525f + (index - 4) * 0.235f;
+            choices[index] = Button(ResponseLabels[index], new Vector2(left, firstRow ? 0.51f : 0.285f),
+                new Vector2(left + 0.225f, firstRow ? 0.72f : 0.495f), () => Choose(value));
         }
-        status = Text("Survey status", "", new Vector2(0.04f, 0.30f), new Vector2(0.96f, 0.38f), 27f);
-        back = Button("Back", new Vector2(0.04f, 0.19f), new Vector2(0.23f, 0.28f), () => Move(-1));
-        clear = Button("Clear answer", new Vector2(0.28f, 0.19f), new Vector2(0.49f, 0.28f), () =>
+        status = Text("Survey status", "", new Vector2(0.02f, 0.735f), new Vector2(0.98f, 0.795f), MobileDialogLayout.SecondarySize);
+        back = Button("Back", new Vector2(0.035f, 0.15f), new Vector2(0.26f, 0.275f), () => Move(-1));
+        clear = Button("Clear answer", new Vector2(0.30f, 0.15f), new Vector2(0.70f, 0.275f), () =>
         {
             response.SetAnswer(questionIndex, null);
             Refresh();
         });
-        next = Button("Next", new Vector2(0.75f, 0.19f), new Vector2(0.96f, 0.28f), () => Move(1));
-        Button("Leave without submitting", new Vector2(0.04f, 0.06f), new Vector2(0.46f, 0.15f), ShowLeaveConfirmation);
-        submit = Button("Submit answers so far", new Vector2(0.50f, 0.06f), new Vector2(0.96f, 0.15f), Submit);
+        next = Button("Next", new Vector2(0.74f, 0.15f), new Vector2(0.965f, 0.275f), () => Move(1));
+        Button("Leave without submitting", new Vector2(0.035f, 0.015f), new Vector2(0.48f, 0.14f), ShowLeaveConfirmation);
+        submit = Button("Submit answers so far", new Vector2(0.52f, 0.015f), new Vector2(0.965f, 0.14f), Submit);
         Refresh();
         EventSystem.current.SetSelectedGameObject(choices[0].gameObject);
     }
@@ -192,7 +199,7 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
         Transform originalContent = content;
         content = overlay.transform;
         int previousButtonCount = buttons.Count;
-        Text("Leave survey", "Leave without submitting your answers?", new Vector2(0.1f, 0.55f), new Vector2(0.9f, 0.8f), 44f);
+        Text("Leave survey", "Leave without submitting your answers?", new Vector2(0.1f, 0.5f), new Vector2(0.9f, 0.85f), MobileDialogLayout.BodySize);
         cancelLeave = () =>
         {
             leaveConfirmation = null;
@@ -203,8 +210,8 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
             Refresh();
             EventSystem.current.SetSelectedGameObject(submit.interactable ? submit.gameObject : choices[0].gameObject);
         };
-        Button keep = Button("Keep answering", new Vector2(0.1f, 0.25f), new Vector2(0.48f, 0.4f), () => cancelLeave?.Invoke());
-        Button leave = Button("Leave without submitting", new Vector2(0.52f, 0.25f), new Vector2(0.9f, 0.4f), Close);
+        Button keep = Button("Keep answering", new Vector2(0.08f, 0.22f), new Vector2(0.48f, 0.39f), () => cancelLeave?.Invoke());
+        Button leave = Button("Leave without submitting", new Vector2(0.52f, 0.22f), new Vector2(0.92f, 0.39f), Close);
         ConfigureNavigation(new[] { keep, leave });
         content = originalContent;
         EventSystem.current.SetSelectedGameObject(keep.gameObject);
@@ -245,15 +252,17 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
         text.text = value;
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Center;
-        text.enableAutoSizing = true;
-        text.fontSizeMin = 18f;
-        text.fontSizeMax = size;
-        text.fontSize = size;
+        MobileDialogLayout.Text(text, size);
+        if (name != "Label")
+        {
+            MobileDialogLayout.ReadingArea(text, content, min, max);
+            MobileDialogLayout.Text(text, size);
+        }
         text.raycastTarget = false;
         return text;
     }
 
-    private Button Button(string caption, Vector2 min, Vector2 max, UnityAction action, float size = 30f)
+    private Button Button(string caption, Vector2 min, Vector2 max, UnityAction action, float size = MobileDialogLayout.ButtonSize)
     {
         GameObject root = new GameObject(caption, typeof(RectTransform), typeof(Image), typeof(Button));
         root.transform.SetParent(content, false);
