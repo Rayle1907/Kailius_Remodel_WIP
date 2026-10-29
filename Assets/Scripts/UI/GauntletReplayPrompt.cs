@@ -1,5 +1,4 @@
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -25,17 +24,18 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
     public static GauntletReplayPrompt Show(LayeredButton buttonTemplate, Action onReplay, Action onDismiss = null)
     {
         if (Time.timeScale <= 0f) return null;
-        return ShowConfirmation(buttonTemplate, "Replay this gauntlet?", "Replay", "Keep exploring", onReplay, onDismiss, bodyFontSize: 32f);
+        return ShowConfirmation(buttonTemplate, "Replay this gauntlet?", "Replay", "Keep exploring", onReplay, onDismiss);
     }
 
     public static GauntletReplayPrompt ShowConfirmation(LayeredButton buttonTemplate, string message,
-        string confirmLabel, string cancelLabel, Action onConfirm, Action onCancel = null, string heading = null,
-        float bodyFontSize = 28f)
+        string confirmLabel, string cancelLabel, Action onConfirm, Action onCancel = null, string heading = null)
     {
         if (BlocksSettings) return null;
-        if (buttonTemplate == null || buttonTemplate.PopUpPrefab == null || EventSystem.current == null)
+        GameObject prefabRoot = Resources.Load<GameObject>("UI/ReplayPopup");
+        ConfirmationPopupView prefab = prefabRoot != null ? prefabRoot.GetComponent<ConfirmationPopupView>() : null;
+        if (prefab == null || EventSystem.current == null)
         {
-            Debug.LogError("Gauntlet confirmation needs a button template with a PopUp prefab and an active EventSystem.");
+            Debug.LogError("Gauntlet confirmation needs the UI/ReplayPopup prefab and an active EventSystem.");
             return null;
         }
         GameObject root = new GameObject("Gauntlet Replay Prompt", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -48,63 +48,35 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 200;
-        CanvasScaler scaler = root.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+        MobileDialogLayout.Configure(root);
         RectTransform blocker = Panel(root.transform, "Input Blocker", new Color(0f, 0f, 0f, 0.7f));
         blocker.gameObject.AddComponent<MobileSafeAreaFullScreen>();
         blocker.anchorMin = Vector2.zero;
         blocker.anchorMax = Vector2.one;
         blocker.offsetMin = blocker.offsetMax = Vector2.zero;
         MobileSafeArea safeArea = root.AddComponent<MobileSafeArea>();
-        RectTransform panel = Instantiate(buttonTemplate.PopUpPrefab, safeArea.ContentRoot, false);
-        panel.name = "PopUp";
-        GameObject titleObject = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform titleRect = (RectTransform)titleObject.transform;
-        titleRect.SetParent(panel, false);
-        titleRect.sizeDelta = new Vector2(1100f, 100f);
-        titleRect.anchoredPosition = new Vector2(0f, -65f);
-        TMP_Text title = titleObject.GetComponent<TMP_Text>();
-        TMP_Text templateText = buttonTemplate.GetComponentInChildren<TMP_Text>(true);
-        title.font = templateText.font;
-        title.fontSharedMaterial = templateText.fontSharedMaterial;
-        title.text = message;
-        title.enableAutoSizing = true;
-        title.fontSizeMin = 18f;
-        title.fontSizeMax = bodyFontSize;
-        titleRect.sizeDelta = new Vector2(1000f, 150f);
-        titleRect.anchoredPosition = new Vector2(0f, -90f);
-        title.fontSize = bodyFontSize;
-        title.alignment = TextAlignmentOptions.Center;
-        title.raycastTarget = false;
-        if (!string.IsNullOrEmpty(heading))
-        {
-            GameObject headingObject = new GameObject("Heading", typeof(RectTransform), typeof(TextMeshProUGUI));
-            RectTransform headingRect = (RectTransform)headingObject.transform;
-            headingRect.SetParent(panel, false);
-            headingRect.anchorMin = new Vector2(0.5f, 1f);
-            headingRect.anchorMax = new Vector2(0.5f, 1f);
-            headingRect.sizeDelta = new Vector2(1000f, -110f);
-            headingRect.anchoredPosition = new Vector2(0f, -350f);
-            TMP_Text headingText = headingObject.GetComponent<TMP_Text>();
-            headingText.font = templateText.font;
-            headingText.fontSharedMaterial = templateText.fontSharedMaterial;
-            headingText.text = heading;
-            headingText.enableAutoSizing = false;
-            headingText.fontSize = 56f;
-            headingText.alignment = TextAlignmentOptions.Center;
-            headingText.raycastTarget = false;
-        }
-        Button replayButton = prompt.CreateButton(buttonTemplate, panel, confirmLabel, -260f, true);
-        Button exploreButton = prompt.CreateButton(buttonTemplate, panel, cancelLabel, 260f, false);
+        Button exploreButton = prompt.BuildDialog(safeArea.ContentRoot, prefab, message, confirmLabel, cancelLabel, heading);
+        Time.timeScale = 0f;
+        EventSystem.current.SetSelectedGameObject(exploreButton.gameObject);
+        return prompt;
+    }
+
+    private Button BuildDialog(Transform parent, ConfirmationPopupView prefab, string message,
+        string confirmLabel, string cancelLabel, string heading)
+    {
+        ConfirmationPopupView view = Instantiate(prefab, parent, false);
+        view.Configure(message, confirmLabel, cancelLabel, heading);
+        Button replayButton = view.ConfirmButton;
+        Button exploreButton = view.CancelButton;
+        replayButton.onClick = new Button.ButtonClickedEvent();
+        exploreButton.onClick = new Button.ButtonClickedEvent();
+        replayButton.onClick.AddListener(() => Close(true));
+        exploreButton.onClick.AddListener(() => Close(false));
         Navigation replayNavigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnRight = exploreButton, selectOnDown = exploreButton };
         Navigation exploreNavigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnLeft = replayButton, selectOnUp = replayButton };
         replayButton.navigation = replayNavigation;
         exploreButton.navigation = exploreNavigation;
-        Time.timeScale = 0f;
-        EventSystem.current.SetSelectedGameObject(exploreButton.gameObject);
-        return prompt;
+        return exploreButton;
     }
 
     private static RectTransform Panel(Transform parent, string name, Color color)
@@ -115,25 +87,6 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
         rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
         panel.GetComponent<Image>().color = color;
         return rect;
-    }
-
-    private Button CreateButton(LayeredButton template, Transform parent, string label, float x, bool accept)
-    {
-        LayeredButton button = Instantiate(template, parent, false);
-        button.name = label;
-        button.SetLabel(label);
-        RectTransform rect = (RectTransform)button.transform;
-        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.localScale = Vector3.one;
-        rect.sizeDelta = new Vector2(420f, 64f);
-        rect.anchoredPosition = new Vector2(x, -190f);
-        TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
-        text.enableAutoSizing = true;
-        text.fontSizeMin = 18f;
-        text.fontSizeMax = 32f;
-        button.onClick = new Button.ButtonClickedEvent();
-        button.onClick.AddListener(() => Close(accept));
-        return button;
     }
 
     private void Update()
