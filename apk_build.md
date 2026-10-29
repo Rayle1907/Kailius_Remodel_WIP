@@ -6,7 +6,7 @@ This is the current build, verification, and phone smoke-test procedure for the 
 
 - Unity version: `6000.5.2f1`.
 - Package ID: `com.kailius.gauntlet11`; scripting backend: IL2CPP; architecture: ARM64.
-- `BuildGauntlet11` builds enabled Build Settings scenes with `Menu` first and `1_1Gauntlet` second. `BuildScene1Only` builds only `Scene_1`.
+- `BuildGauntlet11` builds enabled Build Settings scenes with `Menu` first and `1_1Gauntlet` second. `BuildScene1Only` builds the menu and Scene 1 playtest gauntlet scenes. The Android product name is `Kailius` for both builds.
 - For every Android scene except `Menu`, the scene-build callback activates and wires the configured mobile controls in build data. It does not save scene files or change movement speed and jump height.
 - The callback requires one scene `Player` with `MoveByTouch` and enabled `PlayerCombat`, one `ControllesMobiles` hierarchy with joystick, Jump, Attack, Canvas and `GraphicRaycaster`, plus the player dust, row, menu, and stats objects. It creates an `EventSystem` or input module if absent. Bow is not required while its mechanic is disabled.
 - A missing required object or component fails the build with its scene name and reason. Both build commands use `CleanBuildCache`, so builds may take longer.
