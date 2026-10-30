@@ -39,6 +39,13 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         overlay.SetActive(false);
         overlay.transform.SetParent(null, false);
         MobileDialogLayout.Configure(overlay);
+        Canvas parentCanvas = transform.parent != null ? transform.parent.GetComponentInParent<Canvas>() : null;
+        if (parentCanvas != null)
+        {
+            RectTransform rect = (RectTransform)transform;
+            rect.SetParent(parentCanvas.rootCanvas.transform, false);
+            MobileDialogLayout.Place(rect, Vector2.zero, Vector2.one);
+        }
         entryButton.onClick.AddListener(Open);
         allowButton.onClick.AddListener(AllowAnalytics);
         disableButton.onClick.AddListener(DisableAnalytics);
@@ -62,6 +69,7 @@ public sealed class MobilePrivacyControls : MonoBehaviour
     private void Update()
     {
         UpdateEntrySafeArea();
+        entryArea.gameObject.SetActive(!ResearchSurveyPrompt.IsOpen && !GauntletReplayPrompt.BlocksSettings);
         if (active == this && Input.GetKeyDown(KeyCode.Escape)) Close();
     }
 

@@ -8,7 +8,11 @@ using UnityEngine.UI;
 public sealed class FuryFeedback : MonoBehaviour
 {
     public const string HintSeenKey = "fury_introduction_seen";
+    private const string HintRevisionKey = "fury_introduction_revision";
+    public const int CurrentIntroductionRevision = 2;
     public const string Introduction = "Land 4 sword hits to charge Fury. Your next hit deals +50% damage.";
+    public static bool IntroductionSeen => PlayerPrefs.GetInt(HintRevisionKey,
+        PlayerPrefs.GetInt(HintSeenKey, 0) != 0 ? 1 : 0) >= CurrentIntroductionRevision;
 
     [SerializeField] private Material glowMaterial;
     [SerializeField, Range(0f, 1f)] private float swordTintStrength = 0.65f;
@@ -31,7 +35,8 @@ public sealed class FuryFeedback : MonoBehaviour
     private Image bar;
     private Color originalBarColor;
     private GameObject hint;
-    private float hintUntil;
+    private float hintVisibleSeconds;
+    private bool hintWasReadable;
     private float empoweredUntil;
     private static readonly int MainTexture = Shader.PropertyToID("_MainTex");
     private static readonly int TintColor = Shader.PropertyToID("_TintColor");
@@ -152,8 +157,14 @@ public sealed class FuryFeedback : MonoBehaviour
             target.a = originalBarColor.a;
             bar.color = Color.Lerp(originalBarColor, target, pulse);
         }
-        if (hint != null && hint.activeSelf && Time.time >= hintUntil) hint.SetActive(false);
+        if (!IntroductionSeen && stats.IsFuryReady && (hint == null || !hint.activeSelf)) ShowIntroduction();
+        bool readable = hint != null && hint.activeInHierarchy && stats.getHealth() > 0 && Application.isFocused && Time.timeScale > 0f;
+        if (readable && hintWasReadable) AdvanceIntroduction(Time.unscaledDeltaTime);
+        hintWasReadable = readable;
     }
+
+    private void OnApplicationFocus(bool focused) => hintWasReadable = false;
+    private void OnApplicationPause(bool paused) => hintWasReadable = false;
 
     private void LateUpdate()
     {
@@ -188,9 +199,16 @@ public sealed class FuryFeedback : MonoBehaviour
 
     private void ShowIntroduction()
     {
-        if (PlayerPrefs.GetInt(HintSeenKey, 0) != 0 || bar == null) return;
+        if (IntroductionSeen || bar == null) return;
         Canvas canvas = bar.GetComponentInParent<Canvas>();
         if (canvas == null || !canvas.isActiveAndEnabled || !bar.gameObject.activeInHierarchy) return;
+        if (hint != null)
+        {
+            hintVisibleSeconds = 0f;
+            hintWasReadable = false;
+            hint.SetActive(true);
+            return;
+        }
         canvas = canvas.rootCanvas;
         hint = new GameObject("Fury introduction", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
         RectTransform rect = hint.GetComponent<RectTransform>();
@@ -218,11 +236,27 @@ public sealed class FuryFeedback : MonoBehaviour
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Center;
         text.enableAutoSizing = true;
-        text.fontSizeMin = 12f;
-        text.fontSizeMax = 26f;
+        text.fontSizeMax = 54f * Mathf.Max(1f, safe.height) / 1080f / Mathf.Max(0.001f, canvas.scaleFactor);
+        text.fontSizeMin = text.fontSizeMax * 0.75f;
         text.raycastTarget = false;
-        hintUntil = Time.time + 5f;
+        hintVisibleSeconds = 0f;
+        hintWasReadable = false;
+    }
+
+    private void AdvanceIntroduction(float visibleSeconds)
+    {
+        hintVisibleSeconds += Mathf.Max(0f, visibleSeconds);
+        if (hintVisibleSeconds < 8f) return;
+        hint.SetActive(false);
+        PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
         PlayerPrefs.SetInt(HintSeenKey, 1);
+        PlayerPrefs.Save();
+    }
+
+    public static void ResetIntroduction()
+    {
+        PlayerPrefs.DeleteKey(HintSeenKey);
+        PlayerPrefs.DeleteKey(HintRevisionKey);
         PlayerPrefs.Save();
     }
 
@@ -265,6 +299,7 @@ public sealed class FuryFeedback : MonoBehaviour
         if (glow != null) glow.enabled = false;
         if (swipe != null) swipe.enabled = false;
         if (hint != null) hint.SetActive(false);
+        hintWasReadable = false;
         empoweredUntil = 0f;
     }
 

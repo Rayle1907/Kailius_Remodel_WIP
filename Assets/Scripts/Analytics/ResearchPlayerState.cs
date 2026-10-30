@@ -8,6 +8,8 @@ public static class ResearchPlayerState
     private const string BalanceKey = "research_currency_balance";
     private const string TotalDeathsKey = "research_total_deaths";
     private const string OnboardingKey = "research_revive_onboarding_completed";
+    private const string OnboardingRevisionKey = "research_revive_onboarding_revision";
+    public const int CurrentReviveOnboardingRevision = 2;
 
     private const string PlaythroughKey = "research_playthrough_id";
     private const string OfferCountPrefix = "research_gauntlet_offers_v1_";
@@ -53,12 +55,20 @@ public static class ResearchPlayerState
     public static string PlayerId { get; private set; }
     public static string OfferVariant { get; private set; }
     public static int PremiumCurrencyBalance { get; private set; }
-    public static bool ReviveOnboardingCompleted => PlayerPrefs.GetInt(OnboardingKey, 0) == 1;
+    public static bool ReviveOnboardingCompleted => PlayerPrefs.GetInt(OnboardingRevisionKey,
+        PlayerPrefs.GetInt(OnboardingKey, 0) == 1 ? 1 : 0) >= CurrentReviveOnboardingRevision;
 
     public static void MarkReviveOnboardingCompleted()
     {
         if (ReviveOnboardingCompleted) return;
-        PlayerPrefs.SetInt(OnboardingKey, 1);
+        PlayerPrefs.SetInt(OnboardingRevisionKey, CurrentReviveOnboardingRevision);
+        PlayerPrefs.Save();
+    }
+
+    public static void ResetReviveOnboarding()
+    {
+        PlayerPrefs.DeleteKey(OnboardingKey);
+        PlayerPrefs.DeleteKey(OnboardingRevisionKey);
         PlayerPrefs.Save();
     }
 
