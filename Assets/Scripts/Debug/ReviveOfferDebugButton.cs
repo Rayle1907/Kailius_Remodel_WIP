@@ -10,11 +10,17 @@ using UnityEditor;
 public sealed class ReviveOfferDebugButton : MonoBehaviour
 {
 #if UNITY_EDITOR
+    [MenuItem("Tools/Fury/Reset Introduction")]
+    public static void ResetFuryIntroduction()
+    {
+        FuryFeedback.ResetIntroduction();
+        Debug.Log("Fury introduction reset. It will appear when the meter next fills and its HUD is visible. Currency and progression are unchanged.");
+    }
+
     [MenuItem("Tools/Revive/Reset Onboarding")]
     public static void ResetOnboarding()
     {
-        PlayerPrefs.DeleteKey("research_revive_onboarding_completed");
-        PlayerPrefs.Save();
+        ResearchPlayerState.ResetReviveOnboarding();
         Debug.Log("Revive onboarding reset. It will appear on the next revive offer. If an offer is already open, close it first. Currency and research assignment are unchanged.");
     }
 #endif

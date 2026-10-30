@@ -73,6 +73,18 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
             return;
         }
 
+        if (GauntletHealthDropRules.IsGauntletScene(scene.name))
+        {
+            var reviveAssets = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<ReviveButtonAssets>(true))
+                .ToArray();
+            if (reviveAssets.Length != 1 || reviveAssets[0].OfferPrefab == null || !reviveAssets[0].OfferPrefab.IsConfigured
+                || reviveAssets[0].OnboardingPrefab == null || !reviveAssets[0].OnboardingPrefab.IsConfigured)
+            {
+                throw new BuildFailedException("Scene '" + scene.name + "' requires complete revive offer and onboarding prefabs.");
+            }
+        }
+
         if (isAndroid && scene.name == "Scene_1" &&
             System.IO.Path.GetFileName(report.summary.outputPath) == "Scene1Only.apk")
         {

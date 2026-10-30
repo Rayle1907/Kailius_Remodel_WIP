@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -19,7 +18,7 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
     private bool offerLocked;
     private ReviveOnboardingPresenter onboarding;
     private Coroutine unlockRoutine;
-    private TextMeshProUGUI affordabilityText;
+    private ReviveOfferView offerView;
     private Coroutine timeoutRoutine;
     private bool applicationPaused;
     private bool applicationFocused;
@@ -82,9 +81,8 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
 
         GameObject canvas = FindSceneCanvasRoot();
         ReviveButtonAssets assets = canvas == null ? null : canvas.GetComponent<ReviveButtonAssets>();
-        Transform panel = canvas == null ? null : FindChild(canvas.transform, "Panel");
-        if (assets == null || assets.ButtonPrefab == null || assets.PressMeButtonPrefab == null
-            || assets.UIFont == null || panel == null || EventSystem.current == null)
+        if (assets == null || assets.OfferPrefab == null || !assets.OfferPrefab.IsConfigured
+            || assets.UIFont == null || EventSystem.current == null)
         {
             Debug.LogError("Revive offer UI is unavailable or incomplete. Continuing normal death handling.");
             return false;
@@ -133,33 +131,22 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         }
 
         ReviveButtonAssets buttonAssets = canvasObject.GetComponent<ReviveButtonAssets>();
-        if (buttonAssets == null || buttonAssets.ButtonPrefab == null || buttonAssets.PressMeButtonPrefab == null || buttonAssets.UIFont == null)
+        if (buttonAssets == null || buttonAssets.OfferPrefab == null || !buttonAssets.OfferPrefab.IsConfigured || buttonAssets.UIFont == null)
         {
-            Debug.LogError($"ReviveCanvas configuration is incomplete: component={buttonAssets != null}, regular={buttonAssets != null && buttonAssets.ButtonPrefab != null}, PressMe={buttonAssets != null && buttonAssets.PressMeButtonPrefab != null}, font={buttonAssets != null && buttonAssets.UIFont != null}.");
+            Debug.LogError("ReviveCanvas needs a complete ReviveOfferView prefab and UI font.");
             return;
         }
 
         HideOtherSceneCanvases(canvasObject);
         canvasObject.SetActive(true);
         MobileDialogLayout.Configure(canvasObject);
-        Transform safeArea = FindChild(canvasObject.transform, "SafeArea");
-        if (safeArea != null)
-        {
-            safeArea.localScale = Vector3.one;
-            safeArea.gameObject.SetActive(true);
-        }
+        MobileSafeArea safeArea = canvasObject.GetComponent<MobileSafeArea>();
+        if (safeArea == null) safeArea = canvasObject.AddComponent<MobileSafeArea>();
 
         overlay = canvasObject;
 
-        Transform panelTransform = FindChild(canvasObject.transform, "Panel");
-        if (panelTransform == null)
-        {
-            Debug.LogError("ReviveCanvas is missing a child named Panel.");
-            canvasObject.SetActive(false);
-            overlay = null;
-            RestoreOtherSceneCanvases();
-            return;
-        }
+        Transform legacyPanel = FindChild(canvasObject.transform, "Panel");
+        if (legacyPanel != null) legacyPanel.gameObject.SetActive(false);
 
         foreach (DeathWall wall in FindObjectsByType<DeathWall>())
         {
@@ -167,13 +154,12 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             wall.SetRevivePresentationHidden(true);
         }
 
-        Image panel = panelTransform.GetComponent<Image>();
-        if (panel == null)
-        {
-            panel = panelTransform.gameObject.AddComponent<Image>();
-        }
-
-        BuildOffer((RectTransform)panel.transform, buttonAssets, price, balance);
+        offerView = Instantiate(buttonAssets.OfferPrefab, safeArea.ContentRoot, false);
+        offerView.Configure(price, balance);
+        reviveButton = offerView.ReviveButton;
+        restartButton = offerView.RestartButton;
+        reviveButton.onClick.AddListener(AcceptRevive);
+        restartButton.onClick.AddListener(DeclineRevive);
         if (string.IsNullOrEmpty(GauntletRunTracker.Instance.RecordOfferShown()))
         {
             CloseOverlay();
@@ -188,38 +174,12 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
                 if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
                 onboarding = Instantiate(buttonAssets.OnboardingPrefab, canvasObject.transform, false);
                 onboarding.transform.SetAsLastSibling();
-                onboarding.Show(buttonAssets.UIFont, (RectTransform)panel.transform, OnOnboardingDismissed);
+                onboarding.Show(buttonAssets.UIFont, (RectTransform)offerView.transform, OnOnboardingDismissed);
                 return;
             }
             Debug.LogError("ReviveCanvas needs a complete ReviveOnboardingView prefab on ReviveButtonAssets. Showing the offer without onboarding.");
         }
         EnableOfferDecision();
-    }
-
-    private void BuildOffer(RectTransform panel, ReviveButtonAssets buttonAssets, int price, int balance)
-    {
-        bool canAfford = balance >= price;
-        RemoveGeneratedChildren(panel);
-        MobileDialogLayout.Panel(panel);
-
-        TextMeshProUGUI heading = CreateText(panel, "ReviveHeading", "REVIVE?", MobileDialogLayout.HeadingSize, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        MobileDialogLayout.Place(heading.rectTransform, new Vector2(0.06f, 0.78f), new Vector2(0.94f, 0.91f));
-
-        TextMeshProUGUI explanation = CreateText(panel, "Explanation", "Continue this gauntlet from the last checkpoint.", MobileDialogLayout.BodySize, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        MobileDialogLayout.ReadingArea(explanation, panel, new Vector2(0.08f, 0.53f), new Vector2(0.92f, 0.69f));
-
-        TextMeshProUGUI cost = CreateText(panel, "Cost", $"Cost: {price} Embers\nYou have: {balance} Embers", MobileDialogLayout.BodySize, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        MobileDialogLayout.Place(cost.rectTransform, new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.55f));
-
-        affordabilityText = CreateText(panel, "Affordability", canAfford ? "" : "Not enough Embers", MobileDialogLayout.SecondarySize, TextAlignmentOptions.Center, buttonAssets.UIFont);
-        affordabilityText.color = new Color(1f, 0.72f, 0.25f);
-        MobileDialogLayout.Place(affordabilityText.rectTransform, new Vector2(0.08f, 0.26f), new Vector2(0.92f, 0.34f));
-
-        reviveButton = CreateButton(buttonAssets.PressMeButtonPrefab, panel, "Revive", "REVIVE", new Vector2(-260f, -190f), 420f, AcceptRevive);
-        reviveButton.interactable = canAfford;
-        restartButton = CreateButton(buttonAssets.ButtonPrefab, panel, "Restart", "RESTART", new Vector2(260f, -190f), 420f, DeclineRevive);
-        MobileDialogLayout.Button(reviveButton, new Vector2(0.08f, 0.08f), new Vector2(0.48f, 0.23f));
-        MobileDialogLayout.Button(restartButton, new Vector2(0.52f, 0.08f), new Vector2(0.92f, 0.23f));
     }
 
     private void OnOnboardingDismissed()
@@ -323,6 +283,14 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
             unlockRoutine = null;
         }
         RemoveOnboarding();
+        if (offerView != null)
+        {
+            offerView.gameObject.SetActive(false);
+            Destroy(offerView.gameObject);
+            offerView = null;
+        }
+        reviveButton = null;
+        restartButton = null;
         if (timeoutRoutine != null)
         {
             StopCoroutine(timeoutRoutine);
@@ -416,66 +384,6 @@ public sealed class ReviveOfferPrototype : MonoBehaviour
         }
 
         return null;
-    }
-
-    private static void RemoveGeneratedChildren(Transform panel)
-    {
-        string[] generatedNames =
-        {
-            "ReviveHeading",
-            "Explanation",
-            "Explanation Reading Area",
-            "Cost",
-            "Affordability",
-            "Revive",
-            "Restart"
-        };
-
-        foreach (string generatedName in generatedNames)
-        {
-            Transform child = panel.Find(generatedName);
-            if (child != null)
-            {
-                child.gameObject.SetActive(false);
-                child.SetParent(null, false);
-                Destroy(child.gameObject);
-            }
-        }
-    }
-
-    private static TextMeshProUGUI CreateText(Transform parent, string name, string text, float size, TextAlignmentOptions alignment, TMP_FontAsset font)
-    {
-        GameObject objectRoot = new GameObject(name);
-        objectRoot.transform.SetParent(parent, false);
-        TextMeshProUGUI label = objectRoot.AddComponent<TextMeshProUGUI>();
-        label.font = font;
-        label.fontSharedMaterial = font.material;
-        label.text = text;
-        MobileDialogLayout.Text(label, size);
-        label.alignment = alignment;
-        label.color = Color.white;
-        label.textWrappingMode = TextWrappingModes.Normal;
-        return label;
-    }
-
-    private static Button CreateButton(LayeredButton prefab, Transform parent, string name, string labelText, Vector2 position, float width, UnityEngine.Events.UnityAction action)
-    {
-        LayeredButton button = Instantiate(prefab, parent, false);
-        button.name = name;
-        RectTransform rect = (RectTransform)button.transform;
-        SetSize(rect, width, MobileDialogLayout.ButtonHeight);
-        rect.anchoredPosition = position;
-        button.SetLabel(labelText);
-        button.onClick.AddListener(action);
-        return button;
-    }
-
-    private static void SetSize(RectTransform rect, float width, float height)
-    {
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(width, height);
-        rect.anchoredPosition = Vector2.zero;
     }
 
 }
