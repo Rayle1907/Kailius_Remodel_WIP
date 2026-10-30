@@ -23,6 +23,11 @@ PrefabInstance:
       propertyPath: enemyRows
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 920000000000001003, guid: 2c491796d4f1c6d498145246083e42e6,
+        type: 3}
+      propertyPath: m_text
+      value: Bonus loot
+      objectReference: {fileID: 0}
     - target: {fileID: 920000000000001011, guid: 2c491796d4f1c6d498145246083e42e6,
         type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -89,6 +94,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_VerticalAlignment
       value: 4096
+      objectReference: {fileID: 0}
+    - target: {fileID: 2399419338514131443, guid: 2c491796d4f1c6d498145246083e42e6,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 51
+      objectReference: {fileID: 0}
+    - target: {fileID: 3822211213360033303, guid: 2c491796d4f1c6d498145246083e42e6,
+        type: 3}
+      propertyPath: m_text
+      value: 0/0
       objectReference: {fileID: 0}
     - target: {fileID: 3928479665210200058, guid: 2c491796d4f1c6d498145246083e42e6,
         type: 3}
@@ -170,6 +185,11 @@ PrefabInstance:
       propertyPath: m_ReferencePixelsPerUnit
       value: 32
       objectReference: {fileID: 0}
+    - target: {fileID: 6438212626497643793, guid: 2c491796d4f1c6d498145246083e42e6,
+        type: 3}
+      propertyPath: m_text
+      value: 0/0
+      objectReference: {fileID: 0}
     - target: {fileID: 6570344701929462727, guid: 2c491796d4f1c6d498145246083e42e6,
         type: 3}
       propertyPath: m_Name
@@ -225,6 +245,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -156
       objectReference: {fileID: 0}
+    - target: {fileID: 7575746091401837686, guid: 2c491796d4f1c6d498145246083e42e6,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7614194784869513290, guid: 2c491796d4f1c6d498145246083e42e6,
         type: 3}
       propertyPath: m_IsActive
@@ -235,18 +260,6 @@ PrefabInstance:
       propertyPath: m_text
       value: Exploration
       objectReference: {fileID: 0}
-    - target: {fileID: 920000000000001003, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-      propertyPath: m_text
-      value: Bonus loot
-      objectReference: {fileID: 0}
-    - target: {fileID: 6438212626497643793, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-      propertyPath: m_text
-      value: 0/0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3822211213360033303, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-      propertyPath: m_text
-      value: 0/0
-      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6546089406309368881, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
     m_RemovedGameObjects:
@@ -255,33 +268,3 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
---- !u!114 &8160633774437298863 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8160633774437298863, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-  m_PrefabInstance: {fileID: 100100001}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &4384300929039128384 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4384300929039128384, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-  m_PrefabInstance: {fileID: 100100001}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &7437627140554085076 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7437627140554085076, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-  m_PrefabInstance: {fileID: 100100001}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &264028946660224222 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 264028946660224222, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-  m_PrefabInstance: {fileID: 100100001}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &6438212626497643793 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6438212626497643793, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-  m_PrefabInstance: {fileID: 100100001}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &3822211213360033303 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3822211213360033303, guid: 2c491796d4f1c6d498145246083e42e6, type: 3}
-  m_PrefabInstance: {fileID: 100100001}
-  m_PrefabAsset: {fileID: 0}

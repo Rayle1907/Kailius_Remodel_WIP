@@ -2909,7 +2909,8 @@ MonoBehaviour:
     type: 3}
   uiFont: {fileID: 11400000, guid: d22c986e05eac53b8bc884c1372fa019, type: 2}
   onboardingPrefab: {fileID: 104, guid: c4278d163c244d119e960a2bec58eb75, type: 3}
-  offerPrefab: {fileID: 6857434102324085652, guid: 9af0e10b047dd0a4ea6f5fc218543bc6, type: 3}
+  offerPrefab: {fileID: 6857434102324085652, guid: 9af0e10b047dd0a4ea6f5fc218543bc6,
+    type: 3}
 --- !u!1001 &912064282
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11800,7 +11801,7 @@ PrefabInstance:
     - target: {fileID: 3590781676395461518, guid: 7d586631b1ac1e34aacdc5a7899b6233,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 233.2
+      value: 296
       objectReference: {fileID: 0}
     - target: {fileID: 3590781676395461518, guid: 7d586631b1ac1e34aacdc5a7899b6233,
         type: 3}
