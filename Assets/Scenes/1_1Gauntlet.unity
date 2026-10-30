@@ -1003,12 +1003,12 @@ PrefabInstance:
     - target: {fileID: 4930142433679705523, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -51.18
+      value: -30.08
       objectReference: {fileID: 0}
     - target: {fileID: 4930142433679705523, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -14.18
+      value: -19.13
       objectReference: {fileID: 0}
     - target: {fileID: 4930142433679705523, guid: b8d9ca592e4475d40a0f468ecc82ff1e,
         type: 3}
@@ -1602,6 +1602,7 @@ MonoBehaviour:
     type: 3}
   uiFont: {fileID: 11400000, guid: d22c986e05eac53b8bc884c1372fa019, type: 2}
   onboardingPrefab: {fileID: 104, guid: c4278d163c244d119e960a2bec58eb75, type: 3}
+  offerPrefab: {fileID: 6857434102324085652, guid: 9af0e10b047dd0a4ea6f5fc218543bc6, type: 3}
 --- !u!1001 &912064282
 PrefabInstance:
   m_ObjectHideFlags: 0
