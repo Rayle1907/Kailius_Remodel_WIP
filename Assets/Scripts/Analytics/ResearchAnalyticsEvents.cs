@@ -1,4 +1,72 @@
 using Unity.Services.Analytics;
+using System;
+using UnityEngine;
+
+internal abstract class ResearchTelemetryEvent : Unity.Services.Analytics.Event
+{
+    private static string applicationSessionId = Guid.NewGuid().ToString("N");
+    private static int sequence;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetSession()
+    {
+        applicationSessionId = Guid.NewGuid().ToString("N");
+        sequence = 0;
+    }
+
+    internal static ResearchTelemetryContext CaptureContext(string playerId, string offerVariant,
+        string sceneName, string playthroughId, string runId)
+    {
+        return new ResearchTelemetryContext(applicationSessionId, ++sequence,
+            (float)Time.realtimeSinceStartupAsDouble, Application.version,
+            playerId ?? string.Empty, offerVariant ?? "unknown", sceneName ?? string.Empty,
+            playthroughId ?? string.Empty, runId ?? string.Empty);
+    }
+
+    protected ResearchTelemetryEvent(string eventName, ResearchTelemetryContext context) : base(eventName)
+    {
+        SetParameter("schema_version", context.SchemaVersion);
+        SetParameter("application_session_id", context.ApplicationSessionId);
+        SetParameter("event_sequence", context.EventSequence);
+        SetParameter("elapsed_seconds", context.ElapsedSeconds);
+        SetParameter("build_version", context.BuildVersion);
+        SetParameter("player_id", context.PlayerId);
+        SetParameter("offer_variant", context.OfferVariant);
+        SetParameter("scene_name", context.SceneName);
+        SetParameter("playthrough_id", context.PlaythroughId);
+        SetParameter("run_id", context.RunId);
+    }
+}
+
+internal sealed class ResearchTelemetryContext
+{
+    public int SchemaVersion => 1;
+    public string ApplicationSessionId { get; }
+    public int EventSequence { get; }
+    public float ElapsedSeconds { get; }
+    public string BuildVersion { get; }
+    public string PlayerId { get; }
+    public string OfferVariant { get; }
+    public string SceneName { get; }
+    public string PlaythroughId { get; }
+    public string RunId { get; }
+
+    public ResearchTelemetryContext(string applicationSessionId, int eventSequence, float elapsedSeconds,
+        string buildVersion, string playerId, string offerVariant, string sceneName,
+        string playthroughId, string runId)
+    {
+        ApplicationSessionId = applicationSessionId;
+        EventSequence = eventSequence;
+        ElapsedSeconds = elapsedSeconds;
+        BuildVersion = buildVersion;
+        PlayerId = playerId;
+        OfferVariant = offerVariant;
+        SceneName = sceneName;
+        PlaythroughId = playthroughId;
+        RunId = runId;
+    }
+}
+
 
 internal abstract class ResearchSurveyEvent : Unity.Services.Analytics.Event
 {
@@ -62,9 +130,9 @@ internal sealed class GauntletRunStartedEvent : Unity.Services.Analytics.Event
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
 }
 
-internal sealed class PlayerDeathEvent : Unity.Services.Analytics.Event
+internal sealed class PlayerDeathEvent : ResearchTelemetryEvent
 {
-    public PlayerDeathEvent() : base("player_death") { }
+    public PlayerDeathEvent(ResearchTelemetryContext context) : base("player_death", context) { }
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string SceneName { set => SetParameter("scene_name", value); }
@@ -81,11 +149,12 @@ internal sealed class PlayerDeathEvent : Unity.Services.Analytics.Event
     public bool OfferShown { set => SetParameter("offer_shown", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
 }
 
-internal sealed class PlayerFailureEvent : Unity.Services.Analytics.Event
+internal sealed class PlayerFailureEvent : ResearchTelemetryEvent
 {
-    public PlayerFailureEvent() : base("player_failure") { }
+    public PlayerFailureEvent(ResearchTelemetryContext context) : base("player_failure", context) { }
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string SceneName { set => SetParameter("scene_name", value); }
@@ -101,11 +170,51 @@ internal sealed class PlayerFailureEvent : Unity.Services.Analytics.Event
     public float SinceLastFailure { set => SetParameter("time_since_last_failure", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
 }
 
-internal sealed class ReviveOfferShownEvent : Unity.Services.Analytics.Event
+internal sealed class SegmentAttemptStartedEvent : ResearchTelemetryEvent
 {
-    public ReviveOfferShownEvent() : base("revive_offer_shown") { }
+    public SegmentAttemptStartedEvent(ResearchTelemetryContext context) : base("segment_attempt_started", context) { }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
+    public string PlayerId { set => SetParameter("player_id", value); }
+    public string PlaythroughId { set => SetParameter("playthrough_id", value); }
+    public string RunId { set => SetParameter("run_id", value); }
+    public string SegmentId { set => SetParameter("segment_id", value); }
+    public string SegmentVersion { set => SetParameter("segment_version", value); }
+    public string GeometryHash { set => SetParameter("geometry_hash", value); }
+    public string StartReason { set => SetParameter("start_reason", value); }
+    public int AttemptNumber { set => SetParameter("attempt_number", value); }
+    public int Health { set => SetParameter("health", value); }
+    public int Defense { set => SetParameter("defense", value); }
+    public int AttackDamage { set => SetParameter("attack_damage", value); }
+    public float MoveSpeed { set => SetParameter("move_speed", value); }
+    public float JumpHeight { set => SetParameter("jump_height", value); }
+    public float Gravity { set => SetParameter("gravity", value); }
+    public string InputMethod { set => SetParameter("input_method", value); }
+    public float WallDistance { set => SetParameter("wall_distance", value); }
+    public bool WallActive { set => SetParameter("wall_active", value); }
+    public int DefeatedRequiredEnemies { set => SetParameter("defeated_required_enemies", value); }
+    public int TotalRequiredEnemies { set => SetParameter("total_required_enemies", value); }
+}
+
+internal sealed class SegmentAttemptEndedEvent : ResearchTelemetryEvent
+{
+    public string GeometryHash { set => SetParameter("geometry_hash", value); }
+    public SegmentAttemptEndedEvent(ResearchTelemetryContext context) : base("segment_attempt_ended", context) { }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
+    public string SegmentId { set => SetParameter("segment_id", value); }
+    public string SegmentVersion { set => SetParameter("segment_version", value); }
+    public string Outcome { set => SetParameter("outcome", value); }
+    public string Reason { set => SetParameter("reason", value); }
+    public float DurationSeconds { set => SetParameter("duration_seconds", value); }
+    public float ProgressX { set => SetParameter("progress_x", value); }
+    public float ProgressY { set => SetParameter("progress_y", value); }
+}
+
+internal sealed class ReviveOfferShownEvent : ResearchTelemetryEvent
+{
+    public ReviveOfferShownEvent(ResearchTelemetryContext context) : base("revive_offer_shown", context) { }
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string OfferId { set => SetParameter("offer_id", value); }
@@ -119,11 +228,12 @@ internal sealed class ReviveOfferShownEvent : Unity.Services.Analytics.Event
     public bool CanAfford { set => SetParameter("can_afford", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
 }
 
-internal sealed class ReviveOfferResolvedEvent : Unity.Services.Analytics.Event
+internal sealed class ReviveOfferResolvedEvent : ResearchTelemetryEvent
 {
-    public ReviveOfferResolvedEvent() : base("revive_offer_resolved") { }
+    public ReviveOfferResolvedEvent(ResearchTelemetryContext context) : base("revive_offer_resolved", context) { }
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string OfferId { set => SetParameter("offer_id", value); }
@@ -134,11 +244,12 @@ internal sealed class ReviveOfferResolvedEvent : Unity.Services.Analytics.Event
     public int BalanceAfter { set => SetParameter("balance_after_decision", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
 }
 
-internal sealed class ReviveOutcomeObservedEvent : Unity.Services.Analytics.Event
+internal sealed class ReviveOutcomeObservedEvent : ResearchTelemetryEvent
 {
-    public ReviveOutcomeObservedEvent() : base("revive_outcome_observed") { }
+    public ReviveOutcomeObservedEvent(ResearchTelemetryContext context) : base("revive_outcome_observed", context) { }
     public string RunId { set => SetParameter("run_id", value); }
     public string GauntletSessionId { set => SetParameter("gauntlet_session_id", value); }
     public string OfferId { set => SetParameter("offer_id", value); }
@@ -148,6 +259,7 @@ internal sealed class ReviveOutcomeObservedEvent : Unity.Services.Analytics.Even
     public string SegmentId { set => SetParameter("level_segment_id", value); }
     public string Variant { set => SetParameter("offer_variant", value); }
     public string ExperimentVersion { set => SetParameter("experiment_version", value); }
+    public string AttemptId { set => SetParameter("attempt_id", value); }
 }
 
 internal sealed class GauntletRunEndedEvent : Unity.Services.Analytics.Event

@@ -1,0 +1,792 @@
+{
+  "format": "reference_only_not_dashboard_import",
+  "schema_version": 1,
+  "setup": "Create segment_attempt_started and segment_attempt_ended in Unity Analytics Event Manager. Extend the listed existing events with the common metadata and optional attempt_id. Reuse existing parameter types. Validate development events before copying definitions to production.",
+  "events": [
+    {
+      "name": "player_death",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "level_segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "death_number_total",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "death_number_in_segment",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "death_number_in_gauntlet_session",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "time_since_last_death",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "cause_of_death",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_health_before_death",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "premium_currency_balance",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "offer_eligible",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "offer_shown",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "player_failure",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "level_segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "death_number_total",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "death_number_in_segment",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "death_number_in_gauntlet_session",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "failureReason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_health_before_failure",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "player_health_after_failure",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "premium_currency_balance",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_last_failure",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "segment_attempt_started",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "segment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "geometry_hash",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "start_reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_number",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "health",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "defense",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "attack_damage",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "move_speed",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "jump_height",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "gravity",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "input_method",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "wall_distance",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "wall_active",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "defeated_required_enemies",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "total_required_enemies",
+          "type": "integer",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "segment_attempt_ended",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "geometry_hash",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "segment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "duration_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "progress_x",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "progress_y",
+          "type": "float",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "revive_offer_shown",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "level_segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "death_number_total",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "death_number_in_segment",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "premium_currency_balance",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "revive_price_int",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "offer_number_in_gauntlet",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "can_afford",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "revive_offer_resolved",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_response",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "time_to_decision",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "revive_price_int",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "premium_currency_balance",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "balance_after_decision",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "revive_outcome_observed",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "application_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "elapsed_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "build_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "player_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offer_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "post_decision_outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "seconds_after_decision",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "level_segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "attempt_id",
+          "type": "string",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
