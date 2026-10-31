@@ -11,6 +11,8 @@ internal static class ResearchAnalytics
     public static bool RecordOfferResolved(ReviveOfferResolvedEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordOutcome(ReviveOutcomeObservedEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordRunEnded(GauntletRunEndedEvent analyticsEvent) => Record(analyticsEvent);
+    public static bool RecordAttemptStarted(SegmentAttemptStartedEvent analyticsEvent) => Record(analyticsEvent);
+    public static bool RecordAttemptEnded(SegmentAttemptEndedEvent analyticsEvent) => Record(analyticsEvent);
     public static bool RecordSurveyInvitationShown(SurveyInvitationShownEvent analyticsEvent) => RecordSurvey(analyticsEvent);
     public static bool RecordSurveyInvitationResolved(SurveyInvitationResolvedEvent analyticsEvent) => RecordSurvey(analyticsEvent);
     public static bool RecordSurveySubmitted(SurveySubmittedEvent analyticsEvent) => RecordSurvey(analyticsEvent);
@@ -23,6 +25,7 @@ internal static class ResearchAnalytics
     private static bool Record(Unity.Services.Analytics.Event analyticsEvent)
     {
         if (analyticsEvent == null
+            || !ResearchAnalyticsBootstrap.HasAnalyticsConsent
             || !ResearchAnalyticsBootstrap.IsReady
             || ResearchAnalyticsBootstrap.IsShuttingDown)
         {
