@@ -27,6 +27,25 @@ public static class ResearchPlayerState
         }
     }
 
+    public static int GetSegmentAttemptCount(string segmentId, string segmentVersion)
+    {
+        string key = GetAttemptCountKey(segmentId, segmentVersion);
+        return Mathf.Max(0, PlayerPrefs.GetInt(key, 0));
+    }
+
+    public static int AdvanceSegmentAttemptCount(string segmentId, string segmentVersion)
+    {
+        int count = Math.Min(int.MaxValue - 1, GetSegmentAttemptCount(segmentId, segmentVersion)) + 1;
+        PlayerPrefs.SetInt(GetAttemptCountKey(segmentId, segmentVersion), count);
+        PlayerPrefs.Save();
+        return count;
+    }
+
+    private static string GetAttemptCountKey(string segmentId, string segmentVersion)
+    {
+        return "research_attempt_v1_" + PlayerId + "_" + segmentId + "_" + segmentVersion;
+    }
+
     public static int GetGauntletOfferCount(string gauntletId)
     {
         return Mathf.Max(0, PlayerPrefs.GetInt(OfferCountPrefix + PlaythroughId + "_" + gauntletId, 0));
