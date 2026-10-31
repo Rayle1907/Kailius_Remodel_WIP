@@ -215,19 +215,19 @@ public sealed class FuryFeedback : MonoBehaviour
         rect.SetParent(canvas.transform, false);
         Rect safe = Screen.safeArea;
         float width = Mathf.Max(1f, Screen.width), height = Mathf.Max(1f, Screen.height);
-        rect.anchorMin = new Vector2((safe.xMin + safe.width * 0.1f) / width, (safe.yMin + safe.height * 0.76f) / height);
-        rect.anchorMax = new Vector2((safe.xMin + safe.width * 0.9f) / width, (safe.yMin + safe.height * 0.89f) / height);
+        rect.anchorMin = new Vector2(0f, (safe.yMin + safe.height * 0.76f) / height);
+        rect.anchorMax = new Vector2(1f, (safe.yMin + safe.height * 0.89f) / height);
         rect.offsetMin = rect.offsetMax = Vector2.zero;
         hint.GetComponent<CanvasGroup>().blocksRaycasts = false;
         Image background = hint.GetComponent<Image>();
-        background.color = new Color(0.12f, 0.025f, 0.025f, 0.9f);
+        background.color = new Color(0.12f, 0.025f, 0.025f, 0.63f);
         background.raycastTarget = false;
 
         var label = new GameObject("Explanation", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform labelRect = label.GetComponent<RectTransform>();
         labelRect.SetParent(rect, false);
-        labelRect.anchorMin = Vector2.zero;
-        labelRect.anchorMax = Vector2.one;
+        labelRect.anchorMin = new Vector2(safe.xMin / width, 0f);
+        labelRect.anchorMax = new Vector2(safe.xMax / width, 1f);
         labelRect.offsetMin = new Vector2(12f, 6f);
         labelRect.offsetMax = new Vector2(-12f, -6f);
         TextMeshProUGUI text = label.GetComponent<TextMeshProUGUI>();
@@ -246,7 +246,7 @@ public sealed class FuryFeedback : MonoBehaviour
     private void AdvanceIntroduction(float visibleSeconds)
     {
         hintVisibleSeconds += Mathf.Max(0f, visibleSeconds);
-        if (hintVisibleSeconds < 8f) return;
+        if (hintVisibleSeconds < 10f) return;
         hint.SetActive(false);
         PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
         PlayerPrefs.SetInt(HintSeenKey, 1);
