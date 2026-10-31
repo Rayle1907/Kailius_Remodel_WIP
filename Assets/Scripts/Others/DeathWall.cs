@@ -25,6 +25,10 @@ public sealed class DeathWall : MonoBehaviour
     [SerializeField, Range(0.05f, 0.9f)] private float middleGradientStop = 0.45f;
     [SerializeField, Range(0.1f, 0.99f)] private float outerGradientStop = 0.8f;
 
+    public bool AnalyticsActive => activated && !stoppedForDeath;
+    public float AnalyticsSpeed => speed;
+    public float AnalyticsHeadStart => headStart;
+
     private Rigidbody2D body;
     private BoxCollider2D lethalCollider;
     private Camera gameplayCamera;
