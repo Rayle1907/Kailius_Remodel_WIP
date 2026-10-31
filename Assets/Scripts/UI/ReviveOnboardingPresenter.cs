@@ -154,11 +154,11 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         RectTransform root = (RectTransform)transform;
         lastSafeArea = Screen.safeArea;
         lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+        MobileDialogLayout.Place(root, Vector2.zero, Vector2.one);
         if (Screen.width > 0 && Screen.height > 0)
-            MobileDialogLayout.Place(root,
+            MobileDialogLayout.Place(layoutRoot,
                 new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height),
                 new Vector2(lastSafeArea.xMax / Screen.width, lastSafeArea.yMax / Screen.height));
-        MobileDialogLayout.Place(layoutRoot, Vector2.zero, Vector2.one);
         MobileDialogLayout.Panel(content);
         MobileDialogLayout.Place(dialogueBox.rectTransform, new Vector2(0.2f, 0f), Vector2.one);
         MobileDialogLayout.Place(instructor.rectTransform, new Vector2(0f, 0.12f), new Vector2(0.22f, 0.58f));
@@ -171,7 +171,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         continuationPrompt.color = Color.white;
         continuationPrompt.alignment = TextAlignmentOptions.Center;
         MobileDialogLayout.Place(continuationPrompt.rectTransform, new Vector2(0.24f, 0.01f), new Vector2(0.98f, 0.10f));
-        inputBlocker.color = new Color(0f, 0f, 0f, 0.85f);
+        inputBlocker.color = new Color(0f, 0f, 0f, 0.95f);
     }
 
     private void RestoreOffer()
