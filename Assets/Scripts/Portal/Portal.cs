@@ -131,6 +131,7 @@ public class Portal : MonoBehaviour {
         }
         if (GauntletRunTracker.Instance != null
             && GauntletRunTracker.Instance.IsCurrentSceneGauntlet) {
+            GauntletRunTracker.Instance.EndSegmentForExit(this);
             GauntletRunTracker.Instance.RecordPostDecisionOutcome("level_completed");
             GauntletRunTracker.Instance.EndCurrentRun("completed");
         }

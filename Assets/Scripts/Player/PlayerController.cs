@@ -209,7 +209,7 @@ public class PlayerController : MonoBehaviour {
         currentRespawn = checkpoint;
         CheckpointTouched?.Invoke(checkpoint);
         if (reachedNextCheckpoint && GauntletRunTracker.Instance != null) {
-            GauntletRunTracker.Instance.SetSegment(checkpoint.name);
+            GauntletRunTracker.Instance.ReachCheckpoint(checkpoint);
         }
     }
 
@@ -251,6 +251,10 @@ public class PlayerController : MonoBehaviour {
             transform.position.z
         );
         CheckpointRespawned?.Invoke(currentRespawn);
+        if (GauntletRunTracker.Instance != null)
+        {
+            GauntletRunTracker.Instance.BeginAttemptAfterRespawn("checkpoint_respawn");
+        }
     }
     private Transform FindClosestRespawn() {
         GameObject[] respawns = GameObject.FindGameObjectsWithTag("ReSpawn");

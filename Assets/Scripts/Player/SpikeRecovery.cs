@@ -41,7 +41,7 @@ public sealed class SpikeRecovery : MonoBehaviour {
         stats.ApplyDamage(damage, "trap", true);
         if (stats.health <= 0) return true;
         if (GauntletRunTracker.Instance != null) {
-            GauntletRunTracker.Instance.RecordPlayerFailure("hazard", healthBefore, stats.health);
+            GauntletRunTracker.Instance.RecordPlayerFailure("local_hazard_recovery", healthBefore, stats.health, false);
         }
         movementLockedUntil = Time.time + movementLockDuration;
         if (safePosition != null) {
