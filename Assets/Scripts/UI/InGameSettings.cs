@@ -137,11 +137,9 @@ public sealed class InGameSettings : MonoBehaviour
                 break;
             }
         }
-        abandonPrompt = GauntletReplayPrompt.ShowConfirmation(abandonTemplate,
-            "Return to the open world. This attempt's progress will reset. Ember prices for this gauntlet will remain.",
-            "Abandon run", "Keep playing",
+        abandonPrompt = GauntletReplayPrompt.ShowAbandon(
             () => { RestoreSettingsAfterPrompt(); Leave("Scene_1", "abandoned"); },
-            RestoreSettingsAfterPrompt, heading: "Abandon?");
+            RestoreSettingsAfterPrompt);
         if (abandonPrompt != null) menu.transform.Find("Menu").gameObject.SetActive(false);
     }
 
