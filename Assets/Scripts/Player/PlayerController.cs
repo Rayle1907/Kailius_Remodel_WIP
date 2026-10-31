@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour {
 
     void Update() {
 
-        if(!dead && !controllerMobile.activeSelf) {
+        if(!dead) {
 
             if (Time.timeScale <= 0f || SpikeRecovery.IsMovementLocked) return;
 
@@ -88,35 +88,38 @@ public class PlayerController : MonoBehaviour {
 
             }
 
-            if (Input.GetKey(KeyCode.A)) {
-                CreateDust();
-                body.linearVelocity = new Vector2(-moveSpeed, body.linearVelocity.y);
-                SetMoving(true);
-                playerSprite.flipX = true;
-                
-                rotacionA = true;
-                if (rotacionD == true) {
-                    rowTransform.Rotate(0f, 180f, 0f);
-                    rotacionD = false;
-                }
+            bool moveLeft = Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow);
+            bool moveRight = Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow);
+
+            bool keyboardInput = moveLeft || moveRight;
+            float horizontalInput = keyboardInput
+                ? moveLeft == moveRight ? 0f : moveLeft ? -1f : 1f
+                : 0f;
+            bool usingMobileControls = controllerMobile != null && controllerMobile.activeSelf;
+            if (!keyboardInput && usingMobileControls && touchMovement != null)
+            {
+                horizontalInput = touchMovement.HorizontalInput;
             }
 
-            if (Input.GetKey(KeyCode.D)) {
-                CreateDust();
-                body.linearVelocity = new Vector2(moveSpeed, body.linearVelocity.y);
-                SetMoving(true);
-                playerSprite.flipX = false;
-                rotacionD = true;
-                if(rotacionA == true) {
-                    rowTransform.Rotate(0f, 180f, 0f);
-                    rotacionA = false;
-                }
+            bool moving = Mathf.Abs(horizontalInput) > 0.1f;
+            float speed = usingMobileControls && touchMovement != null ? touchMovement.moveSpeed : moveSpeed;
+            if (moving)
+            {
+                body.linearVelocity = new Vector2(horizontalInput * speed, body.linearVelocity.y);
             }
+            SetMoving(moving);
 
-
-            // Voltear sprites del character
-            if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D)) {
-                SetMoving(false);
+            if (moving)
+            {
+                CreateDust();
+                playerSprite.flipX = horizontalInput < 0f;
+                bool facingLeft = horizontalInput < 0f;
+                if (facingLeft != rotacionA && facingLeft == rotacionD)
+                {
+                    rowTransform.Rotate(0f, 180f, 0f);
+                }
+                rotacionA = facingLeft;
+                rotacionD = !facingLeft;
             }
         }
     }

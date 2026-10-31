@@ -31,8 +31,7 @@ public class MoveByTouch : MonoBehaviour {
 
     private bool canJump;
     private bool canDoubleJump;
-    private bool rotacionA = false;
-    private bool rotacionD = false;
+    public float HorizontalInput => joystick != null ? joystick.Horizontal : 0f;
 
 
     // Start is called before the first frame update
@@ -43,41 +42,9 @@ public class MoveByTouch : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         if (Time.timeScale <= 0f || RecoveryBlocksMovement) return;
-        if (ControlesMoviles.activeSelf) {
+        if (ControlesMoviles != null && ControlesMoviles.activeSelf) {
             canJump = GetComponentInChildren<PlayerControllerUP>().getJump();
             canDoubleJump = GetComponentInChildren<PlayerControllerUP>().getDoubleJump();
-
-            if (joystick.Horizontal < -0.1) {
-                CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(-moveSpeed * (-joystick.Horizontal), GetComponent<Rigidbody2D>().linearVelocity.y);
-                gameObject.GetComponent<Animator>().SetBool("moving", true);
-                gameObject.GetComponent<SpriteRenderer>().flipX = true;
-
-                rotacionA = true;
-                if (rotacionD == true) {
-                    row.transform.Rotate(0f, 180f, 0f);
-                    rotacionD = false;
-                }
-            }
-
-
-            if (joystick.Horizontal > 0.1) {
-                CreateDust();
-                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(moveSpeed * (joystick.Horizontal), GetComponent<Rigidbody2D>().linearVelocity.y);
-                gameObject.GetComponent<Animator>().SetBool("moving", true);
-                gameObject.GetComponent<SpriteRenderer>().flipX = false;
-
-                rotacionD = true;
-                if (rotacionA == true) {
-                    row.transform.Rotate(0f, 180f, 0f);
-                    rotacionA = false;
-                }
-            }
-
-            // Quitar animacion de correr
-            if (joystick.Horizontal == 0) {
-                gameObject.GetComponent<Animator>().SetBool("moving", false);
-            }
         }
     }
 
