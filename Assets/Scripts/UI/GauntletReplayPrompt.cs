@@ -24,18 +24,22 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
     public static GauntletReplayPrompt Show(LayeredButton buttonTemplate, Action onReplay, Action onDismiss = null)
     {
         if (Time.timeScale <= 0f) return null;
-        return ShowConfirmation(buttonTemplate, "Replay this gauntlet?", "Replay", "Keep exploring", onReplay, onDismiss);
+        return ShowConfirmation("UI/ReplayPopup", onReplay, onDismiss);
     }
 
-    public static GauntletReplayPrompt ShowConfirmation(LayeredButton buttonTemplate, string message,
-        string confirmLabel, string cancelLabel, Action onConfirm, Action onCancel = null, string heading = null)
+    public static GauntletReplayPrompt ShowAbandon(Action onConfirm, Action onCancel = null)
+    {
+        return ShowConfirmation("UI/AbandonPopup", onConfirm, onCancel);
+    }
+
+    private static GauntletReplayPrompt ShowConfirmation(string prefabPath, Action onConfirm, Action onCancel)
     {
         if (BlocksSettings) return null;
-        GameObject prefabRoot = Resources.Load<GameObject>("UI/ReplayPopup");
+        GameObject prefabRoot = Resources.Load<GameObject>(prefabPath);
         ConfirmationPopupView prefab = prefabRoot != null ? prefabRoot.GetComponent<ConfirmationPopupView>() : null;
         if (prefab == null || EventSystem.current == null)
         {
-            Debug.LogError("Gauntlet confirmation needs the UI/ReplayPopup prefab and an active EventSystem.");
+            Debug.LogError("Gauntlet confirmation needs the " + prefabPath + " prefab and an active EventSystem.");
             return null;
         }
         GameObject root = new GameObject("Gauntlet Replay Prompt", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -55,17 +59,15 @@ public sealed class GauntletReplayPrompt : MonoBehaviour
         blocker.anchorMax = Vector2.one;
         blocker.offsetMin = blocker.offsetMax = Vector2.zero;
         MobileSafeArea safeArea = root.AddComponent<MobileSafeArea>();
-        Button exploreButton = prompt.BuildDialog(safeArea.ContentRoot, prefab, message, confirmLabel, cancelLabel, heading);
+        Button exploreButton = prompt.BuildDialog(safeArea.ContentRoot, prefab);
         Time.timeScale = 0f;
         EventSystem.current.SetSelectedGameObject(exploreButton.gameObject);
         return prompt;
     }
 
-    private Button BuildDialog(Transform parent, ConfirmationPopupView prefab, string message,
-        string confirmLabel, string cancelLabel, string heading)
+    private Button BuildDialog(Transform parent, ConfirmationPopupView prefab)
     {
         ConfirmationPopupView view = Instantiate(prefab, parent, false);
-        view.Configure(message, confirmLabel, cancelLabel, heading);
         Button replayButton = view.ConfirmButton;
         Button exploreButton = view.CancelButton;
         replayButton.onClick = new Button.ButtonClickedEvent();

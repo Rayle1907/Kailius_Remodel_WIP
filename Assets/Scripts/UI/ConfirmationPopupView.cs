@@ -12,16 +12,6 @@ public sealed class ConfirmationPopupView : MonoBehaviour
     public LayeredButton ConfirmButton => confirmButton;
     public LayeredButton CancelButton => cancelButton;
 
-    public void Configure(string message, string confirmLabel, string cancelLabel, string heading)
-    {
-        messageText.text = message;
-        headingText.text = heading;
-        headingText.gameObject.SetActive(!string.IsNullOrEmpty(heading));
-        confirmButton.SetLabel(confirmLabel);
-        cancelButton.SetLabel(cancelLabel);
-        Fit();
-    }
-
     private void LateUpdate() => Fit();
 
     private void Fit()
