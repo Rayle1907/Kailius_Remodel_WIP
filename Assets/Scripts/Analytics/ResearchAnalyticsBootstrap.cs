@@ -45,6 +45,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 
     private void OnApplicationQuit()
     {
+        if (GauntletRunTracker.Instance != null) GauntletRunTracker.Instance.PrepareForShutdown();
         BeginShutdown();
     }
 

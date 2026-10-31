@@ -8,6 +8,11 @@ public class PlayerController : MonoBehaviour {
     public Transform CurrentRespawnCheckpoint => currentRespawn;
 
     public SpikeRecovery SpikeRecovery { get; private set; }
+    public bool AnalyticsCanControl => !dead && isActiveAndEnabled && (SpikeRecovery == null || !SpikeRecovery.IsMovementLocked);
+    public string AnalyticsInputMethod => controllerMobile != null && controllerMobile.activeSelf ? "touch" : "keyboard";
+    public float AnalyticsMoveSpeed => AnalyticsInputMethod == "touch" && touchMovement != null ? touchMovement.moveSpeed : moveSpeed;
+    public float AnalyticsJumpHeight => AnalyticsInputMethod == "touch" && touchMovement != null ? touchMovement.jumpHeight : jumpHeight;
+    public float AnalyticsGravity => body == null ? Physics2D.gravity.y : Physics2D.gravity.y * body.gravityScale;
 
     public float moveSpeed;
     public float jumpHeight;
@@ -40,6 +45,7 @@ public class PlayerController : MonoBehaviour {
     private Stats playerStats;
     private Transform rowTransform;
     private bool isMoving;
+    private MoveByTouch touchMovement;
 
     void Awake() {
         SpikeRecovery = GetComponent<SpikeRecovery>();
@@ -47,6 +53,7 @@ public class PlayerController : MonoBehaviour {
         body = GetComponent<Rigidbody2D>();
         mainCollider = GetComponent<Collider2D>();
         playerAnimator = GetComponent<Animator>();
+        touchMovement = GetComponent<MoveByTouch>();
         playerSprite = GetComponent<SpriteRenderer>();
         jumpController = GetComponentInChildren<PlayerControllerUP>();
         playerStats = GetComponentInChildren<Stats>();
@@ -55,6 +62,7 @@ public class PlayerController : MonoBehaviour {
 
     void Start() {
         currentRespawn = FindClosestRespawn();
+        if (GauntletRunTracker.Instance != null) GauntletRunTracker.Instance.BindAttemptPlayer(this);
     }
 
     void Update() {
