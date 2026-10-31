@@ -1,0 +1,11 @@
+{
+  "input_globs": ["raw/*.csv"],
+  "catalogue_globs": ["catalogues/*.json"],
+  "environment": "production",
+  "output_dir": "processed",
+  "expected_raw_rows": null,
+  "minimum_players": 30,
+  "seed": 42,
+  "extraction_cutoff_utc": null,
+  "query_file": "export.sql"
+}

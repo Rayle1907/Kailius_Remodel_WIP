@@ -1,0 +1,7 @@
+raw/
+processed/
+*.egg-info/
+__pycache__/
+catalogues/
+config.json
+.venv/
