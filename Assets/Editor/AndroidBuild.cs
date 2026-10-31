@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 
 public static class CodexAndroidBuild
 {
@@ -106,6 +107,60 @@ public static class CodexAndroidBuild
         if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
         {
             throw new Exception("Scene 1 Android build failed: " + report.summary.result);
+        }
+    }
+
+    [MenuItem("Tools/Build/Emulator build")]
+    public static void BuildAndRunOnEmulator()
+    {
+        BuildScene1Only();
+
+        string adbPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Android", "Sdk", "platform-tools", "adb.exe");
+        if (!File.Exists(adbPath))
+        {
+            throw new Exception("Emulator install stopped: ADB was not found at " + adbPath + ". Check the Android SDK path in Unity Preferences > External Tools.");
+        }
+
+        string[] devices = RunAdb(adbPath, "devices").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        string emulator = devices
+            .Skip(1)
+            .Select(line => line.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            .FirstOrDefault(parts => parts.Length > 1 && parts[0].StartsWith("emulator-") && parts[1] == "device")?[0];
+
+        if (emulator == null)
+        {
+            throw new Exception("Emulator install stopped: no running, authorized Android emulator was found. Start the emulator and run Tools > Build > Emulator build again.");
+        }
+
+        string apkPath = Path.GetFullPath("Builds/Android/Scene1Only.apk");
+        RunAdb(adbPath, "-s " + emulator + " install -r \"" + apkPath + "\"");
+        RunAdb(adbPath, "-s " + emulator + " shell monkey -p com.kailius.gauntlet11 1");
+    }
+
+    private static string RunAdb(string adbPath, string arguments)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = adbPath,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using (var process = System.Diagnostics.Process.Start(startInfo))
+        {
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                throw new Exception("ADB failed: " + (string.IsNullOrWhiteSpace(error) ? output : error));
+            }
+            return output;
         }
     }
 
