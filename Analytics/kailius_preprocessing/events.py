@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import pandas as pd
+from .schema_contract import EVENT_CLASSES
 
 START = "segment_attempt_started"
 END = "segment_attempt_ended"
@@ -12,13 +13,31 @@ RAW_NUMERIC = [
     "health", "defense", "attack_damage", "move_speed", "jump_height", "gravity",
     "defeated_required_enemies", "total_required_enemies", "wall_distance", "wall_active",
 ]
+INTEGER_PARAMETERS = {
+    "schema_version", "event_sequence", "attempt_number", "health", "defense", "attack_damage",
+    "defeated_required_enemies", "total_required_enemies", "death_number_total", "death_number_in_segment",
+    "death_number_in_gauntlet_session", "player_health_before_death", "player_health_before_failure",
+    "player_health_after_failure", "premium_currency_balance", "revive_price_int", "offer_number_in_gauntlet",
+    "balance_after_decision", "offers_shown_in_gauntlet", "next_revive_price_int", "exit_health", "run_deaths",
+    "accepted_revives", "survey_answered_count", "survey_pxi_answered_count",
+    "pxi_autonomy_1", "pxi_autonomy_2", "pxi_autonomy_3", "pxi_mastery_1", "pxi_mastery_2", "pxi_mastery_3",
+    "pxi_challenge_1", "pxi_challenge_2", "pxi_challenge_3", "pxi_progress_feedback_1",
+    "pxi_progress_feedback_2", "pxi_progress_feedback_3", "background_experience_skill_1",
+    "background_experience_skill_2", "background_experience_skill_3",
+}
+FLOAT_PARAMETERS = {
+    "duration_seconds", "progress_x", "progress_y", "time_since_session_start",
+    "time_since_last_death", "time_since_last_failure", "time_to_decision", "seconds_after_decision",
+    "run_duration_seconds", "move_speed", "jump_height", "gravity", "wall_distance",
+}
+BOOLEAN_PARAMETERS = {"wall_active", "offer_eligible", "offer_shown", "can_afford", "survey_complete"}
 ALIASES = {
     "EVENT_ID": "event_id", "EVENT_NAME": "event_name", "EVENT_TIMESTAMP": "event_timestamp",
     "UNITY_ENVIRONMENT_NAME": "environment", "LOADED_TIMESTAMP": "loaded_timestamp",
     "USER_ID": "sdk_user_id", "SESSION_ID": "sdk_session_id", "ENVIRONMENT_NAME": "environment",
     "PLATFORM": "platform", "CLIENT_VERSION": "client_version", "eventUUID": "event_id",
     "eventName": "event_name", "eventTimestamp": "event_timestamp", "userID": "sdk_user_id",
-    "sessionID": "sdk_session_id",
+    "sessionID": "sdk_session_id", "clientVersion": "client_version",
 }
 
 Event = dict[str, Any]
@@ -52,13 +71,13 @@ def sql_event(raw: dict[str, Any]) -> Event:
         for key, value in payload.items()
         if key != "eventParams"
     }
-    event.update(parameters)
+    event.update({ALIASES.get(key, key): value for key, value in parameters.items()})
     event.update({
         ALIASES.get(key, key.lower()): value
         for key, value in raw.items()
         if value != "" and key.lower() != "event_json"
     })
-    return {ALIASES.get(key, key): value for key, value in event.items()}
+    return event
 
 
 def flat_event(raw: dict[str, Any]) -> Event:
@@ -69,20 +88,34 @@ def flat_event(raw: dict[str, Any]) -> Event:
     }
 
 
+def _normalize_event_parameters(row: Event) -> None:
+    for field in INTEGER_PARAMETERS:
+        if field in row and row[field] not in (None, ""):
+            row[field] = number(row[field], True)
+    for field in FLOAT_PARAMETERS:
+        if field in row and row[field] not in (None, ""):
+            row[field] = number(row[field])
+    for field in BOOLEAN_PARAMETERS:
+        if field not in row or row[field] in (None, ""):
+            continue
+        value = row[field]
+        if isinstance(value, bool):
+            continue
+        lowered = str(value).lower()
+        if lowered not in ("true", "false"):
+            raise ValueError("Invalid boolean " + field)
+        row[field] = lowered == "true"
+
+
 def _normalize_attempt_fields(row: Event) -> None:
     required_fields = (
-        "attempt_id", "player_id", "application_session_id", "segment_id", "segment_version", "geometry_hash"
+        "attempt_id", "playthrough_id", "run_id",
+        "gauntlet_session_id", "offer_variant", "experiment_version",
+        "level_segment_id", "segment_version", "geometry_hash"
     )
     for field in required_fields:
         if not row.get(field):
             raise ValueError("Missing " + field)
-    if number(row.get("schema_version", 0), True) != 1:
-        raise ValueError("Unsupported event schema")
-
-    row["event_sequence"] = number(row.get("event_sequence"), True)
-    row["elapsed_seconds"] = number(row.get("elapsed_seconds"))
-    if row["event_sequence"] < 1 or row["elapsed_seconds"] < 0:
-        raise ValueError("Invalid session order")
     if row.get("attempt_number") not in (None, ""):
         row["attempt_number"] = number(row["attempt_number"], True)
 
@@ -114,6 +147,26 @@ def _normalize_attempt_fields(row: Event) -> None:
         raise ValueError("Negative duration")
 
 
+def _normalize_research_identity(row: Event) -> None:
+    if row.get("schema_version") != 2:
+        raise ValueError("Unsupported event schema")
+    if row.get("event_sequence") in (None, ""):
+        raise ValueError("Missing event_sequence")
+    if row["event_sequence"] < 1:
+        raise ValueError("Invalid session order")
+    if row.get("time_since_session_start") in (None, ""):
+        raise ValueError("Missing time_since_session_start")
+    if row["time_since_session_start"] < 0:
+        raise ValueError("Invalid session order")
+
+
+def _normalize_metadata(row: Event) -> None:
+    row["player_id"] = row.get("sdk_user_id") or None
+    row["application_session_id"] = row.get("sdk_session_id") or None
+    row["build_version"] = row.get("client_version") or None
+    row.pop("elapsed_seconds", None)
+
+
 def _normalize_row(
     raw: dict[str, Any], path: Path, source_row: int, environment: str
 ) -> tuple[Event | None, Rejection | None]:
@@ -130,10 +183,13 @@ def _normalize_row(
         row["event_timestamp"] = timestamp(row["event_timestamp"])
         if row.get("loaded_timestamp"):
             row["loaded_timestamp"] = timestamp(row["loaded_timestamp"])
-        if row.get("event_sequence") not in (None, ""):
-            row["event_sequence"] = number(row["event_sequence"], True)
-        if row.get("elapsed_seconds") not in (None, ""):
-            row["elapsed_seconds"] = number(row["elapsed_seconds"])
+        _normalize_event_parameters(row)
+        _normalize_metadata(row)
+        if row["event_name"] in EVENT_CLASSES:
+            _normalize_research_identity(row)
+        else:
+            if row.get("event_sequence") not in (None, ""):
+                row["event_sequence"] = number(row["event_sequence"], True)
         if row["event_name"] in (START, END):
             _normalize_attempt_fields(row)
 
@@ -183,7 +239,7 @@ def _remove_conflicting_session_sequences(
 ) -> tuple[list[Event], list[Rejection]]:
     sequences: dict[tuple[Any, Any, Any], list[Event]] = defaultdict(list)
     for event in events:
-        if event["event_name"] in (START, END):
+        if event.get("event_sequence") not in (None, "") and event.get("player_id") and event.get("application_session_id"):
             key = (event["player_id"], event["application_session_id"], event["event_sequence"])
             sequences[key].append(event)
 
@@ -204,7 +260,7 @@ def _remove_conflicting_session_sequences(
 
 def normalize(
     paths: Sequence[Path], environment: str, expected: int | None = None
-) -> tuple[list[Event], list[Rejection], dict[str, int]]:
+) -> tuple[list[Event], list[Rejection], dict[str, Any]]:
     raw_count = 0
     events = []
     rejected = []
@@ -226,7 +282,7 @@ def normalize(
     events, sequence_rejections = _remove_conflicting_session_sequences(events)
     rejected.extend(sequence_rejections)
     events.sort(key=lambda event: (
-        event.get("application_session_id", ""), event.get("event_sequence", 0),
+        event.get("application_session_id") or "", event.get("event_sequence") or 0,
         event["event_timestamp"], event["event_id"],
     ))
     rejected.sort(key=lambda item: (

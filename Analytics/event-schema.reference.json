@@ -1,7 +1,7 @@
 {
   "format": "reference_only_not_dashboard_import",
-  "schema_version": 1,
-  "setup": "Create segment_attempt_started and segment_attempt_ended in Unity Analytics Event Manager. Extend the listed existing events with the common metadata and optional attempt_id. Reuse existing parameter types. Validate development events before copying definitions to production.",
+  "schema_version": 2,
+  "setup": "Current client contract, not a dashboard import. Event descriptions and the parameter_definitions catalog provide manual dashboard descriptions and types; reuse matching existing parameter definitions. Attempt events use the existing level_segment_id field for the baked segment identifier. Select the matching environment in SQL Data Explorer; ENVIRONMENT_NAME labels that selection rather than filtering EVENTS. Validate development before copying definitions to production. Keep rollout_optional_parameters and legacy_optional_parameters optional in dashboard schemas while older builds remain active. Unity sessionID identifies SDK sessions, not exact application lifetimes.",
   "events": [
     {
       "name": "player_death",
@@ -12,32 +12,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -79,11 +69,6 @@
         {
           "name": "death_number_in_gauntlet_session",
           "type": "integer",
-          "required": true
-        },
-        {
-          "name": "time_since_session_start",
-          "type": "float",
           "required": true
         },
         {
@@ -117,14 +102,9 @@
           "required": true
         },
         {
-          "name": "experiment_version",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "attempt_id",
           "type": "string",
-          "required": false
+          "required": true
         }
       ]
     },
@@ -137,32 +117,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -207,11 +177,6 @@
           "required": true
         },
         {
-          "name": "time_since_session_start",
-          "type": "float",
-          "required": true
-        },
-        {
           "name": "failureReason",
           "type": "string",
           "required": true
@@ -237,14 +202,9 @@
           "required": true
         },
         {
-          "name": "experiment_version",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "attempt_id",
           "type": "string",
-          "required": false
+          "required": true
         }
       ]
     },
@@ -257,32 +217,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -302,12 +252,17 @@
           "required": true
         },
         {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "attempt_id",
           "type": "string",
           "required": true
         },
         {
-          "name": "segment_id",
+          "name": "level_segment_id",
           "type": "string",
           "required": true
         },
@@ -362,11 +317,6 @@
           "required": true
         },
         {
-          "name": "input_method",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "wall_distance",
           "type": "float",
           "required": true
@@ -386,7 +336,8 @@
           "type": "integer",
           "required": true
         }
-      ]
+      ],
+      "description": "Records the beginning of a playable segment attempt, including its identity, starting player state, and segment geometry version."
     },
     {
       "name": "segment_attempt_ended",
@@ -397,32 +348,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -442,6 +383,11 @@
           "required": true
         },
         {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "geometry_hash",
           "type": "string",
           "required": true
@@ -452,7 +398,7 @@
           "required": true
         },
         {
-          "name": "segment_id",
+          "name": "level_segment_id",
           "type": "string",
           "required": true
         },
@@ -486,7 +432,8 @@
           "type": "float",
           "required": true
         }
-      ]
+      ],
+      "description": "Records the end of a segment attempt, including its outcome, end reason, duration, and final position."
     },
     {
       "name": "revive_offer_shown",
@@ -497,32 +444,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -587,14 +524,9 @@
           "required": true
         },
         {
-          "name": "experiment_version",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "attempt_id",
           "type": "string",
-          "required": false
+          "required": true
         }
       ]
     },
@@ -607,32 +539,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -687,14 +609,9 @@
           "required": true
         },
         {
-          "name": "experiment_version",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "attempt_id",
           "type": "string",
-          "required": false
+          "required": true
         }
       ]
     },
@@ -707,32 +624,22 @@
           "required": true
         },
         {
-          "name": "application_session_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "event_sequence",
           "type": "integer",
           "required": true
         },
         {
-          "name": "elapsed_seconds",
+          "name": "time_since_session_start",
           "type": "float",
           "required": true
         },
         {
-          "name": "build_version",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "player_id",
-          "type": "string",
-          "required": true
-        },
-        {
           "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
           "type": "string",
           "required": true
         },
@@ -777,16 +684,718 @@
           "required": true
         },
         {
+          "name": "attempt_id",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "gauntlet_run_started",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "experiment_version",
           "type": "string",
           "required": true
         },
         {
-          "name": "attempt_id",
+          "name": "scene_name",
           "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offers_shown_in_gauntlet",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "next_revive_price_int",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "gauntlet_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "level_segment_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "premium_currency_balance",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "run_start_reason",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "gauntlet_run_ended",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "offers_shown_in_gauntlet",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "next_revive_price_int",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "exit_checkpoint_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "exit_health",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "defeated_required_enemies",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "total_required_enemies",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "gauntlet_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_end_reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_duration_seconds",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "run_deaths",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "accepted_revives",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "premium_currency_balance",
+          "type": "integer",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "survey_invitation_shown",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_version",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "survey_invitation_resolved",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_invitation_response",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "survey_submitted",
+      "parameters": [
+        {
+          "name": "schema_version",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "event_sequence",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "time_since_session_start",
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": "offer_variant",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "experiment_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "scene_name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "playthrough_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "run_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "gauntlet_session_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_id",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_version",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "survey_answered_count",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "survey_pxi_answered_count",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "survey_complete",
+          "type": "boolean",
+          "required": true
+        },
+        {
+          "name": "pxi_autonomy_1",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_autonomy_2",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_autonomy_3",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_mastery_1",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_mastery_2",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_mastery_3",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_challenge_1",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_challenge_2",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_challenge_3",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_progress_feedback_1",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_progress_feedback_2",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "pxi_progress_feedback_3",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "background_experience_skill_1",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "background_experience_skill_2",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "name": "background_experience_skill_3",
+          "type": "integer",
           "required": false
         }
       ]
+    }
+  ],
+  "legacy_optional_parameters": [
+    {
+      "name": "player_id",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "build_version",
+      "type": "string",
+      "required": false
+    },
+    {
+      "name": "elapsed_seconds",
+      "type": "float",
+      "required": false
+    },
+    {
+      "name": "application_session_id",
+      "type": "string",
+      "required": false
+    }
+  ],
+  "rollout_optional_parameters": {
+    "player_death": [
+      "schema_version",
+      "event_sequence",
+      "playthrough_id",
+      "attempt_id"
+    ],
+    "player_failure": [
+      "schema_version",
+      "event_sequence",
+      "playthrough_id",
+      "attempt_id"
+    ],
+    "revive_offer_shown": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "playthrough_id",
+      "attempt_id"
+    ],
+    "revive_offer_resolved": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "scene_name",
+      "playthrough_id",
+      "attempt_id"
+    ],
+    "revive_outcome_observed": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "playthrough_id",
+      "attempt_id"
+    ],
+    "gauntlet_run_started": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start"
+    ],
+    "gauntlet_run_ended": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "scene_name"
+    ],
+    "survey_invitation_shown": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "run_id",
+      "gauntlet_session_id"
+    ],
+    "survey_invitation_resolved": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "run_id",
+      "gauntlet_session_id"
+    ],
+    "survey_submitted": [
+      "schema_version",
+      "event_sequence",
+      "time_since_session_start",
+      "run_id",
+      "gauntlet_session_id"
+    ]
+  },
+  "parameter_definitions": [
+    {
+      "name": "schema_version",
+      "type": "integer",
+      "description": "Version of the client research telemetry parameter format. The current revised format is version 2."
+    },
+    {
+      "name": "event_sequence",
+      "type": "integer",
+      "description": "Increasing research event creation order within the application runtime; resets when the runtime initializes."
+    },
+    {
+      "name": "attempt_id",
+      "type": "string",
+      "description": "Identifier linking an attempt start and end with related death, failure, and revive events."
+    },
+    {
+      "name": "level_segment_id",
+      "type": "string",
+      "description": "Identifier of the current level or tracked segment. In attempt events, it is the baked segment definition ID used for geometry catalogue matching."
+    },
+    {
+      "name": "segment_version",
+      "type": "string",
+      "description": "Version of the segment definition used for this attempt."
+    },
+    {
+      "name": "geometry_hash",
+      "type": "string",
+      "description": "Fingerprint identifying the baked geometry associated with this attempt."
+    },
+    {
+      "name": "start_reason",
+      "type": "string",
+      "description": "Reason this segment attempt began."
+    },
+    {
+      "name": "attempt_number",
+      "type": "integer",
+      "description": "Recorded exposure count for this segment and segment version."
+    },
+    {
+      "name": "health",
+      "type": "integer",
+      "description": "Player health recorded at the beginning of the attempt."
+    },
+    {
+      "name": "defense",
+      "type": "integer",
+      "description": "Player defense recorded at the beginning of the attempt."
+    },
+    {
+      "name": "attack_damage",
+      "type": "integer",
+      "description": "Player attack damage recorded at the beginning of the attempt."
+    },
+    {
+      "name": "move_speed",
+      "type": "float",
+      "description": "Player movement speed recorded at the beginning of the attempt."
+    },
+    {
+      "name": "jump_height",
+      "type": "float",
+      "description": "Player jump-height setting recorded at the beginning of the attempt."
+    },
+    {
+      "name": "gravity",
+      "type": "float",
+      "description": "Player gravity setting recorded at the beginning of the attempt."
+    },
+    {
+      "name": "wall_distance",
+      "type": "float",
+      "description": "Wall-distance measurement recorded at the beginning of the attempt."
+    },
+    {
+      "name": "wall_active",
+      "type": "boolean",
+      "description": "Whether the tracked wall is active at the beginning of the attempt."
+    },
+    {
+      "name": "outcome",
+      "type": "string",
+      "description": "Segment attempt result: success, failure, or unresolved."
+    },
+    {
+      "name": "reason",
+      "type": "string",
+      "description": "Recorded reason the segment attempt ended."
+    },
+    {
+      "name": "duration_seconds",
+      "type": "float",
+      "description": "Elapsed seconds from the beginning to the end of this attempt."
+    },
+    {
+      "name": "progress_x",
+      "type": "float",
+      "description": "Player world-space X position when the attempt ended."
+    },
+    {
+      "name": "progress_y",
+      "type": "float",
+      "description": "Player world-space Y position when the attempt ended."
+    },
+    {
+      "name": "time_since_session_start",
+      "type": "float",
+      "description": "Seconds elapsed on the existing analytics bootstrap session clock."
+    },
+    {
+      "name": "playthrough_id",
+      "type": "string",
+      "description": "Identifier linking events belonging to the same playthrough."
+    },
+    {
+      "name": "run_id",
+      "type": "string",
+      "description": "Identifier linking events belonging to the same gauntlet run."
+    },
+    {
+      "name": "gauntlet_session_id",
+      "type": "string",
+      "description": "Identifier linking events belonging to the same gauntlet gameplay session."
+    },
+    {
+      "name": "scene_name",
+      "type": "string",
+      "description": "Name of the scene associated with the event."
+    },
+    {
+      "name": "offer_variant",
+      "type": "string",
+      "description": "Revive experiment variant assigned to the player."
+    },
+    {
+      "name": "experiment_version",
+      "type": "string",
+      "description": "Version of the revive experiment configuration."
+    },
+    {
+      "name": "defeated_required_enemies",
+      "type": "integer",
+      "description": "Number of required enemies defeated at the recorded observation."
+    },
+    {
+      "name": "total_required_enemies",
+      "type": "integer",
+      "description": "Total number of required enemies at the recorded observation."
     }
   ]
 }

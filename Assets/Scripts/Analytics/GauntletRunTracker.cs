@@ -37,9 +37,18 @@ public sealed class GauntletRunTracker : MonoBehaviour
     private double lastDeathAt = -1;
     private double lastFailureAt = -1;
     private bool startEventRecorded;
+    private bool runTelemetrySuppressed;
     private PendingOffer pendingOffer;
     private string lastDeathAttemptId = string.Empty;
     private readonly CheckpointAttemptCoordinator attemptCoordinator = new CheckpointAttemptCoordinator();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetSession()
+    {
+        Instance = null;
+        persistentGauntletSessionId = null;
+        persistentGauntletDeaths = 0;
+    }
 
     private sealed class PendingOffer
     {
@@ -56,6 +65,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
         public string AttemptId;
         public bool ShownEventRecorded;
         public bool ResolvedEventRecorded;
+        public bool AnalyticsSuppressed;
     }
 
     private void OnEnable()
@@ -114,6 +124,35 @@ public sealed class GauntletRunTracker : MonoBehaviour
         }
     }
 
+    public void SuppressPendingAnalytics()
+    {
+        if (pendingOffer != null) pendingOffer.AnalyticsSuppressed = true;
+        if (IsCurrentSceneGauntlet) runTelemetrySuppressed = true;
+        attemptCoordinator.SuppressCurrentTelemetry();
+    }
+
+    public void BeginTelemetryAfterConsentGrant()
+    {
+        if (!ResearchAnalyticsBootstrap.HasAnalyticsConsent || !IsCurrentSceneGauntlet
+            || (!runTelemetrySuppressed && startEventRecorded))
+        {
+            return;
+        }
+
+        if (pendingOffer != null) pendingOffer.AnalyticsSuppressed = true;
+        CurrentRunId = Guid.NewGuid().ToString("N");
+        deathsInRun = 0;
+        acceptedRevives = 0;
+        lastDeathAt = -1;
+        lastFailureAt = -1;
+        lastDeathAttemptId = string.Empty;
+        runStartedAt = Time.realtimeSinceStartupAsDouble;
+        currentRunStartReason = "consent_granted";
+        startEventRecorded = false;
+        runTelemetrySuppressed = false;
+        TryRecordRunStarted();
+    }
+
     public void SetSegment(string segmentId)
     {
         if (!string.IsNullOrWhiteSpace(segmentId) && segmentId != CurrentSegmentId)
@@ -150,7 +189,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public void RecordPlayerDeath(string causeOfDeath, int healthBeforeDeath)
     {
-        string failedAttemptId = attemptCoordinator.AttemptId ?? string.Empty;
+        string failedAttemptId = attemptCoordinator.TelemetryAttemptId ?? string.Empty;
         lastDeathAttemptId = failedAttemptId;
         EndActiveAttempt("failure", "death:" + (string.IsNullOrWhiteSpace(causeOfDeath) ? "unknown" : causeOfDeath));
         // If a revive was accepted, the outcome is not known until a later
@@ -175,21 +214,12 @@ public sealed class GauntletRunTracker : MonoBehaviour
         persistentGauntletDeaths = deathsInGauntletSession;
         bool offerEligible = IsCurrentSceneGauntlet && ShouldShowOffer(deathsInGauntletSession);
 
-        if (!ResearchAnalyticsBootstrap.IsReady)
-        {
-            return;
-        }
-
         PlayerDeathEvent deathEvent = new PlayerDeathEvent(CaptureTelemetryContext(CurrentRunId))
         {
-            RunId = CurrentRunId,
-            GauntletSessionId = CurrentGauntletSessionId,
-            SceneName = currentSceneName,
             SegmentId = CurrentSegmentId,
             DeathTotal = totalDeaths,
             DeathInSegment = deathsInSegment,
             DeathInGauntletSession = deathsInGauntletSession,
-            SessionSeconds = (float)ResearchAnalyticsBootstrap.SessionElapsedSeconds,
             SinceLastDeath = (float)sinceLastDeath,
             Cause = string.IsNullOrWhiteSpace(causeOfDeath) ? "unknown" : causeOfDeath,
             HealthBefore = healthBeforeDeath,
@@ -200,8 +230,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
             // separate revive_offer_shown event, so do not infer it from
             // schedule eligibility here.
             OfferShown = false,
-            Variant = ResearchPlayerState.OfferVariant,
-            ExperimentVersion = ExperimentVersion,
             AttemptId = failedAttemptId
         };
         ResearchAnalytics.RecordDeath(deathEvent);
@@ -209,40 +237,31 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     private ResearchTelemetryContext CaptureTelemetryContext(string runId)
     {
-        return ResearchTelemetryEvent.CaptureContext(ResearchPlayerState.PlayerId,
-            ResearchPlayerState.OfferVariant, currentSceneName,
-            ResearchPlayerState.PlaythroughId, runId);
+        return ResearchTelemetryEvent.CaptureContext(ResearchPlayerState.OfferVariant, currentSceneName,
+            ResearchPlayerState.PlaythroughId, runId, CurrentGauntletSessionId);
     }
 
     public void RecordPlayerFailure(string failureReason, int healthBeforeFailure, int healthAfterFailure, bool endsAttempt = true)
     {
         if (!IsCurrentSceneGauntlet) return;
 
-        string failedAttemptId = attemptCoordinator.AttemptId ?? string.Empty;
+        string failedAttemptId = attemptCoordinator.TelemetryAttemptId ?? string.Empty;
         if (endsAttempt) EndActiveAttempt("failure", string.IsNullOrWhiteSpace(failureReason) ? "forced_reset" : failureReason);
 
         double now = Time.realtimeSinceStartupAsDouble;
         double sinceLastFailure = lastFailureAt < 0 ? -1 : now - lastFailureAt;
         lastFailureAt = now;
-        if (!ResearchAnalyticsBootstrap.IsReady) return;
-
         ResearchAnalytics.RecordFailure(new PlayerFailureEvent(CaptureTelemetryContext(CurrentRunId))
         {
-            RunId = CurrentRunId,
-            GauntletSessionId = CurrentGauntletSessionId,
-            SceneName = currentSceneName,
             SegmentId = CurrentSegmentId,
             DeathTotal = lastDeathTotal,
             DeathInSegment = deathsInSegment,
             DeathInGauntletSession = deathsInGauntletSession,
-            SessionSeconds = (float)ResearchAnalyticsBootstrap.SessionElapsedSeconds,
             FailureReason = string.IsNullOrWhiteSpace(failureReason) ? "unknown" : failureReason,
             HealthBefore = healthBeforeFailure,
             HealthAfter = healthAfterFailure,
             Balance = ResearchPlayerState.PremiumCurrencyBalance,
             SinceLastFailure = (float)sinceLastFailure,
-            Variant = ResearchPlayerState.OfferVariant,
-            ExperimentVersion = ExperimentVersion,
             AttemptId = failedAttemptId
         });
     }
@@ -287,7 +306,8 @@ public sealed class GauntletRunTracker : MonoBehaviour
             OfferNumber = ResearchPlayerState.AdvanceGauntletOfferCount(currentGauntletId),
             BalanceBefore = ResearchPlayerState.PremiumCurrencyBalance,
             ShownAt = Time.realtimeSinceStartupAsDouble,
-            AttemptId = lastDeathAttemptId
+            AttemptId = lastDeathAttemptId,
+            AnalyticsSuppressed = !ResearchAnalyticsBootstrap.HasAnalyticsConsent
         };
 
         TryRecordPendingOfferEvents();
@@ -337,19 +357,14 @@ public sealed class GauntletRunTracker : MonoBehaviour
             return;
         }
 
-        if (ResearchAnalyticsBootstrap.IsReady)
+        if (!pendingOffer.AnalyticsSuppressed)
         {
             ReviveOutcomeObservedEvent outcomeEvent = new ReviveOutcomeObservedEvent(CaptureTelemetryContext(CurrentRunId))
             {
-                RunId = CurrentRunId,
-                GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
                 Outcome = outcome,
                 SecondsAfterDecision = (float)(Time.realtimeSinceStartupAsDouble - pendingOffer.ResolvedAt),
-                SceneName = currentSceneName,
                 SegmentId = CurrentSegmentId,
-                Variant = ResearchPlayerState.OfferVariant,
-                ExperimentVersion = ExperimentVersion,
                 AttemptId = pendingOffer.AttemptId
             };
             ResearchAnalytics.RecordOutcome(outcomeEvent);
@@ -370,7 +385,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             return;
         }
 
-        if (ResearchAnalyticsBootstrap.IsReady && startEventRecorded)
+        if (startEventRecorded && !runTelemetrySuppressed)
         {
             Stats player = null;
             GauntletRequirements requirements = null;
@@ -378,12 +393,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 if (candidate.gameObject.scene.name == currentSceneName) { player = candidate; break; }
             foreach (GauntletRequirements candidate in FindObjectsByType<GauntletRequirements>())
                 if (candidate.gameObject.scene.name == currentSceneName) { requirements = candidate; break; }
-            GauntletRunEndedEvent endedEvent = new GauntletRunEndedEvent
+            GauntletRunEndedEvent endedEvent = new GauntletRunEndedEvent(CaptureTelemetryContext(CurrentRunId))
             {
-                RunId = CurrentRunId,
-                GauntletSessionId = CurrentGauntletSessionId,
                 GauntletId = currentGauntletId,
-                PlaythroughId = ResearchPlayerState.PlaythroughId,
                 OffersShown = ResearchPlayerState.GetGauntletOfferCount(currentGauntletId),
                 NextRevivePrice = GetNextRevivePrice(),
                 ExitCheckpoint = CurrentSegmentId,
@@ -395,8 +407,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 RunDeaths = deathsInRun,
                 AcceptedRevives = acceptedRevives,
                 FinalBalance = ResearchPlayerState.PremiumCurrencyBalance,
-                Variant = ResearchPlayerState.OfferVariant,
-                ExperimentVersion = ExperimentVersion
             };
             ResearchAnalytics.RecordRunEnded(endedEvent);
         }
@@ -492,6 +502,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             runStartedAt = Time.realtimeSinceStartupAsDouble;
             pendingOffer = null;
             startEventRecorded = false;
+            runTelemetrySuppressed = false;
         }
 
         TryRecordRunStarted();
@@ -534,19 +545,22 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     private void TryRecordPendingOfferEvents()
     {
-        if (!ResearchAnalyticsBootstrap.IsReady || pendingOffer == null)
+        if (pendingOffer == null)
         {
             return;
         }
+        if (!ResearchAnalyticsBootstrap.HasAnalyticsConsent)
+        {
+            pendingOffer.AnalyticsSuppressed = true;
+            return;
+        }
+        if (pendingOffer.AnalyticsSuppressed) return;
 
         if (!pendingOffer.ShownEventRecorded)
         {
             ReviveOfferShownEvent shownEvent = new ReviveOfferShownEvent(CaptureTelemetryContext(CurrentRunId))
             {
-                RunId = CurrentRunId,
-                GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
-                SceneName = currentSceneName,
                 SegmentId = CurrentSegmentId,
                 DeathTotal = lastDeathTotal,
                 DeathInSegment = deathsInSegment,
@@ -554,8 +568,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
                 RevivePrice = pendingOffer.Price,
                 OfferNumber = pendingOffer.OfferNumber,
                 CanAfford = pendingOffer.BalanceBefore >= pendingOffer.Price,
-                Variant = ResearchPlayerState.OfferVariant,
-                ExperimentVersion = ExperimentVersion,
                 AttemptId = pendingOffer.AttemptId
             };
             pendingOffer.ShownEventRecorded = ResearchAnalytics.RecordOfferShown(shownEvent);
@@ -565,16 +577,12 @@ public sealed class GauntletRunTracker : MonoBehaviour
         {
             ReviveOfferResolvedEvent resolvedEvent = new ReviveOfferResolvedEvent(CaptureTelemetryContext(CurrentRunId))
             {
-                RunId = CurrentRunId,
-                GauntletSessionId = CurrentGauntletSessionId,
                 OfferId = pendingOffer.OfferId,
                 Response = pendingOffer.Response,
                 DecisionSeconds = pendingOffer.DecisionSeconds,
                 RevivePrice = pendingOffer.Price,
                 BalanceBefore = pendingOffer.BalanceBefore,
                 BalanceAfter = ResearchPlayerState.PremiumCurrencyBalance,
-                Variant = ResearchPlayerState.OfferVariant,
-                ExperimentVersion = ExperimentVersion,
                 AttemptId = pendingOffer.AttemptId
             };
             pendingOffer.ResolvedEventRecorded = ResearchAnalytics.RecordOfferResolved(resolvedEvent);
@@ -583,25 +591,19 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     private void TryRecordRunStarted()
     {
-        if (!IsCurrentSceneGauntlet || startEventRecorded || !ResearchAnalyticsBootstrap.IsReady)
+        if (!IsCurrentSceneGauntlet || startEventRecorded || runTelemetrySuppressed)
         {
             return;
         }
 
-        GauntletRunStartedEvent startedEvent = new GauntletRunStartedEvent
+        GauntletRunStartedEvent startedEvent = new GauntletRunStartedEvent(CaptureTelemetryContext(CurrentRunId))
         {
-            RunId = CurrentRunId,
-            GauntletSessionId = CurrentGauntletSessionId,
             GauntletId = currentGauntletId,
-            SceneName = currentSceneName,
             SegmentId = CurrentSegmentId,
             Balance = ResearchPlayerState.PremiumCurrencyBalance,
-            PlaythroughId = ResearchPlayerState.PlaythroughId,
             OffersShown = ResearchPlayerState.GetGauntletOfferCount(currentGauntletId),
             NextRevivePrice = GetNextRevivePrice(),
             RunStartReason = currentRunStartReason,
-            Variant = ResearchPlayerState.OfferVariant,
-            ExperimentVersion = ExperimentVersion
         };
         startEventRecorded = ResearchAnalytics.RecordRunStarted(startedEvent);
     }

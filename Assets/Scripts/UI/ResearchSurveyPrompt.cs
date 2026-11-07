@@ -98,7 +98,7 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
     private void ResolveInvitation(bool accepted)
     {
         if (closed || questionnaire) return;
-        ResearchAnalytics.RecordSurveyInvitationResolved(new SurveyInvitationResolvedEvent(response, accepted));
+        ResearchSurvey.ResolveInvitation(response, accepted);
         if (!accepted)
         {
             Close();

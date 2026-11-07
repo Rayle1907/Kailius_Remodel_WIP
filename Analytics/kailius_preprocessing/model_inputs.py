@@ -17,7 +17,7 @@ NUMERIC = [
     "attempt_number", "prior_observed_attempts", "prior_observed_failures",
     "prior_segment_observed_failures", "prior_active_seconds", "history_incomplete",
 ]
-CATEGORICAL = ["input_method", "platform", "offer_variant", "start_reason", "previous_outcome"]
+CATEGORICAL = ["platform", "offer_variant", "start_reason", "previous_outcome"]
 
 
 def split_players(rows: Sequence[Mapping[str, Any]], seed: int) -> dict[str, str]:
@@ -51,7 +51,7 @@ def _training_cohort(dataset: Path) -> pd.DataFrame:
     model_rows = pd.read_parquet(dataset / "model_rows.parquet")
     cohort = model_rows.loc[(model_rows["split"] == "train") & model_rows["first_attempt"]].copy()
     cohort = cohort.sort_values(
-        ["player_id", "segment_id", "segment_version", "attempt_id"], kind="mergesort"
+        ["player_id", "level_segment_id", "segment_version", "attempt_id"], kind="mergesort"
     )
     return cohort.drop_duplicates("player_id", keep="first")
 
@@ -77,7 +77,7 @@ def _candidate_record(
     candidate.update(
         player_id=player_row["player_id"],
         source_attempt_id=player_row["attempt_id"],
-        source_segment_id=player_row["segment_id"],
+        source_segment_id=player_row["level_segment_id"],
         source_segment_version=player_row["segment_version"],
         **features,
     )
