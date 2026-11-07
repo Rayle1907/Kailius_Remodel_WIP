@@ -67,6 +67,7 @@ public class Stats : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
+        BindHealthDisplay();
         if(instance == null) {
             instance = this;
         }
@@ -113,6 +114,20 @@ public class Stats : MonoBehaviour {
 
         RefreshFuryBar();
 
+    }
+
+    private void BindHealthDisplay() {
+        if (hearts != null) return;
+
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
+            if (root.name != "Estadisticas" && root.name != "OpenWorldHud") continue;
+
+            foreach (Image image in root.GetComponentsInChildren<Image>(true)) {
+                if (image.name != "Health") continue;
+                hearts = image;
+                return;
+            }
+        }
     }
 
     private void UpdateStatText() {
