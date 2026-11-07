@@ -389,7 +389,7 @@ MonoBehaviour:
   m_text: '<b>A spark remains.</b>
 
 
-    You carry 100 Embers. When you fall, spend
+    You carry 100 Embers. When you die, spend
     them to rise at your last checkpoint with your health restored.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d22c986e05eac53b8bc884c1372fa019, type: 2}

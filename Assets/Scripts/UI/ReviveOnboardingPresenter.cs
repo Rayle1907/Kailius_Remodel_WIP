@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public sealed class ReviveOnboardingPresenter : MonoBehaviour
 {
     public enum TutorialState { Typing, AwaitingDismissal, Dismissed }
-    public const string IntroductionPageOne = "<b>A spark remains.</b>\n\nYou carry 100 Embers. When you fall, spend them to rise at your last checkpoint with your health restored.";
+    public const string IntroductionPageOne = "<b>A spark remains.</b>\n\nYou carry 100 Embers. When you die, spend them to rise at your last checkpoint with your health restored.";
     public const string IntroductionPageTwo = "Each offer of another chance demands more Embers. Those you keep remain with you between runs.\n\nYou may always begin the gauntlet again, at no cost.";
     public const string Introduction = IntroductionPageOne + "\n\n" + IntroductionPageTwo;
 
@@ -155,6 +155,15 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         lastSafeArea = Screen.safeArea;
         lastScreenSize = new Vector2Int(Screen.width, Screen.height);
         MobileDialogLayout.Place(root, Vector2.zero, Vector2.one);
+        MobileDialogLayout.Place(inputBlocker.rectTransform, Vector2.zero, Vector2.one);
+        if (Screen.width > 0 && Screen.height > 0)
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            float scale = canvas != null ? Mathf.Max(0.0001f, canvas.scaleFactor) : 1f;
+            inputBlocker.rectTransform.offsetMin = new Vector2(-lastSafeArea.xMin / scale, -lastSafeArea.yMin / scale);
+            inputBlocker.rectTransform.offsetMax = new Vector2((Screen.width - lastSafeArea.xMax) / scale,
+                (Screen.height - lastSafeArea.yMax) / scale);
+        }
         if (Screen.width > 0 && Screen.height > 0)
             MobileDialogLayout.Place(layoutRoot,
                 new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height),
@@ -171,7 +180,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         continuationPrompt.color = Color.white;
         continuationPrompt.alignment = TextAlignmentOptions.Center;
         MobileDialogLayout.Place(continuationPrompt.rectTransform, new Vector2(0.24f, 0.01f), new Vector2(0.98f, 0.10f));
-        inputBlocker.color = new Color(0f, 0f, 0f, 0.95f);
+        inputBlocker.color = Color.black;
     }
 
     private void RestoreOffer()
