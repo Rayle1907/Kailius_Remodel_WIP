@@ -10,6 +10,7 @@ public sealed class GauntletRequirements : MonoBehaviour
     public int DefeatedCount => visit == null ? 0 : visit.DefeatedCount;
     public int RequiredCount => visit == null ? 0 : visit.RequiredCount;
     public bool IsConfigured { get; private set; }
+    public bool IsInitialized => initialized;
     public bool IsCleared => GauntletProgress.IsCleared(gameObject.scene.name);
     [SerializeField] private List<RequiredGauntletEnemy> targets = new List<RequiredGauntletEnemy>();
     [SerializeField] private List<int> defeatedIds = new List<int>();

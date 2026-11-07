@@ -882,8 +882,33 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000000000000022}
   m_SourcePrefab: {fileID: 100100000, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
+--- !u!1 &910000000000000021 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
+  m_PrefabInstance: {fileID: 369401137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &910000000000000022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000000000000021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name: ''
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  warningRadius: 10
+  prerequisites:
+  - {fileID: 511434620}
+  - {fileID: 1724991233}
+  - {fileID: 2055605332}
 --- !u!4 &369401138 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5469285553354129140, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
@@ -2076,8 +2101,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 910000000000000012}
   m_SourcePrefab: {fileID: 100100000, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
+--- !u!1 &910000000000000011 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
+  m_PrefabInstance: {fileID: 912064282}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &910000000000000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000000000000011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name: ''
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  warningRadius: 10
+  prerequisites:
+  - {fileID: 1724991233}
 --- !u!4 &912064283 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5469285553354129140, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
@@ -2897,6 +2945,7 @@ GameObject:
   - component: {fileID: 1383918134}
   - component: {fileID: 1383918136}
   - component: {fileID: 1383918135}
+  - component: {fileID: 8911123456789012012}
   m_Layer: 5
   m_Name: DimBackground
   m_TagString: Untagged
@@ -2961,6 +3010,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383918133}
   m_CullTransparentMesh: 1
+--- !u!114 &8911123456789012012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383918133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51563581b6ec453bbcef7ae61492cd22, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MobileSafeAreaFullScreen
 --- !u!1001 &1386667289
 PrefabInstance:
   m_ObjectHideFlags: 0

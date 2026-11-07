@@ -6,12 +6,12 @@ public class PlayerController : MonoBehaviour {
     public event System.Action<Transform> CheckpointTouched;
     public event System.Action<Transform> CheckpointRespawned;
     public Transform CurrentRespawnCheckpoint => currentRespawn;
+    public bool IsAlive => !dead && playerStats != null && playerStats.health > 0;
 
     public SpikeRecovery SpikeRecovery { get; private set; }
     public bool AnalyticsCanControl => !dead && isActiveAndEnabled && (SpikeRecovery == null || !SpikeRecovery.IsMovementLocked);
-    public string AnalyticsInputMethod => controllerMobile != null && controllerMobile.activeSelf ? "touch" : "keyboard";
-    public float AnalyticsMoveSpeed => AnalyticsInputMethod == "touch" && touchMovement != null ? touchMovement.moveSpeed : moveSpeed;
-    public float AnalyticsJumpHeight => AnalyticsInputMethod == "touch" && touchMovement != null ? touchMovement.jumpHeight : jumpHeight;
+    public float AnalyticsMoveSpeed => controllerMobile != null && controllerMobile.activeSelf && touchMovement != null ? touchMovement.moveSpeed : moveSpeed;
+    public float AnalyticsJumpHeight => controllerMobile != null && controllerMobile.activeSelf && touchMovement != null ? touchMovement.jumpHeight : jumpHeight;
     public float AnalyticsGravity => body == null ? Physics2D.gravity.y : Physics2D.gravity.y * body.gravityScale;
 
     public float moveSpeed;
@@ -37,6 +37,11 @@ public class PlayerController : MonoBehaviour {
     private Rigidbody2D body;
     private Collider2D mainCollider;
     private readonly HashSet<Collider2D> pendingCheckpointTriggers = new HashSet<Collider2D>();
+    private readonly List<RequiredGauntletEnemy> checkpointRequirementsRemaining = new List<RequiredGauntletEnemy>();
+    private readonly List<CheckpointRequirements> checkpointRequirementCandidates = new List<CheckpointRequirements>();
+    private readonly List<CheckpointRequirements> nearbyCheckpointRequirements = new List<CheckpointRequirements>();
+    private GauntletRequirements checkpointRequirementsOwner;
+    private GauntletRequirementsHud checkpointRequirementsHud;
     private Transform lastCheckpointTouched;
     private int lastCheckpointTouchedFrame = -1;
     private Animator playerAnimator;
@@ -66,6 +71,8 @@ public class PlayerController : MonoBehaviour {
     }
 
     void Update() {
+
+        RefreshCheckpointRequirementsNotice();
 
         if(!dead) {
 
@@ -198,6 +205,8 @@ public class PlayerController : MonoBehaviour {
     private void OnTriggerExit2D(Collider2D collision)
     {
         pendingCheckpointTriggers.Remove(collision);
+        if (collision.CompareTag("ReSpawn") && !HasPendingCheckpointCollider(collision.transform))
+            CheckpointRequirementsNotice.HideFor(this, collision.transform.GetComponent<CheckpointRequirements>());
     }
 
     private void HandleCheckpointTouched(Transform checkpoint) {
@@ -229,11 +238,104 @@ public class PlayerController : MonoBehaviour {
             return false;
         }
 
-        HandleCheckpointTouched(checkpointCollider.transform);
+        Transform checkpoint = checkpointCollider.transform;
+        CheckpointRequirements checkpointRequirements = checkpoint.GetComponent<CheckpointRequirements>();
+        if (checkpointRequirements != null)
+        {
+            GauntletRequirements owner = GetCheckpointRequirementsOwner();
+            CheckpointRequirements.GateState gateState = checkpointRequirements.Evaluate(owner, checkpointRequirementsRemaining);
+            if (gateState != CheckpointRequirements.GateState.Cleared)
+            {
+                return false;
+            }
+        }
+
+        CheckpointRequirementsNotice.HideForActivation(this);
+        if (checkpointRequirements != null && currentRespawn == checkpoint)
+            return true;
+
+        HandleCheckpointTouched(checkpoint);
         return true;
     }
 
+    private void RefreshCheckpointRequirementsNotice()
+    {
+        if (!IsAlive || Time.timeScale <= 0f || (menu != null && menu.activeInHierarchy)
+            || ResearchSurveyPrompt.IsOpen || MobilePrivacyControls.IsOpen || GauntletReplayPrompt.BlocksSettings)
+        {
+            CheckpointRequirementsNotice.HideForPlayer(this);
+            return;
+        }
+
+        CheckpointRequirements nearest = null;
+        float nearestDistance = float.MaxValue;
+        checkpointRequirementCandidates.Clear();
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+            checkpointRequirementCandidates.AddRange(root.GetComponentsInChildren<CheckpointRequirements>(true));
+        foreach (CheckpointRequirements candidate in checkpointRequirementCandidates)
+        {
+            if (candidate.gameObject.scene != gameObject.scene) continue;
+            float distance = Vector2.Distance(transform.position, candidate.transform.position);
+            if (distance > candidate.WarningRadius || distance >= nearestDistance) continue;
+            GauntletRequirements owner = GetCheckpointRequirementsOwner();
+            CheckpointRequirements.GateState state = candidate.Evaluate(owner, checkpointRequirementsRemaining);
+            if (state != CheckpointRequirements.GateState.RequirementsRemain
+                && state != CheckpointRequirements.GateState.Misconfigured) continue;
+            nearest = candidate;
+            nearestDistance = distance;
+        }
+
+        if (nearest == null)
+        {
+            CheckpointRequirementsNotice.HideForPlayer(this);
+            return;
+        }
+
+        CheckpointRequirementsNotice.Show(this, nearest, GetCheckpointRequirementsOwner(), GetCheckpointRequirementsHud(), playerStats);
+    }
+
+    private GauntletRequirements GetCheckpointRequirementsOwner()
+    {
+        if (checkpointRequirementsOwner == null
+            || checkpointRequirementsOwner.gameObject.scene != gameObject.scene)
+        {
+            checkpointRequirementsOwner = FindAnyObjectByType<GauntletRequirements>();
+            if (checkpointRequirementsOwner != null
+                && checkpointRequirementsOwner.gameObject.scene != gameObject.scene)
+                checkpointRequirementsOwner = null;
+        }
+
+        return checkpointRequirementsOwner;
+    }
+
+    private GauntletRequirementsHud GetCheckpointRequirementsHud()
+    {
+        if (checkpointRequirementsHud == null
+            || checkpointRequirementsHud.gameObject.scene != gameObject.scene)
+        {
+            checkpointRequirementsHud = FindAnyObjectByType<GauntletRequirementsHud>();
+            if (checkpointRequirementsHud != null
+                && checkpointRequirementsHud.gameObject.scene != gameObject.scene)
+                checkpointRequirementsHud = null;
+        }
+
+        return checkpointRequirementsHud;
+    }
+
+    private bool HasPendingCheckpointCollider(Transform checkpoint)
+    {
+        pendingCheckpointTriggers.RemoveWhere(item => item == null || !item.enabled || !item.gameObject.activeInHierarchy);
+        foreach (Collider2D item in pendingCheckpointTriggers)
+            if (item.transform == checkpoint) return true;
+        return false;
+    }
+
     public void reSpawn()
+    {
+        TryRespawn();
+    }
+
+    public bool TryRespawn()
     {
         if (currentRespawn == null)
         {
@@ -243,7 +345,7 @@ public class PlayerController : MonoBehaviour {
         if (currentRespawn == null)
         {
             Debug.LogError("No Respawn checkpoint found.");
-            return;
+            return false;
         }
 
         Debug.Log("Respawning at: " + currentRespawn.name);
@@ -258,6 +360,7 @@ public class PlayerController : MonoBehaviour {
         {
             GauntletRunTracker.Instance.BeginAttemptAfterRespawn("checkpoint_respawn");
         }
+        return true;
     }
     private Transform FindClosestRespawn() {
         GameObject[] respawns = GameObject.FindGameObjectsWithTag("ReSpawn");
@@ -265,6 +368,7 @@ public class PlayerController : MonoBehaviour {
         float closestDistance = float.MaxValue;
 
         foreach(GameObject respawn in respawns) {
+            if (respawn.GetComponent<CheckpointRequirements>() != null) continue;
             float distance = (respawn.transform.position - transform.position).sqrMagnitude;
             if(distance < closestDistance) {
                 closestDistance = distance;

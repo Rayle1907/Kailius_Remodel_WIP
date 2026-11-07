@@ -7,7 +7,6 @@ public sealed class OptionalLootHud : MonoBehaviour
     [SerializeField] private GameObject section;
     [SerializeField] private TMP_Text heading;
     [SerializeField] private TMP_Text details;
-    [SerializeField] private RectTransform enemyRows;
     [SerializeField] private GameObject[] currencyRows;
     [SerializeField] private TMP_Text coinsText;
     [SerializeField] private TMP_Text gemsText;
@@ -27,22 +26,11 @@ public sealed class OptionalLootHud : MonoBehaviour
     {
         progress.Changed += Refresh;
         Refresh();
-        Canvas.willRenderCanvases += PositionSection;
     }
 
     private void OnDisable()
     {
         if (progress != null) progress.Changed -= Refresh;
-        Canvas.willRenderCanvases -= PositionSection;
-    }
-
-    private void PositionSection()
-    {
-        if (!gauntlet || enemyRows == null || !section.activeSelf) return;
-        RectTransform rect = (RectTransform)section.transform;
-        Vector2 position = rect.anchoredPosition;
-        position.y = enemyRows.anchoredPosition.y - enemyRows.rect.height - 16f;
-        if (rect.anchoredPosition != position) rect.anchoredPosition = position;
     }
 
     private void Refresh()

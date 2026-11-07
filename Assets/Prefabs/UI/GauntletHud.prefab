@@ -671,13 +671,13 @@ RectTransform:
   - {fileID: 920000000000001011}
   - {fileID: 920000000000003001}
   - {fileID: 920000000000003101}
-  m_Father: {fileID: 2399419338514131443}
+  m_Father: {fileID: 585494622495715448}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: -362}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -32, y: -24}
   m_SizeDelta: {x: 420, y: 120}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 1, y: 1}
 --- !u!1 &920000000000001000
 GameObject:
   m_ObjectHideFlags: 0
@@ -2166,7 +2166,6 @@ RectTransform:
   - {fileID: 7575746091401837686}
   - {fileID: 7169425339317343825}
   - {fileID: 8850284922316321445}
-  - {fileID: 920000000000000002}
   m_Father: {fileID: 585494622495715448}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
@@ -2604,6 +2603,7 @@ RectTransform:
   m_Children:
   - {fileID: 7828832981735847426}
   - {fileID: 2399419338514131443}
+  - {fileID: 920000000000000002}
   m_Father: {fileID: 1360292069697722512}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3837,7 +3837,6 @@ MonoBehaviour:
   section: {fileID: 920000000000000001}
   heading: {fileID: 920000000000001003}
   details: {fileID: 920000000000001013}
-  enemyRows: {fileID: 8850284922316321445}
   currencyRows:
   - {fileID: 920000000000003000}
   - {fileID: 920000000000003100}

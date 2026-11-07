@@ -23,6 +23,23 @@ public sealed class GauntletRequirementsHud : MonoBehaviour
     private GauntletRequirements requirements;
     private GauntletEarnings earnings;
 
+    public Canvas RootCanvas
+    {
+        get
+        {
+            Canvas canvas = GetComponentInParent<Canvas>();
+            return canvas == null ? null : canvas.rootCanvas;
+        }
+    }
+
+    public TMP_FontAsset NoticeFont => requiredHeading == null ? null : requiredHeading.font;
+
+    public GauntletEnemyRow CreateNoticeRow(Transform parent)
+    {
+        if (rowTemplate == null || !rowTemplate.IsConfigured) return null;
+        return Instantiate(rowTemplate, parent, false);
+    }
+
     private void Awake()
     {
         HidePreview();
