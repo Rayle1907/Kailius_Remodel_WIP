@@ -111,9 +111,9 @@ public class Traps : MonoBehaviour {
         controller.SpikeRecovery.TryHit(spikeDamage, source, destination);
     }
 
-    protected void HandleHazardContact(GameObject contactedObject) {
+    protected bool HandleHazardContact(GameObject contactedObject) {
         Stats playerStats = contactedObject.GetComponentInParent<Stats>();
-        if (playerStats == null) return;
+        if (playerStats == null) return false;
         int healthBefore = playerStats.health;
         playerStats.ApplyDamage(damage, "trap", true);
         if (playerStats.health > 0) {
@@ -121,7 +121,11 @@ public class Traps : MonoBehaviour {
                 GauntletRunTracker.Instance.RecordPlayerFailure("hazard", healthBefore, playerStats.health);
             }
             PlayerController controller = contactedObject.GetComponentInParent<PlayerController>();
-            if (controller != null) controller.reSpawn();
+            if (controller == null) return false;
+            bool healthReduced = playerStats.health < healthBefore;
+            bool respawned = controller.TryRespawn();
+            return healthReduced && respawned;
         }
+        return false;
     }
 }

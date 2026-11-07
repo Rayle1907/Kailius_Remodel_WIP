@@ -65,6 +65,10 @@ public sealed class LethalTilemapHazard : Traps
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!Application.IsPlaying(gameObject)) return;
-        HandleHazardContact(other.gameObject);
+        if (!HandleHazardContact(other.gameObject)) return;
+        Stats playerStats = other.GetComponentInParent<Stats>();
+        if (playerStats == null) return;
+        FuryFeedback feedback = playerStats.GetComponent<FuryFeedback>();
+        if (feedback != null) feedback.ShowFallRecoveryIntroduction();
     }
 }

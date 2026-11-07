@@ -17,6 +17,13 @@ public sealed class ReviveOfferDebugButton : MonoBehaviour
         Debug.Log("Fury introduction reset. It will appear when the meter next fills and its HUD is visible. Currency and progression are unchanged.");
     }
 
+    [MenuItem("Tools/Fall Recovery/Reset Introduction")]
+    public static void ResetFallRecoveryIntroduction()
+    {
+        FuryFeedback.ResetFallRecoveryIntroduction();
+        Debug.Log("Fall recovery introduction reset. It will appear after the next survived lethal-tilemap hazard.");
+    }
+
     [MenuItem("Tools/Revive/Reset Onboarding")]
     public static void ResetOnboarding()
     {

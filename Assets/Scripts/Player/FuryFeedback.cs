@@ -11,8 +11,13 @@ public sealed class FuryFeedback : MonoBehaviour
     private const string HintRevisionKey = "fury_introduction_revision";
     public const int CurrentIntroductionRevision = 2;
     public const string Introduction = "Land 4 sword hits to charge Fury. Your next hit deals +50% damage.";
+    public const string FallIntroductionSeenKey = "fall_recovery_introduction_seen";
+    public const string FallIntroduction = "Back at your checkpoint. Falling costs health. You die when your health runs out.";
     public static bool IntroductionSeen => PlayerPrefs.GetInt(HintRevisionKey,
         PlayerPrefs.GetInt(HintSeenKey, 0) != 0 ? 1 : 0) >= CurrentIntroductionRevision;
+    public static bool FallIntroductionSeen => PlayerPrefs.GetInt(FallIntroductionSeenKey, 0) != 0;
+
+    private enum IntroductionType { None, Fury, FallRecovery }
 
     [SerializeField] private Material glowMaterial;
     [SerializeField, Range(0f, 1f)] private float swordTintStrength = 0.65f;
@@ -34,9 +39,12 @@ public sealed class FuryFeedback : MonoBehaviour
     private MaterialPropertyBlock swipeProperties;
     private Image bar;
     private Color originalBarColor;
-    private GameObject hint;
-    private float hintVisibleSeconds;
+    private GameplayOnboardingBannerView banner;
+    private IntroductionType activeIntroduction;
+    private float furyVisibleSeconds;
+    private float fallRecoveryVisibleSeconds;
     private bool hintWasReadable;
+    private bool applicationPaused;
     private float empoweredUntil;
     private static readonly int MainTexture = Shader.PropertyToID("_MainTex");
     private static readonly int TintColor = Shader.PropertyToID("_TintColor");
@@ -128,13 +136,13 @@ public sealed class FuryFeedback : MonoBehaviour
             if (stats.getHealth() <= 0)
             {
                 empoweredUntil = 0f;
-                if (hint != null) hint.SetActive(false);
+                HideIntroductionForDeath();
                 if (glow != null) glow.enabled = false;
                 if (swipe != null) swipe.enabled = false;
             }
             return;
         }
-        ShowIntroduction();
+        ShowFuryIntroduction();
     }
 
     private void OnConsumed() => empoweredUntil = Time.time + 0.45f;
@@ -157,14 +165,30 @@ public sealed class FuryFeedback : MonoBehaviour
             target.a = originalBarColor.a;
             bar.color = Color.Lerp(originalBarColor, target, pulse);
         }
-        if (!IntroductionSeen && stats.IsFuryReady && (hint == null || !hint.activeSelf)) ShowIntroduction();
-        bool readable = hint != null && hint.activeInHierarchy && stats.getHealth() > 0 && Application.isFocused && Time.timeScale > 0f;
+        if (stats.getHealth() <= 0)
+        {
+            HideIntroductionForDeath();
+        }
+        else
+        {
+            if (!IntroductionSeen && stats.IsFuryReady && activeIntroduction != IntroductionType.FallRecovery)
+                ShowFuryIntroduction();
+            banner?.RefreshLayoutIfNeeded();
+        }
+
+        bool readable = banner != null && banner.IsVisible && activeIntroduction != IntroductionType.None
+            && stats.getHealth() > 0 && Application.isFocused && !applicationPaused && Time.timeScale > 0f;
         if (readable && hintWasReadable) AdvanceIntroduction(Time.unscaledDeltaTime);
         hintWasReadable = readable;
     }
 
     private void OnApplicationFocus(bool focused) => hintWasReadable = false;
-    private void OnApplicationPause(bool paused) => hintWasReadable = false;
+
+    private void OnApplicationPause(bool paused)
+    {
+        applicationPaused = paused;
+        hintWasReadable = false;
+    }
 
     private void LateUpdate()
     {
@@ -197,66 +221,98 @@ public sealed class FuryFeedback : MonoBehaviour
         swipe.SetPropertyBlock(swipeProperties);
     }
 
-    private void ShowIntroduction()
+    private void ShowFuryIntroduction()
     {
-        if (IntroductionSeen || bar == null) return;
-        Canvas canvas = bar.GetComponentInParent<Canvas>();
-        if (canvas == null || !canvas.isActiveAndEnabled || !bar.gameObject.activeInHierarchy) return;
-        if (hint != null)
-        {
-            hintVisibleSeconds = 0f;
-            hintWasReadable = false;
-            hint.SetActive(true);
-            return;
-        }
-        canvas = canvas.rootCanvas;
-        hint = new GameObject("Fury introduction", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-        RectTransform rect = hint.GetComponent<RectTransform>();
-        rect.SetParent(canvas.transform, false);
-        Rect safe = Screen.safeArea;
-        float width = Mathf.Max(1f, Screen.width), height = Mathf.Max(1f, Screen.height);
-        rect.anchorMin = new Vector2(0f, (safe.yMin + safe.height * 0.76f) / height);
-        rect.anchorMax = new Vector2(1f, (safe.yMin + safe.height * 0.89f) / height);
-        rect.offsetMin = rect.offsetMax = Vector2.zero;
-        hint.GetComponent<CanvasGroup>().blocksRaycasts = false;
-        Image background = hint.GetComponent<Image>();
-        background.color = new Color(0.12f, 0.025f, 0.025f, 0.63f);
-        background.raycastTarget = false;
-
-        var label = new GameObject("Explanation", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform labelRect = label.GetComponent<RectTransform>();
-        labelRect.SetParent(rect, false);
-        labelRect.anchorMin = new Vector2(safe.xMin / width, 0f);
-        labelRect.anchorMax = new Vector2(safe.xMax / width, 1f);
-        labelRect.offsetMin = new Vector2(12f, 6f);
-        labelRect.offsetMax = new Vector2(-12f, -6f);
-        TextMeshProUGUI text = label.GetComponent<TextMeshProUGUI>();
-        if (stats.textDamage != null) text.font = stats.textDamage.font;
-        text.text = Introduction;
-        text.color = Color.white;
-        text.alignment = TextAlignmentOptions.Center;
-        text.enableAutoSizing = true;
-        text.fontSizeMax = 54f * Mathf.Max(1f, safe.height) / 1080f / Mathf.Max(0.001f, canvas.scaleFactor);
-        text.fontSizeMin = text.fontSizeMax * 0.75f;
-        text.raycastTarget = false;
-        hintVisibleSeconds = 0f;
+        if (IntroductionSeen || activeIntroduction == IntroductionType.FallRecovery || !TryCreateBanner()) return;
+        if (activeIntroduction == IntroductionType.Fury && banner.IsVisible) return;
+        if (furyVisibleSeconds >= 10f) furyVisibleSeconds = 0f;
+        activeIntroduction = IntroductionType.Fury;
+        banner.Show(Introduction);
         hintWasReadable = false;
+    }
+
+    public void ShowFallRecoveryIntroduction()
+    {
+        if (FallIntroductionSeen || stats.getHealth() <= 0 || activeIntroduction == IntroductionType.FallRecovery
+            || !TryCreateBanner()) return;
+        fallRecoveryVisibleSeconds = 0f;
+        activeIntroduction = IntroductionType.FallRecovery;
+        banner.Show(FallIntroduction);
+        hintWasReadable = false;
+    }
+
+    private bool TryCreateBanner()
+    {
+        if (banner != null && banner.IsAvailable) return true;
+        banner?.Dispose();
+        banner = null;
+        Canvas canvas = bar != null ? bar.GetComponentInParent<Canvas>() : null;
+        if (canvas == null && stats.hearts != null) canvas = stats.hearts.GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+            {
+                if (root.name != "Estadisticas" && root.name != "OpenWorldHud") continue;
+                Canvas[] canvases = root.GetComponentsInChildren<Canvas>(true);
+                foreach (Canvas candidate in canvases)
+                {
+                    if (!candidate.isActiveAndEnabled) continue;
+                    canvas = candidate.rootCanvas;
+                    break;
+                }
+                if (canvas != null) break;
+            }
+        }
+        if (canvas == null || !canvas.isActiveAndEnabled || (bar != null && !bar.gameObject.activeInHierarchy)) return false;
+        banner = GameplayOnboardingBannerView.Create(canvas.rootCanvas,
+            stats.textDamage != null ? stats.textDamage.font : null);
+        return banner != null;
     }
 
     private void AdvanceIntroduction(float visibleSeconds)
     {
-        hintVisibleSeconds += Mathf.Max(0f, visibleSeconds);
-        if (hintVisibleSeconds < 10f) return;
-        hint.SetActive(false);
-        PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
-        PlayerPrefs.SetInt(HintSeenKey, 1);
+        if (activeIntroduction == IntroductionType.Fury)
+        {
+            furyVisibleSeconds += Mathf.Max(0f, visibleSeconds);
+            if (furyVisibleSeconds < 10f) return;
+            PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
+            PlayerPrefs.SetInt(HintSeenKey, 1);
+        }
+        else if (activeIntroduction == IntroductionType.FallRecovery)
+        {
+            fallRecoveryVisibleSeconds += Mathf.Max(0f, visibleSeconds);
+            if (fallRecoveryVisibleSeconds < 10f) return;
+            PlayerPrefs.SetInt(FallIntroductionSeenKey, 1);
+        }
+        else return;
+
         PlayerPrefs.Save();
+        IntroductionType completed = activeIntroduction;
+        activeIntroduction = IntroductionType.None;
+        banner.Hide();
+        hintWasReadable = false;
+        if (completed == IntroductionType.FallRecovery && !IntroductionSeen && stats.IsFuryReady)
+            ShowFuryIntroduction();
+    }
+
+    private void HideIntroductionForDeath()
+    {
+        if (activeIntroduction == IntroductionType.FallRecovery) fallRecoveryVisibleSeconds = 0f;
+        activeIntroduction = IntroductionType.None;
+        banner?.Hide();
+        hintWasReadable = false;
     }
 
     public static void ResetIntroduction()
     {
         PlayerPrefs.DeleteKey(HintSeenKey);
         PlayerPrefs.DeleteKey(HintRevisionKey);
+        PlayerPrefs.Save();
+    }
+
+    public static void ResetFallRecoveryIntroduction()
+    {
+        PlayerPrefs.DeleteKey(FallIntroductionSeenKey);
         PlayerPrefs.Save();
     }
 
@@ -298,14 +354,16 @@ public sealed class FuryFeedback : MonoBehaviour
         if (bar != null) bar.color = originalBarColor;
         if (glow != null) glow.enabled = false;
         if (swipe != null) swipe.enabled = false;
-        if (hint != null) hint.SetActive(false);
+        if (activeIntroduction == IntroductionType.FallRecovery) fallRecoveryVisibleSeconds = 0f;
+        activeIntroduction = IntroductionType.None;
+        banner?.Hide();
         hintWasReadable = false;
         empoweredUntil = 0f;
     }
 
     private void OnDestroy()
     {
-        if (hint != null) Release(hint);
+        banner?.Dispose();
         if (frameMeshes != null)
             foreach (Mesh mesh in frameMeshes) if (mesh != null) Release(mesh);
         if (swipeMeshes != null)
