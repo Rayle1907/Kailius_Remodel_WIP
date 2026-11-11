@@ -72,6 +72,10 @@ public class Stats : MonoBehaviour {
             instance = this;
         }
 
+        if(hearts == null && gameObject.scene.name == "Scene_3") {
+            hearts = GameObject.Find("Estadisticas/Mobile Safe Area/Stats/Health Frame/Health")?.GetComponent<Image>();
+        }
+
         // Cogemos los datos guardados de las otras escenas
         if ((int)PlayerPrefs.GetInt("AttackDamage", 0) >= 100) {
             this.attackDamage = (int)PlayerPrefs.GetInt("AttackDamage", 0);
