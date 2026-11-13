@@ -18,6 +18,8 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 	private NpcFacing facing;
 	private BossWeapon weapon;
 	private float patrolDirection = 1f;
+	private readonly RaycastHit2D[] wallHits = new RaycastHit2D[16];
+	private ContactFilter2D wallFilter;
 
 	// OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
 		override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
@@ -30,6 +32,8 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 		{
 			groundLayer = LayerMask.GetMask("Ground", "Water");
 		}
+		wallFilter.SetLayerMask(groundLayer);
+		wallFilter.useTriggers = false;
 		patrolDirection = 1f;
 	}
 
@@ -72,7 +76,7 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 			}
 
 			Vector2 ledgeOrigin = GroundProbeOrigin(movementDirection);
-			if (HasGroundAhead(ledgeOrigin))
+			if (HasGroundAhead(ledgeOrigin) && !HasWallAhead(movementDirection))
 			{
 				Vector2 target = new Vector2(rb.position.x + horizontalOffset, rb.position.y);
 				Vector2 newPos = Vector2.MoveTowards(
@@ -98,10 +102,10 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 	private void Patrol(Animator animator)
 	{
 		Vector2 origin = GroundProbeOrigin(patrolDirection);
-		if (!HasGroundAhead(origin))
+		if (!HasGroundAhead(origin) || HasWallAhead(patrolDirection))
 		{
 			Vector2 oppositeOrigin = GroundProbeOrigin(-patrolDirection);
-			if (!HasGroundAhead(oppositeOrigin))
+			if (!HasGroundAhead(oppositeOrigin) || HasWallAhead(-patrolDirection))
 			{
 				rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 				return;
@@ -161,6 +165,27 @@ public class ChaseAndPatrol : StateMachineBehaviour {
 				return true;
 			}
 		}
+		return false;
+	}
+
+	private bool HasWallAhead(float direction)
+	{
+		if (bodyCollider == null)
+		{
+			return false;
+		}
+
+		int hitCount = bodyCollider.Cast(Vector2.right * direction, wallFilter, wallHits,
+			0.1f + Mathf.Abs(speed) * Time.fixedDeltaTime);
+		for (int i = 0; i < hitCount; i++)
+		{
+			RaycastHit2D hit = wallHits[i];
+			if (hit.collider != null && hit.rigidbody != rb && hit.normal.x * direction < -0.5f)
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
