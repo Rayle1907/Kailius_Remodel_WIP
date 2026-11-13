@@ -8620,7 +8620,7 @@ GameObject:
   - component: {fileID: 777738964}
   - component: {fileID: 777738963}
   m_Layer: 9
-  m_Name: Trampas
+  m_Name: Hazards
   m_TagString: Water
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33442,6 +33442,36 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 66a671814eff4a6c8ffa85e0386bf713, type: 3}
+--- !u!114 &140375688 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7437627140554085076, guid: 66a671814eff4a6c8ffa85e0386bf713,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152753823629223995}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &326576789 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3822211213360033303, guid: 66a671814eff4a6c8ffa85e0386bf713,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152753823629223995}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &542766350 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6438212626497643793, guid: 66a671814eff4a6c8ffa85e0386bf713,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152753823629223995}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1078813843 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1995648707492942728, guid: 66a671814eff4a6c8ffa85e0386bf713,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152753823629223995}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1451108251 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 264028946660224222, guid: 66a671814eff4a6c8ffa85e0386bf713,
+    type: 3}
+  m_PrefabInstance: {fileID: 1152753823629223995}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1834037649375787908
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -33822,12 +33852,12 @@ PrefabInstance:
         type: 3}
       propertyPath: textDamage
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 140375688}
     - target: {fileID: 2369990289210757353, guid: dbcb10883e4a7dace8e37feda9a42605,
         type: 3}
       propertyPath: textDefense
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1451108251}
     - target: {fileID: 2369990289210757356, guid: dbcb10883e4a7dace8e37feda9a42605,
         type: 3}
       propertyPath: m_RootOrder
@@ -35012,12 +35042,12 @@ PrefabInstance:
         type: 3}
       propertyPath: textGems
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 326576789}
     - target: {fileID: 8797934893148283030, guid: f33f89450c39def38b2cb89ea5de8947,
         type: 3}
       propertyPath: textCoins
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 542766350}
     - target: {fileID: 8797934893148283030, guid: f33f89450c39def38b2cb89ea5de8947,
         type: 3}
       propertyPath: textScore
@@ -35027,7 +35057,7 @@ PrefabInstance:
         type: 3}
       propertyPath: textStars
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1078813843}
     - target: {fileID: 8797934893148283031, guid: f33f89450c39def38b2cb89ea5de8947,
         type: 3}
       propertyPath: m_RootOrder

@@ -57217,7 +57217,7 @@ GameObject:
   - component: {fileID: 1830791128}
   - component: {fileID: 1830791131}
   m_Layer: 9
-  m_Name: Trampas
+  m_Name: Hazards
   m_TagString: Water
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

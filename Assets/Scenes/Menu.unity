@@ -655,8 +655,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2791814379993791549, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 2.175171
+      objectReference: {fileID: 0}
+    - target: {fileID: 2791814379993791549, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 9.720093
+      value: 258.87
       objectReference: {fileID: 0}
     - target: {fileID: 3001867856935728954, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
@@ -735,13 +740,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 126.4399
+      objectReference: {fileID: 0}
+    - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
       propertyPath: m_SizeDelta.y
-      value: -91.0527
+      value: 5.5016
+      objectReference: {fileID: 0}
+    - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -1.1494141
       objectReference: {fileID: 0}
     - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -45.5263
+      value: -93.80345
       objectReference: {fileID: 0}
     - target: {fileID: 5662946952595231238, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
@@ -777,7 +792,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_text
       value: '
-
 
         Kailius is part of a university study. If you allow analytics,
         Unity Analytics receives a random player ID and gameplay data such as progress,
