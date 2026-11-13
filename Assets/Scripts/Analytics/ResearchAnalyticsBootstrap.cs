@@ -8,12 +8,20 @@ using UnityEngine.UnityConsent;
 public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 {
     private const string ConsentKey = "research_analytics_consent";
+    private const string ConsentChoiceKey = "research_analytics_consent_choice_made";
     private const string DeletionPendingKey = "research_analytics_deletion_pending";
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    private const int DefaultAnalyticsConsent = 1;
+#else
+    private const int DefaultAnalyticsConsent = 0;
+#endif
     private static ResearchAnalyticsBootstrap instance;
 
     public static bool IsReady { get; private set; }
     public static bool IsShuttingDown { get; private set; }
-    public static bool HasAnalyticsConsent => PlayerPrefs.GetInt(ConsentKey, 1) == 1;
+    public static bool HasAnalyticsChoice => PlayerPrefs.GetInt(ConsentChoiceKey, DefaultAnalyticsConsent) == 1;
+    public static bool HasAnalyticsConsent => HasAnalyticsChoice && !HasPendingDeletion && PlayerPrefs.GetInt(ConsentKey, DefaultAnalyticsConsent) == 1;
+    public static bool HasPendingDeletion => PlayerPrefs.GetInt(DeletionPendingKey, 0) == 1;
     public static double SessionElapsedSeconds => Time.realtimeSinceStartupAsDouble - sessionStartedAt;
     public static event Action AnalyticsReady;
 
@@ -110,6 +118,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         }
 
         PlayerPrefs.SetInt(ConsentKey, granted ? 1 : 0);
+        PlayerPrefs.SetInt(ConsentChoiceKey, 1);
         PlayerPrefs.Save();
         ApplyConsent(granted);
     }
@@ -124,7 +133,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 
     private static void TrySendPendingDeletion()
     {
-        if (!IsReady || PlayerPrefs.GetInt(DeletionPendingKey, 0) != 1)
+        if (!IsReady || !HasPendingDeletion)
         {
             return;
         }

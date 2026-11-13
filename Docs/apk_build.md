@@ -15,6 +15,15 @@ For scene duplication details, see [duplication_instr.md](duplication_instr.md).
 
 ## Before building
 
+### Development and production analytics defaults
+
+- **Development:** In Unity's Build Profiles window, enable **Development Build** before building. Analytics defaults to ON and uses the `development` environment. Editor Play Mode uses the same default.
+- **Production:** Disable **Development Build** before building. Analytics defaults to OFF and uses the `production` environment. The existing scripted Android build commands use `BuildOptions.CleanBuildCache` without `BuildOptions.Development`, so they produce production builds regardless of the window's checkbox. For a scripted development build, include `BuildOptions.Development` in the options passed to `BuildPipeline.BuildPlayer`.
+- These defaults apply when no privacy choice has been saved. An explicit choice in Privacy settings overrides the default in either build; pending data deletion keeps collection off. Production players can opt in through the existing privacy prompt.
+- Development builds skip the initial privacy-choice prompt. Privacy settings remain available to disable collection.
+- Installing over an existing app preserves its privacy choice, so upgrading from development to production can preserve an earlier opt-in. Verify defaults using a clean installation or cleared app data; clearing app data also removes local progress.
+- Verify development collection in the `development` analytics environment, then verify that a fresh production installation sends no gameplay events before opt-in.
+
 1. Confirm the intended scenes are enabled in `ProjectSettings/EditorBuildSettings.asset`. The menu loads `1_1Gauntlet`.
 2. Close another Unity Editor instance using this project; batch mode cannot open the same project concurrently.
 3. Confirm the Android SDK and Unity Android build support are available.

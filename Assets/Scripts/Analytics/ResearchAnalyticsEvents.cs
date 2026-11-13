@@ -191,7 +191,6 @@ internal sealed class SegmentAttemptStartedEvent : ResearchTelemetryEvent
     public float MoveSpeed { set => SetParameter("move_speed", value); }
     public float JumpHeight { set => SetParameter("jump_height", value); }
     public float Gravity { set => SetParameter("gravity", value); }
-    public string InputMethod { set => SetParameter("input_method", value); }
     public float WallDistance { set => SetParameter("wall_distance", value); }
     public bool WallActive { set => SetParameter("wall_active", value); }
     public int DefeatedRequiredEnemies { set => SetParameter("defeated_required_enemies", value); }
