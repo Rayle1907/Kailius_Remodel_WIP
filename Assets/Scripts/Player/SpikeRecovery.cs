@@ -37,6 +37,7 @@ public sealed class SpikeRecovery : MonoBehaviour {
         body?.WakeUp();
         if (Time.time < protectedUntil) return false;
         protectedUntil = Time.time + protectionDuration;
+        controller?.ReleasePlatformSupport();
         int healthBefore = stats.health;
         stats.ApplyDamage(damage, "trap", true);
         if (stats.health <= 0) return true;
@@ -49,6 +50,7 @@ public sealed class SpikeRecovery : MonoBehaviour {
             destination.z = transform.position.z;
             transform.position = destination;
             if (body != null) body.linearVelocity = Vector2.zero;
+            controller?.NotifySafePositionRespawned(new Vector2(destination.x, destination.y));
             return true;
         }
         if (body == null || controller == null) return true;

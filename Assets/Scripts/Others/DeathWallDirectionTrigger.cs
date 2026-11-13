@@ -6,10 +6,13 @@ public sealed class DeathWallDirectionTrigger : MonoBehaviour
     private enum TriggerMode
     {
         Reverse = 0,
-        MoveRight = 1
+        MoveRight = 1,
+        MoveLeft = 2,
+        MoveDown = 3,
+        MoveUp = 4
     }
 
-    [SerializeField] private TriggerMode triggerMode = TriggerMode.Reverse;
+    [SerializeField] private TriggerMode triggerMode = TriggerMode.MoveLeft;
     [SerializeField] private DeathWall deathWall;
     [SerializeField] private PlayerController playerController;
     [SerializeField] private CameraController gameplayCamera;
@@ -82,10 +85,27 @@ public sealed class DeathWallDirectionTrigger : MonoBehaviour
             return;
         }
 
-        int previousDirection = deathWall.Direction;
-        bool succeeded = triggerMode == TriggerMode.MoveRight
-            ? deathWall.TrySetDirection(1)
-            : deathWall.TryReverseDirection();
+        DeathWallDirection previousDirection = deathWall.Direction;
+        bool succeeded;
+        switch (triggerMode)
+        {
+            case TriggerMode.Reverse:
+            case TriggerMode.MoveLeft:
+                succeeded = deathWall.TrySetDirection(DeathWallDirection.Left);
+                break;
+            case TriggerMode.MoveRight:
+                succeeded = deathWall.TrySetDirection(DeathWallDirection.Right);
+                break;
+            case TriggerMode.MoveDown:
+                succeeded = deathWall.TrySetDirection(DeathWallDirection.Down);
+                break;
+            case TriggerMode.MoveUp:
+                succeeded = deathWall.TrySetDirection(DeathWallDirection.Up);
+                break;
+            default:
+                succeeded = deathWall.TrySetDirection(DeathWallDirection.Left);
+                break;
+        }
 
         if (succeeded)
         {
