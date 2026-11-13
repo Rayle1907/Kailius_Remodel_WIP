@@ -165,9 +165,9 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
             {
                 hudName = "OpenWorldHud";
             }
-            move.stats = FindUniqueObject(scene, hudName);
+            move.stats = FindUniqueObject(scene, hudName, false);
         }
-        if (move.stats.scene != scene)
+        if (move.stats != null && move.stats.scene != scene)
         {
             Fail(sceneName, "MoveByTouch.stats must reference a HUD object in the same scene.");
         }
@@ -263,13 +263,18 @@ public sealed class AndroidMobileControlsBuildProcessor : IProcessSceneWithRepor
         }
     }
 
-    private static GameObject FindUniqueObject(Scene scene, string objectName)
+    private static GameObject FindUniqueObject(Scene scene, string objectName, bool required = true)
     {
         var matches = scene.GetRootGameObjects()
             .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
             .Where(transform => transform.name == objectName)
             .Select(transform => transform.gameObject)
             .ToArray();
+
+        if (matches.Length == 0 && !required)
+        {
+            return null;
+        }
 
         if (matches.Length != 1)
         {

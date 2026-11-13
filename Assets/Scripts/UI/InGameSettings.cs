@@ -105,8 +105,11 @@ public sealed class InGameSettings : MonoBehaviour
         }
         if (Time.timeScale <= 0f || GetComponent<Stats>().health <= 0) return;
         previousTimeScale = Time.timeScale;
-        statsWereActive = movement.stats.activeSelf;
-        movement.stats.SetActive(false);
+        if (movement.stats != null)
+        {
+            statsWereActive = movement.stats.activeSelf;
+            movement.stats.SetActive(false);
+        }
         volume.SetValueWithoutNotify(VolumenController.Volume);
         isOpen = true;
         menu.SetActive(true);
@@ -119,7 +122,10 @@ public sealed class InGameSettings : MonoBehaviour
         if (!isOpen || abandonPrompt != null) return;
         isOpen = false;
         menu.SetActive(false);
-        movement.stats.SetActive(statsWereActive);
+        if (movement.stats != null)
+        {
+            movement.stats.SetActive(statsWereActive);
+        }
         Time.timeScale = previousTimeScale;
         PlayerPrefs.Save();
         if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
