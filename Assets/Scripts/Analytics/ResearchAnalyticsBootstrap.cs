@@ -4,6 +4,7 @@ using Unity.Services.Core;
 using Unity.Services.Core.Environments;
 using UnityEngine;
 using UnityEngine.UnityConsent;
+using System.Threading.Tasks;
 
 public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
     private const int DefaultAnalyticsConsent = 0;
 #endif
     private static ResearchAnalyticsBootstrap instance;
+    private bool initializationInProgress;
+    private double nextPendingFlushAt;
 
     public static bool IsReady { get; private set; }
     public static bool IsShuttingDown { get; private set; }
@@ -49,6 +52,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
     {
         IsShuttingDown = true;
         IsReady = false;
+        ResearchAnalytics.DiscardPendingEvents();
     }
 
     private void OnApplicationQuit()
@@ -57,7 +61,7 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         BeginShutdown();
     }
 
-    private async void Awake()
+    private void Awake()
     {
         if (instance != null && instance != this)
         {
@@ -77,33 +81,78 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         sessionStartedAt = Time.realtimeSinceStartupAsDouble;
         ResearchPlayerState.EnsureInitialized();
+        InitializeServicesWithRetries();
+    }
 
+    private async void InitializeServicesWithRetries()
+    {
+        if (initializationInProgress || IsReady || IsShuttingDown) return;
+        initializationInProgress = true;
         try
         {
-            ApplyStoredConsentBeforeInitialization();
-            UnityServices.ExternalUserId = ResearchPlayerState.PlayerId;
+            for (int attempt = 0; attempt < 3 && !IsShuttingDown; attempt++)
+            {
+                try
+                {
+                    ApplyStoredConsentBeforeInitialization();
+                    UnityServices.ExternalUserId = ResearchPlayerState.PlayerId;
 
-            InitializationOptions options = new InitializationOptions();
+                    InitializationOptions options = new InitializationOptions();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            const string environmentName = "development";
+                    const string environmentName = "development";
 #else
-            const string environmentName = "production";
+                    const string environmentName = "production";
 #endif
-            options.SetEnvironmentName(environmentName);
-            await UnityServices.InitializeAsync(options);
+                    options.SetEnvironmentName(environmentName);
+                    await UnityServices.InitializeAsync(options);
+                    if (IsShuttingDown) return;
 
-            _ = AnalyticsService.Instance;
-            IsReady = true;
-            TrySendPendingDeletion();
-            AnalyticsReady?.Invoke();
+                    _ = AnalyticsService.Instance;
+                    IsReady = true;
+                    TrySendPendingDeletion();
+                    ResearchAnalytics.FlushPendingEvents();
+                    try
+                    {
+                        AnalyticsReady?.Invoke();
+                    }
+                    catch (Exception callbackException)
+                    {
+                        Debug.LogError($"Research Analytics ready callback failed: {callbackException}");
+                    }
 
-            Debug.Log($"Research Analytics initialized in '{environmentName}'.");
+                    Debug.Log($"Research Analytics initialized in '{environmentName}'.");
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    IsReady = false;
+                    if (attempt == 2 || IsShuttingDown)
+                    {
+                        Debug.LogError($"Research Analytics initialization failed after {attempt + 1} attempt(s): {exception}");
+                        return;
+                    }
+
+                    Debug.LogWarning($"Research Analytics initialization attempt {attempt + 1} failed; retrying: {exception.Message}");
+                    await Task.Delay(1000 * (attempt + 1));
+                }
+            }
         }
-        catch (Exception exception)
+        finally
         {
-            IsReady = false;
-            Debug.LogError($"Research Analytics initialization failed: {exception}");
+            initializationInProgress = false;
         }
+    }
+
+    private void Update()
+    {
+        if (!IsReady || !HasAnalyticsConsent || ResearchAnalytics.PendingEventCount == 0
+            || Time.realtimeSinceStartupAsDouble < nextPendingFlushAt)
+        {
+            return;
+        }
+
+        nextPendingFlushAt = Time.realtimeSinceStartupAsDouble + 5d;
+        ResearchAnalytics.FlushPendingEvents();
     }
 
     public static void SetAnalyticsConsent(bool granted)
@@ -121,6 +170,17 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
         PlayerPrefs.SetInt(ConsentChoiceKey, 1);
         PlayerPrefs.Save();
         ApplyConsent(granted);
+        if (!granted)
+        {
+            ResearchAnalytics.DiscardPendingEvents();
+            ResearchSurvey.SuppressPendingAnalytics();
+            if (GauntletRunTracker.Instance != null) GauntletRunTracker.Instance.SuppressPendingAnalytics();
+        }
+        else
+        {
+            if (GauntletRunTracker.Instance != null) GauntletRunTracker.Instance.BeginTelemetryAfterConsentGrant();
+            if (instance != null && !IsReady) instance.InitializeServicesWithRetries();
+        }
     }
 
     public static void RequestPlayerDataDeletion()

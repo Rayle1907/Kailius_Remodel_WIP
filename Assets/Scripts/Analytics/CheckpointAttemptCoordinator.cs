@@ -4,7 +4,7 @@ using UnityEngine;
 internal sealed class CheckpointAttemptCoordinator
 {
     private readonly SegmentAttemptState state = new SegmentAttemptState();
-    private readonly Action<SegmentAttemptStartedEvent> recordStarted;
+    private readonly Func<SegmentAttemptStartedEvent, bool> recordStarted;
     private readonly Action<SegmentAttemptEndedEvent> recordEnded;
     private AnalyticsSegmentDefinition[] definitions = Array.Empty<AnalyticsSegmentDefinition>();
     private AnalyticsSegmentDefinition definition;
@@ -17,11 +17,14 @@ internal sealed class CheckpointAttemptCoordinator
     private int resumeFrame;
     private string attemptRunId;
     private string attemptSceneName;
+    private bool attemptTelemetryRecorded;
+    private bool attemptTelemetrySuppressed;
 
     public string AttemptId => state.AttemptId;
+    public string TelemetryAttemptId => attemptTelemetryRecorded && !attemptTelemetrySuppressed ? state.AttemptId : null;
     public string SegmentId => snapshot == null ? null : snapshot.segment_id;
 
-    public CheckpointAttemptCoordinator(Action<SegmentAttemptStartedEvent> recordStarted = null,
+    public CheckpointAttemptCoordinator(Func<SegmentAttemptStartedEvent, bool> recordStarted = null,
         Action<SegmentAttemptEndedEvent> recordEnded = null)
     {
         this.recordStarted = recordStarted ?? (value => ResearchAnalytics.RecordAttemptStarted(value));
@@ -84,22 +87,33 @@ internal sealed class CheckpointAttemptCoordinator
     {
         CompletedSegmentAttempt completed = state.End(outcome);
         if (completed == null) return;
-        Vector3 position = player == null ? Vector3.zero : player.transform.position;
-        ResearchTelemetryContext context = ResearchTelemetryEvent.CaptureContext(
-            ResearchPlayerState.PlayerId, ResearchPlayerState.OfferVariant,
-            attemptSceneName, ResearchPlayerState.PlaythroughId, attemptRunId);
-        recordEnded(new SegmentAttemptEndedEvent(context)
+        if (attemptTelemetryRecorded && !attemptTelemetrySuppressed)
         {
-            AttemptId = completed.AttemptId,
-            SegmentId = completed.SegmentId,
-            SegmentVersion = completed.SegmentVersion,
-            GeometryHash = completed.GeometryHash,
-            Outcome = outcome,
-            Reason = reason,
-            DurationSeconds = (float)completed.ActiveSeconds,
-            ProgressX = position.x,
-            ProgressY = position.y
-        });
+            Vector3 position = player == null ? Vector3.zero : player.transform.position;
+            ResearchTelemetryContext context = ResearchTelemetryEvent.CaptureContext(
+                ResearchPlayerState.OfferVariant,
+                attemptSceneName, ResearchPlayerState.PlaythroughId, attemptRunId,
+                GauntletRunTracker.Instance == null ? string.Empty : GauntletRunTracker.Instance.CurrentGauntletSessionId);
+            recordEnded(new SegmentAttemptEndedEvent(context)
+            {
+                AttemptId = completed.AttemptId,
+                SegmentId = completed.SegmentId,
+                SegmentVersion = completed.SegmentVersion,
+                GeometryHash = completed.GeometryHash,
+                Outcome = outcome,
+                Reason = reason,
+                DurationSeconds = (float)completed.ActiveSeconds,
+                ProgressX = position.x,
+                ProgressY = position.y
+            });
+        }
+        attemptTelemetryRecorded = false;
+        attemptTelemetrySuppressed = false;
+    }
+
+    public void SuppressCurrentTelemetry()
+    {
+        if (state.AttemptId != null) attemptTelemetrySuppressed = true;
     }
 
     public void ResetScene()
@@ -128,14 +142,12 @@ internal sealed class CheckpointAttemptCoordinator
         attemptRunId = runId;
         attemptSceneName = player.gameObject.scene.name;
         ResearchTelemetryContext context = ResearchTelemetryEvent.CaptureContext(
-            ResearchPlayerState.PlayerId, ResearchPlayerState.OfferVariant,
-            attemptSceneName, ResearchPlayerState.PlaythroughId, attemptRunId);
-        recordStarted(new SegmentAttemptStartedEvent(context)
+            ResearchPlayerState.OfferVariant,
+            attemptSceneName, ResearchPlayerState.PlaythroughId, attemptRunId,
+            GauntletRunTracker.Instance == null ? string.Empty : GauntletRunTracker.Instance.CurrentGauntletSessionId);
+        attemptTelemetryRecorded = recordStarted(new SegmentAttemptStartedEvent(context)
         {
             AttemptId = state.AttemptId,
-            PlayerId = ResearchPlayerState.PlayerId,
-            PlaythroughId = ResearchPlayerState.PlaythroughId,
-            RunId = runId,
             SegmentId = snapshot.segment_id,
             SegmentVersion = snapshot.segment_version,
             GeometryHash = snapshot.geometry_hash,

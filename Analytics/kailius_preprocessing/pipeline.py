@@ -19,7 +19,10 @@ from .attempts import Attempt, add_history, reconstruct
 from .events import END, START, Event, normalize
 from .geometry import load_catalogue as catalogue
 from .model_inputs import CATEGORICAL, NUMERIC, candidate_rows, preprocessing, split_players
-from .reports import difficulty_report, revive_journeys
+from .reports import (
+    difficulty_report, revive_journeys, revive_quality, run_journeys, survey_journeys, survey_quality,
+)
+from .schema_contract import EVENT_CLASSES
 
 Config = dict[str, Any]
 Record = dict[str, Any]
@@ -27,9 +30,11 @@ Record = dict[str, Any]
 EMPTY_SCHEMAS = {
     "events": ["event_id", "event_name", "event_timestamp", "environment"],
     "quarantine": ["source", "row", "reason", "attempt_id", "event_id"],
-    "attempts": ["attempt_id", "player_id", "segment_id", "segment_version", "geometry_hash", "outcome", "label", "split"],
-    "revive_journeys": ["offer_id", "attempt_id", "response", "post_decision_outcome", "quality"],
-    "difficulty": ["segment_id", "segment_version", "geometry_hash", "resolved_first_attempts", "status"],
+    "attempts": ["attempt_id", "player_id", "level_segment_id", "segment_version", "geometry_hash", "outcome", "label", "split"],
+    "revive_journeys": ["offer_id", "attempt_id", "offer_response", "post_decision_outcome", "quality"],
+    "runs": ["run_id", "player_id", "application_session_id", "gauntlet_session_id", "gauntlet_id", "playthrough_id", "offer_variant", "experiment_version", "quality"],
+    "surveys": ["survey_id", "player_id", "application_session_id", "gauntlet_session_id", "run_id", "playthrough_id", "offer_variant", "experiment_version", "survey_version", "scene_name", "submission_count", "survey_invitation_response", "survey_answered_count", "survey_pxi_answered_count", "survey_complete", "quality"],
+    "difficulty": ["level_segment_id", "segment_version", "geometry_hash", "resolved_first_attempts", "status"],
     "splits": ["player_id", "split"],
 }
 
@@ -63,7 +68,7 @@ def _labelled_model_rows(rows: Sequence[Attempt], feature_columns: Sequence[str]
     retained_columns = list(dict.fromkeys(
         list(feature_columns) + [
             "label", "split", "player_id", "attempt_id", "first_attempt",
-            "segment_id", "segment_version", "geometry_hash",
+            "level_segment_id", "segment_version", "geometry_hash",
         ]
     ))
     model_rows = pd.DataFrame(labelled_attempts).reindex(columns=retained_columns)
@@ -158,7 +163,11 @@ def write_manifest(
         "source_files": [{"path": str(path), "sha256": digest(path)} for path in source_paths],
         "query_sha256": digest(query_path) if query_path is not None and query_path.exists() else None,
         "created_utc": datetime.now(timezone.utc).isoformat(),
-        "extraction_cutoff_utc": config.get("extraction_cutoff_utc"),
+        "extraction_window_utc": {
+            "start_inclusive": config.get("extraction_start_utc"),
+            "end_exclusive": config.get("extraction_end_utc"),
+        },
+        "extraction_environment": config.get("environment", "production"),
         "python": platform.python_version(),
         "packages": {
             name: importlib.metadata.version(name)
@@ -170,7 +179,7 @@ def write_manifest(
 
 
 def build_quality_report(
-    counts: dict[str, int],
+    counts: dict[str, Any],
     events: Sequence[Event],
     rows: Sequence[Attempt],
     model_rows: Sequence[Attempt],
@@ -178,7 +187,21 @@ def build_quality_report(
     splits: dict[str, str],
     model_status: str,
     missing_classes: Sequence[str],
+    revive_rows: Sequence[Record] = (),
+    run_rows: Sequence[Record] = (),
+    survey_rows: Sequence[Record] = (),
+    missing_run_id: int = 0,
+    missing_survey_id: int = 0,
 ) -> dict[str, Any]:
+    event_counts = Counter(event["event_name"] for event in events)
+    attempt_rejection_reasons = {
+        "missing_or_conflicting_attempt_boundaries", "terminal_identity_mismatch", "terminal_precedes_start",
+        "active_duration_exceeds_observed_time", "unknown_geometry_version", "overlapping_attempts",
+        "missing_attempt_identity", "missing_attempt_order",
+        "attempt_crosses_sdk_sessions",
+    }
+    run_ids = {row["run_id"] for row in run_rows}
+    revive_summary = revive_quality(events, revive_rows)
     report = counts | {
         "status": model_status,
         "valid_events": len(events),
@@ -188,9 +211,50 @@ def build_quality_report(
         "rejections_by_reason": dict(Counter(item["reason"] for item in quarantine)),
         "partitions_missing_both_classes": list(missing_classes),
         "players_per_split": dict(Counter(splits.values())),
+        "event_coverage": {name: event_counts.get(name, 0) for name in EVENT_CLASSES},
+        "attempt_rejection_counts": dict(Counter(
+            item["reason"] for item in quarantine if item.get("reason") in attempt_rejection_reasons
+        )),
+        "attempt_boundary_quality": {
+            "missing_ordering": sum(item.get("reason") == "missing_attempt_order" for item in quarantine),
+            "sdk_session_transitions": sum(item.get("reason") == "attempt_crosses_sdk_sessions" for item in quarantine),
+            "missing_terminal_events": sum(
+                row.get("reason") == "missing_terminal_event" for row in rows
+            ),
+            "missing_or_conflicting_boundaries": sum(
+                item.get("reason") == "missing_or_conflicting_attempt_boundaries" for item in quarantine
+            ),
+            "identity_mismatches": sum(
+                item.get("reason") == "terminal_identity_mismatch" for item in quarantine
+            ),
+            "invalid_identity_events": sum(
+                item.get("reason", "").startswith("Missing ")
+                for item in quarantine
+            ),
+        },
+        "revive_journey_quality": revive_summary,
+        "run_quality": {
+            "journeys": len(run_rows),
+            "status_counts": dict(Counter(row["status"] for row in run_rows)),
+            "incomplete_journeys": sum(row["status"] == "incomplete" for row in run_rows),
+            "conflicting_journeys": sum(row["status"] == "conflicting" for row in run_rows),
+            "quality_counts": dict(Counter(
+                issue for row in run_rows for issue in row["quality"].split(";") if issue != "valid"
+            )),
+            "events_missing_run_id": missing_run_id,
+        },
+        "survey_quality": survey_quality(survey_rows) | {"events_missing_survey_id": missing_survey_id},
+        "broken_links": {
+            "revive_attempt_links": revive_summary["orphan_attempt_links"],
+            "revive_run_links": revive_summary["orphan_run_links"],
+            "survey_run_links": sum("orphan_run_link" in row["quality"].split(";") for row in survey_rows),
+            "attempt_run_links": sum(
+                bool(row.get("run_id")) and row["run_id"] not in run_ids for row in rows
+            ),
+        },
     }
     report["unresolved_by_segment_and_variant"] = dict(Counter(
-        row["segment_id"] + ":" + row["segment_version"] + ":" + str(row.get("offer_variant", "unknown"))
+        row["level_segment_id"] + ":" + row["segment_version"] + ":" + str(row.get("offer_variant", "unknown"))
         for row in rows
         if row["label"] is None
     ))
@@ -220,16 +284,31 @@ def _write_dataset_tables(
     segments: dict[tuple[str, str, str], Record],
     splits: dict[str, str],
     minimum_players: int,
-) -> None:
+) -> tuple[list[Record], list[Record], list[Record], int, int]:
+    run_rows = run_journeys(events)
+    run_ids = {row["run_id"] for row in run_rows}
+    survey_rows = survey_journeys(events, run_ids)
+    revive_rows = revive_journeys(events, rows, run_ids)
+    missing_run_id = sum(
+        event["event_name"] in ("gauntlet_run_started", "gauntlet_run_ended") and not event.get("run_id")
+        for event in events
+    )
+    missing_survey_id = sum(
+        event["event_name"] in ("survey_invitation_shown", "survey_invitation_resolved", "survey_submitted")
+        and not event.get("survey_id") for event in events
+    )
     write_table(output, "events", events)
     write_table(output, "quarantine", quarantine)
     write_table(output, "attempts", rows)
-    write_table(output, "revive_journeys", revive_journeys(events))
+    write_table(output, "revive_journeys", revive_rows)
+    write_table(output, "runs", run_rows)
+    write_table(output, "surveys", survey_rows)
     write_table(output, "difficulty", difficulty_report(rows, segments, minimum_players))
     write_table(output, "splits", [
         {"player_id": player_id, "split": split}
         for player_id, split in splits.items()
     ])
+    return revive_rows, run_rows, survey_rows, missing_run_id, missing_survey_id
 
 
 def _build_dataset(
@@ -250,7 +329,7 @@ def _build_dataset(
     for row in rows:
         row["split"] = splits[row["player_id"]]
 
-    _write_dataset_tables(
+    revive_rows, run_rows, survey_rows, missing_run_id, missing_survey_id = _write_dataset_tables(
         output, events, quarantine, rows, segments, splits, config.get("minimum_players", 30)
     )
     model_results = write_model_datasets(output, rows, segments)
@@ -264,6 +343,11 @@ def _build_dataset(
         splits,
         model_results["status"],
         model_results["missing_classes"],
+        revive_rows,
+        run_rows,
+        survey_rows,
+        missing_run_id,
+        missing_survey_id,
     )
     dump(output / "quality_report.json", report)
     return report
@@ -291,6 +375,25 @@ def _validate_config(config: Any) -> Config:
         raise ValueError("environment must be production, development, or test")
     if config.get("extraction_cutoff_utc") is not None and not isinstance(config["extraction_cutoff_utc"], str):
         raise ValueError("extraction_cutoff_utc must be a string or null")
+
+    start_utc = config.get("extraction_start_utc")
+    end_utc = config.get("extraction_end_utc")
+    if (start_utc is None) != (end_utc is None):
+        raise ValueError("extraction_start_utc and extraction_end_utc must be supplied together")
+    if start_utc is not None:
+        parsed_bounds = []
+        for field, value in (("extraction_start_utc", start_utc), ("extraction_end_utc", end_utc)):
+            if not isinstance(value, str):
+                raise ValueError(field + " must be an ISO 8601 UTC timestamp")
+            try:
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError as error:
+                raise ValueError(field + " must be an ISO 8601 UTC timestamp") from error
+            if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
+                raise ValueError(field + " must include a UTC timezone")
+            parsed_bounds.append(parsed)
+        if parsed_bounds[0] >= parsed_bounds[1]:
+            raise ValueError("extraction_start_utc must precede extraction_end_utc")
 
     query_file = config.get("query_file", "export.sql")
     if query_file is not None and (not isinstance(query_file, str) or not query_file):

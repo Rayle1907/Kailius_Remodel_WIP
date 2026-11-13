@@ -41,16 +41,24 @@ public sealed class ResearchSurveyResponse
     public string SceneName { get; }
     public string OfferVariant { get; }
     public string ExperimentVersion { get; }
+    public string PlayerId { get; }
+    public string RunId { get; }
+    public string GauntletSessionId { get; }
+    internal bool AnalyticsSuppressed { get; private set; }
     public int AnsweredCount => CountAnswers(ItemCount);
     public int PxiAnsweredCount => CountAnswers(PxiItemCount);
     public bool Complete => AnsweredCount == ItemCount;
 
-    public ResearchSurveyResponse(string playthroughId, string sceneName, string offerVariant, string experimentVersion)
+    public ResearchSurveyResponse(string playthroughId, string sceneName, string offerVariant, string experimentVersion,
+        string playerId = null, string runId = null, string gauntletSessionId = null)
     {
         PlaythroughId = playthroughId;
         SceneName = sceneName;
         OfferVariant = offerVariant;
         ExperimentVersion = experimentVersion;
+        PlayerId = playerId;
+        RunId = runId;
+        GauntletSessionId = gauntletSessionId;
     }
 
     public static string Question(int index) => questions[index];
@@ -63,6 +71,8 @@ public sealed class ResearchSurveyResponse
             throw new ArgumentOutOfRangeException(nameof(value));
         answers[index] = value;
     }
+
+    internal void SuppressAnalytics() => AnalyticsSuppressed = true;
 
     private int CountAnswers(int count)
     {

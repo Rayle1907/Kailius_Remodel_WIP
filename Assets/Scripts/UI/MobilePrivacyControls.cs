@@ -97,7 +97,11 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         EventSystem.current.SetSelectedGameObject(closeButton.gameObject);
     }
 
-    private void AllowAnalytics() => SetConsent(true);
+    private void AllowAnalytics()
+    {
+        SetConsent(true);
+        if (ResearchAnalyticsBootstrap.HasAnalyticsConsent) Close();
+    }
     private void DisableAnalytics() => SetConsent(false);
 
     private void DeleteAnalytics()

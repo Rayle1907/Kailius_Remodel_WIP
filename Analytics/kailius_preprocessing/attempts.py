@@ -21,25 +21,36 @@ def _attempt_boundary_error(starts: Sequence[Event], ends: Sequence[Event]) -> s
     if len(starts) != 1 or len(ends) > 1:
         return "missing_or_conflicting_attempt_boundaries"
 
+    boundaries = list(starts) + list(ends)
+    if any(not event.get(field) for event in boundaries for field in ("player_id", "application_session_id")):
+        return "missing_attempt_identity"
+    if any(event.get(field) in (None, "") for event in boundaries for field in ("schema_version", "event_sequence", "time_since_session_start")):
+        return "missing_attempt_order"
+    if ends and starts[0]["application_session_id"] != ends[0]["application_session_id"]:
+        return "attempt_crosses_sdk_sessions"
+
     if ends and any(
         starts[0].get(field) != ends[0].get(field)
-        for field in ("player_id", "application_session_id", "segment_id", "segment_version", "geometry_hash")
+        for field in (
+            "player_id", "application_session_id", "playthrough_id", "run_id", "gauntlet_session_id",
+            "offer_variant", "experiment_version", "level_segment_id", "segment_version", "geometry_hash",
+        )
     ):
         return "terminal_identity_mismatch"
     if ends and (
         ends[0]["event_sequence"] <= starts[0]["event_sequence"]
-        or ends[0]["elapsed_seconds"] < starts[0]["elapsed_seconds"]
+        or ends[0]["time_since_session_start"] < starts[0]["time_since_session_start"]
     ):
         return "terminal_precedes_start"
     if ends and ends[0]["duration_seconds"] > (
-        ends[0]["elapsed_seconds"] - starts[0]["elapsed_seconds"] + 1
+        ends[0]["time_since_session_start"] - starts[0]["time_since_session_start"] + 1
     ):
         return "active_duration_exceeds_observed_time"
     return None
 
 
 def _attempt_row(start: Event, end: Event, segments: SegmentCatalog) -> Attempt | None:
-    identity = tuple(start[field] for field in ("segment_id", "segment_version", "geometry_hash"))
+    identity = (start["level_segment_id"], start["segment_version"], start["geometry_hash"])
     if identity not in segments:
         return None
 
@@ -50,9 +61,9 @@ def _attempt_row(start: Event, end: Event, segments: SegmentCatalog) -> Attempt 
     row.update(
         outcome=outcome,
         label={"failure": 1, "success": 0}.get(outcome),
-        outcome_reason=end.get("reason", "missing_terminal_event"),
+        reason=end.get("reason", "missing_terminal_event"),
         duration_seconds=end.get("duration_seconds"),
-        end_elapsed_seconds=end.get("elapsed_seconds"),
+        end_time_since_session_start=end.get("time_since_session_start"),
         end_sequence=end.get("event_sequence"),
         first_attempt=start["attempt_number"] == 1,
     )
@@ -141,16 +152,16 @@ def _add_session_history(session_rows: list[Attempt]) -> list[Attempt]:
                 previous_outcome = ended["outcome"]
                 if ended["label"] == 1:
                     observed_failures += 1
-                    segment_failures[ended["segment_id"]] += 1
+                    segment_failures[ended["level_segment_id"]] += 1
                 active_seconds += ended["duration_seconds"] or 0
             end_index += 1
 
-        segment_key = (row["segment_id"], row["segment_version"])
+        segment_key = (row["level_segment_id"], row["segment_version"])
         first_exposure_count[segment_key] += 1
         row.update(
             prior_observed_attempts=started_attempts,
             prior_observed_failures=observed_failures,
-            prior_segment_observed_failures=segment_failures[row["segment_id"]],
+            prior_segment_observed_failures=segment_failures[row["level_segment_id"]],
             prior_active_seconds=active_seconds,
             previous_outcome=previous_outcome,
             history_incomplete=int(row["attempt_number"] != first_exposure_count[segment_key]),
