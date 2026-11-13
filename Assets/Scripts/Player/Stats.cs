@@ -272,6 +272,9 @@ public class Stats : MonoBehaviour {
     }
 
     private void HandleDeath(string causeOfDeath, int healthBeforeDeath) {
+        PlayerController controller = GetComponentInParent<PlayerController>();
+        controller?.ReleasePlatformSupport();
+
         if(GauntletRunTracker.Instance != null) {
             GauntletRunTracker.Instance.RecordPlayerDeath(causeOfDeath, healthBeforeDeath);
         }
@@ -288,7 +291,6 @@ public class Stats : MonoBehaviour {
             animator.SetBool("die", true);
         }
 
-        PlayerController controller = GetComponentInParent<PlayerController>();
         if(controller != null) {
             controller.isDead();
         }

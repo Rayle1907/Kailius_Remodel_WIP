@@ -53,10 +53,12 @@ public class MoveByTouch : MonoBehaviour {
         if (ControlesMoviles.activeSelf) {
             if (canJump) {
                 CreateDust();
+                GetComponent<PlayerController>()?.ReleasePlatformSupport();
                 gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(GetComponent<Rigidbody2D>().linearVelocity.x, jumpHeight);
                 GetComponentInChildren<PlayerControllerUP>().setJump(false);
             } else if (canDoubleJump) {
                 CreateDust();
+                GetComponent<PlayerController>()?.ReleasePlatformSupport();
                 gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(GetComponent<Rigidbody2D>().linearVelocity.x, jumpHeight);
                 GetComponentInChildren<PlayerControllerUP>().setDoubleJump(false);
                 canDoubleJump = false;

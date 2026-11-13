@@ -149,7 +149,6 @@ internal sealed class CheckpointAttemptCoordinator
             DefeatedRequiredEnemies = requirements == null ? -1 : requirements.DefeatedCount,
             TotalRequiredEnemies = requirements == null ? -1 : requirements.RequiredCount,
             Gravity = player.AnalyticsGravity,
-            InputMethod = player.AnalyticsInputMethod,
             WallDistance = definition == null || definition.Wall == null
                 ? -1f : Mathf.Abs(definition.Wall.transform.position.x - player.transform.position.x),
             WallActive = definition != null && definition.Wall != null && definition.Wall.AnalyticsActive
