@@ -29,4 +29,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/1_3Gauntlet.unity
     guid: a282774138554023b2181778effbf880
+  - enabled: 1
+    path: Assets/Scenes/2_2Gauntlet.unity
+    guid: 4d70b36b5c2d4b9bb028c76d39ff42e6
+  - enabled: 1
+    path: Assets/Scenes/2_3Gauntlet.unity
+    guid: d369d9efe6ab4ca4ea99a78145c35b4d
   m_configObjects: {}
