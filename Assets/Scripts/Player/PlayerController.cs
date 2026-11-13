@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour {
 
     public event System.Action<Transform> CheckpointTouched;
     public event System.Action<Transform> CheckpointRespawned;
+    public event System.Action<Vector2> SafePositionRespawned;
     public Transform CurrentRespawnCheckpoint => currentRespawn;
     public bool IsAlive => !dead && playerStats != null && playerStats.health > 0;
 
@@ -37,6 +38,8 @@ public class PlayerController : MonoBehaviour {
     private Rigidbody2D body;
     private Collider2D mainCollider;
     private readonly HashSet<Collider2D> pendingCheckpointTriggers = new HashSet<Collider2D>();
+    private readonly Dictionary<Collider2D, int> enemyHeadSupportDirections = new Dictionary<Collider2D, int>();
+    private readonly List<Collider2D> staleEnemyHeadSupportColliders = new List<Collider2D>();
     private readonly List<RequiredGauntletEnemy> checkpointRequirementsRemaining = new List<RequiredGauntletEnemy>();
     private readonly List<CheckpointRequirements> checkpointRequirementCandidates = new List<CheckpointRequirements>();
     private readonly List<CheckpointRequirements> nearbyCheckpointRequirements = new List<CheckpointRequirements>();
@@ -51,6 +54,9 @@ public class PlayerController : MonoBehaviour {
     private Transform rowTransform;
     private bool isMoving;
     private MoveByTouch touchMovement;
+    private MovingPlatform movingPlatformSupport;
+    private float horizontalInput;
+    private float horizontalMoveSpeed;
 
     void Awake() {
         SpikeRecovery = GetComponent<SpikeRecovery>();
@@ -84,10 +90,12 @@ public class PlayerController : MonoBehaviour {
             if (Input.GetKeyDown(KeyCode.Space)) {
                 if(canJump) {
                     CreateDust();
+                    ReleasePlatformSupport();
                     body.linearVelocity = new Vector2(body.linearVelocity.x, jumpHeight);
                     jumpController.setJump(false);
                 } else if(canDoubleJump) {
                     CreateDust();
+                    ReleasePlatformSupport();
                     body.linearVelocity = new Vector2(body.linearVelocity.x, jumpHeight);
                     jumpController.setDoubleJump(false);
                     canDoubleJump = false;
@@ -110,10 +118,8 @@ public class PlayerController : MonoBehaviour {
 
             bool moving = Mathf.Abs(horizontalInput) > 0.1f;
             float speed = usingMobileControls && touchMovement != null ? touchMovement.moveSpeed : moveSpeed;
-            if (moving)
-            {
-                body.linearVelocity = new Vector2(horizontalInput * speed, body.linearVelocity.y);
-            }
+            this.horizontalInput = horizontalInput;
+            horizontalMoveSpeed = speed;
             SetMoving(moving);
 
             if (moving)
@@ -131,8 +137,135 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    private void FixedUpdate() {
+        if (dead || Time.timeScale <= 0f || SpikeRecovery.IsMovementLocked) return;
+
+        if (movingPlatformSupport != null && !movingPlatformSupport.isActiveAndEnabled) {
+            ReleasePlatformSupport();
+        }
+
+        bool moving = Mathf.Abs(horizontalInput) > 0.1f;
+        float requestedVelocity = moving ? horizontalInput * horizontalMoveSpeed : 0f;
+
+        if (movingPlatformSupport != null) {
+            Vector2 platformVelocity = movingPlatformSupport.Velocity;
+            float dampingFactor = 1f + body.linearDamping * Time.fixedDeltaTime;
+            body.linearVelocity = new Vector2(
+                requestedVelocity + platformVelocity.x * dampingFactor,
+                body.linearVelocity.y);
+
+            if (Mathf.Abs(platformVelocity.y) > 0.001f) {
+                float gravityStep = Physics2D.gravity.y * body.gravityScale * Time.fixedDeltaTime;
+                body.linearVelocity = new Vector2(
+                    body.linearVelocity.x,
+                    platformVelocity.y * dampingFactor - gravityStep);
+            }
+        } else if (moving) {
+            body.linearVelocity = new Vector2(requestedVelocity, body.linearVelocity.y);
+        }
+
+        EnforceEnemyHeadSeparation();
+    }
+
+    public void SetMovingPlatformSupport(MovingPlatform platform) {
+        if (movingPlatformSupport == platform) return;
+
+        if (movingPlatformSupport != null) movingPlatformSupport.SetRider(this, false);
+        movingPlatformSupport = platform;
+        if (movingPlatformSupport != null) movingPlatformSupport.SetRider(this, true);
+    }
+
+    public void ClearMovingPlatformSupport(MovingPlatform platform) {
+        if (movingPlatformSupport == platform) SetMovingPlatformSupport(null);
+    }
+
+    public void ReleasePlatformSupport() {
+        if (movingPlatformSupport != null && body != null)
+            body.linearVelocity -= movingPlatformSupport.Velocity;
+        jumpController?.ClearGroundedState();
+        SetMovingPlatformSupport(null);
+        ClearEnemyHeadSupport();
+    }
+
+    private void OnDisable() {
+        SetMovingPlatformSupport(null);
+        ClearEnemyHeadSupport();
+    }
+
+    private void UpdateEnemyHeadSupport(Collision2D collision) {
+        Collider2D enemyCollider = collision.collider;
+        if (enemyCollider == null) return;
+
+        bool alreadyTracked = enemyHeadSupportDirections.ContainsKey(enemyCollider);
+        if (enemyCollider.GetComponentInParent<Enemy>() == null
+            || body == null
+            || !HasUpwardContact(collision)) {
+            enemyHeadSupportDirections.Remove(enemyCollider);
+            return;
+        }
+
+        if (!alreadyTracked && body.linearVelocity.y > 0.001f) return;
+
+        if (!alreadyTracked)
+            enemyHeadSupportDirections.Add(enemyCollider, GetEnemySlideDirection(enemyCollider));
+    }
+
+    private bool HasUpwardContact(Collision2D collision) {
+        for (int i = 0; i < collision.contactCount; i++) {
+            if (collision.GetContact(i).normal.y > 0.5f) return true;
+        }
+
+        return false;
+    }
+
+    private int GetEnemySlideDirection(Collider2D enemyCollider) {
+        float playerCenterX = mainCollider != null ? mainCollider.bounds.center.x : transform.position.x;
+        float horizontalOffset = playerCenterX - enemyCollider.bounds.center.x;
+        if (Mathf.Abs(horizontalOffset) > 0.05f) return horizontalOffset > 0f ? 1 : -1;
+        if (Mathf.Abs(horizontalInput) > 0.1f) return horizontalInput > 0f ? 1 : -1;
+        return playerSprite != null && playerSprite.flipX ? -1 : 1;
+    }
+
+    private void EnforceEnemyHeadSeparation() {
+        if (enemyHeadSupportDirections.Count == 0) return;
+
+        staleEnemyHeadSupportColliders.Clear();
+        foreach (KeyValuePair<Collider2D, int> support in enemyHeadSupportDirections) {
+            Collider2D enemyCollider = support.Key;
+            if (enemyCollider == null
+                || !enemyCollider.enabled
+                || !enemyCollider.gameObject.activeInHierarchy
+                || enemyCollider.GetComponentInParent<Enemy>() == null) {
+                staleEnemyHeadSupportColliders.Add(enemyCollider);
+            }
+        }
+
+        for (int i = 0; i < staleEnemyHeadSupportColliders.Count; i++)
+            enemyHeadSupportDirections.Remove(staleEnemyHeadSupportColliders[i]);
+
+        if (enemyHeadSupportDirections.Count == 0) return;
+
+        float separationSpeed = Mathf.Abs(horizontalMoveSpeed);
+        foreach (KeyValuePair<Collider2D, int> support in enemyHeadSupportDirections) {
+            Rigidbody2D enemyBody = support.Key.attachedRigidbody;
+            float enemyVelocityX = enemyBody != null ? enemyBody.linearVelocity.x : 0f;
+            float relativeSeparationSpeed = (body.linearVelocity.x - enemyVelocityX) * support.Value;
+            if (relativeSeparationSpeed < separationSpeed) {
+                body.linearVelocity = new Vector2(
+                    enemyVelocityX + support.Value * separationSpeed,
+                    body.linearVelocity.y);
+            }
+        }
+    }
+
+    private void ClearEnemyHeadSupport() {
+        enemyHeadSupportDirections.Clear();
+        staleEnemyHeadSupportColliders.Clear();
+    }
+
     // Salto solo cuando pisa el suelo
     private void OnCollisionEnter2D(Collision2D collision) {
+        UpdateEnemyHeadSupport(collision);
 
         if (collision.gameObject.CompareTag("ReSpawn")) {
             TryHandleCheckpointTouched(collision.collider);
@@ -146,6 +279,14 @@ public class PlayerController : MonoBehaviour {
             }
             body.AddForce(new Vector2(5, 5) * 2, ForceMode2D.Impulse);
         }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision) {
+        UpdateEnemyHeadSupport(collision);
+    }
+
+    private void OnCollisionExit2D(Collision2D collision) {
+        enemyHeadSupportDirections.Remove(collision.collider);
     }
 
     // Scores
@@ -348,6 +489,7 @@ public class PlayerController : MonoBehaviour {
             return false;
         }
 
+        ReleasePlatformSupport();
         Debug.Log("Respawning at: " + currentRespawn.name);
 
         transform.position = new Vector3(
@@ -362,6 +504,12 @@ public class PlayerController : MonoBehaviour {
         }
         return true;
     }
+
+    internal void NotifySafePositionRespawned(Vector2 position)
+    {
+        SafePositionRespawned?.Invoke(position);
+    }
+
     private Transform FindClosestRespawn() {
         GameObject[] respawns = GameObject.FindGameObjectsWithTag("ReSpawn");
         Transform closest = null;
@@ -380,15 +528,18 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void destroy() {
+        ReleasePlatformSupport();
         Object.Destroy(gameObject, 5.0f);
         dead = true;
     }
 
     public bool isDead() {
+        ReleasePlatformSupport();
         return this.dead = true;
     }
 
     public void Revive() {
+        ReleasePlatformSupport();
         SpikeRecovery.ResetRecovery();
         dead = false;
     }
