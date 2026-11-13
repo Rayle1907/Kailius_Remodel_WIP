@@ -773,6 +773,26 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 23.1367
       objectReference: {fileID: 0}
+    - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_text
+      value: '
+
+
+        Kailius is part of a university study. If you allow analytics,
+        Unity Analytics receives a random player ID and gameplay data such as progress,
+        deaths, session times, revive decisions, and Ember balances.
+
+
+        Participation
+        is optional. Change your choice or request data deletion through Privacy
+        settings.'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 39.85
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

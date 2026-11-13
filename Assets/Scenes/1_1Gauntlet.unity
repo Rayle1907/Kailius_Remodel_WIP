@@ -2899,18 +2899,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1383918133}
   m_CullTransparentMesh: 1
---- !u!114 &8911123456789012011
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1383918133}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51563581b6ec453bbcef7ae61492cd22, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::MobileSafeAreaFullScreen
 --- !u!1001 &1386667289
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4143,31 +4131,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 408516493}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1929922417
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2728079664890703108}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67c68ca651b55154db61faa6fa510ee0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Traps
-  damage: 25
-  recoveryMode: 1
-  localRecoveryTiles:
-  - {fileID: 11400000, guid: eac8f6a75f838024081e33df39517378, type: 2}
-  safePosition: {fileID: 0}
-  recoveryPoints:
-  - cell: {x: 138, y: 1, z: 0}
-    safePosition: {fileID: 908700002}
-  - cell: {x: 139, y: 1, z: 0}
-    safePosition: {fileID: 908700002}
-  - cell: {x: 140, y: 1, z: 0}
-    safePosition: {fileID: 908700002}
-  spikeDamage: 50
 --- !u!114 &1961028237 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6438212626497643793, guid: 2c491796d4f1c6d498145246083e42e6,
@@ -25507,7 +25470,6 @@ GameObject:
   - component: {fileID: 2728079664890703130}
   - component: {fileID: 2728079664890703135}
   - component: {fileID: 2728079664890703128}
-  - component: {fileID: 1929922417}
   m_Layer: 9
   m_Name: Trampas
   m_TagString: Water
@@ -25529,16 +25491,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 25
   recoveryMode: 1
-  localRecoveryTiles:
-  - {fileID: 11400000, guid: eac8f6a75f838024081e33df39517378, type: 2}
+  localRecoveryTiles: []
   safePosition: {fileID: 0}
-  recoveryPoints:
-  - cell: {x: 138, y: 1, z: 0}
-    safePosition: {fileID: 908700002}
-  - cell: {x: 139, y: 1, z: 0}
-    safePosition: {fileID: 908700002}
-  - cell: {x: 140, y: 1, z: 0}
-    safePosition: {fileID: 908700002}
+  recoveryPoints: []
   spikeDamage: 50
 --- !u!1839735485 &2728079664890703129
 Tilemap:
@@ -30582,6 +30537,18 @@ TilemapCollider2D:
   m_MaximumTileChangeCount: 1000
   m_ExtrusionFactor: 0.00001
   m_UseDelaunayMesh: 0
+--- !u!114 &8911123456789012011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383918133}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51563581b6ec453bbcef7ae61492cd22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MobileSafeAreaFullScreen
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
