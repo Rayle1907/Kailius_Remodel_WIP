@@ -85,7 +85,11 @@ public static class CodexAndroidBuild
             "Assets/Scenes/Scene_1.unity",
             "Assets/Scenes/1_1Gauntlet.unity",
             "Assets/Scenes/1_2Gauntlet.unity",
-            "Assets/Scenes/1_3Gauntlet.unity"
+            "Assets/Scenes/1_3Gauntlet.unity",
+            "Assets/Scenes/Scene_2.unity",
+            "Assets/Scenes/2_1Gauntlet.unity",
+            "Assets/Scenes/2_2Gauntlet.unity",
+            "Assets/Scenes/2_3Gauntlet.unity"
         };
 
         if (!PlayerSettings.Android.useCustomKeystore ||
