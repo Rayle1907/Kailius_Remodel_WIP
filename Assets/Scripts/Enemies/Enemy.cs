@@ -111,6 +111,12 @@ public class Enemy : MonoBehaviour {
 
     private void SpawnReward(GameObject prefab, Vector3 position, Quaternion rotation) {
         GameObject reward = Instantiate(prefab, position, rotation);
+        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(reward, gameObject.scene);
+        OptionalLootProgress progress = OptionalLootProgress.ForScene(gameObject.scene);
+        Coin coin = reward.GetComponent<Coin>();
+        Gem gem = reward.GetComponent<Gem>();
+        if (coin != null) coin.SetBonusLootOwner(progress);
+        if (gem != null) gem.SetBonusLootOwner(progress);
         RewardMagnet.Attach(reward, gameObject.scene.name);
     }
 

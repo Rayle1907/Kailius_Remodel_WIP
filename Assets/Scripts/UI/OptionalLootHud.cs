@@ -19,7 +19,7 @@ public sealed class OptionalLootHud : MonoBehaviour
         gauntlet = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name);
         foreach (GameObject row in currencyRows) row.SetActive(!gauntlet);
         details.gameObject.SetActive(gauntlet);
-        section.SetActive(gauntlet || gameObject.scene.name == "Scene_1");
+        section.SetActive(true);
     }
 
     private void OnEnable()

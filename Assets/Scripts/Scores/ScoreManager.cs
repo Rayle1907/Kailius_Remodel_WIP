@@ -15,9 +15,9 @@ public class ScoreManager : MonoBehaviour {
     private int scoreCoins;
     private int scoreGems;
     private int scoreStars;
-    private static int sceneCoinsCollected;
+    private int sceneCoinsCollected;
     private int sceneCoinsAvailable;
-    private static int sceneGemsCollected;
+    private int sceneGemsCollected;
     private int sceneGemsAvailable;
     private readonly Dictionary<Coin, int> placedCoins = new Dictionary<Coin, int>();
     private readonly Dictionary<Gem, int> placedGems = new Dictionary<Gem, int>();
@@ -26,6 +26,11 @@ public class ScoreManager : MonoBehaviour {
         if (GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) return;
 
         foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
+            foreach (TextMeshProUGUI text in root.GetComponentsInChildren<TextMeshProUGUI>(true)) {
+                if (textCoins == null && text.gameObject.name == "Coins Text (TMP)") textCoins = text;
+                if (textGems == null && text.gameObject.name == "Gems Text (TMP)") textGems = text;
+            }
+
             foreach (Coin coin in root.GetComponentsInChildren<Coin>(true)) {
                 int value = Mathf.Max(0, coin.coinValue);
                 placedCoins.Add(coin, value);
