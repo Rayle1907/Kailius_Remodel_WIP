@@ -23,13 +23,41 @@ internal sealed class GameplayOnboardingBannerView
     public bool IsAvailable => root != null && canvas != null;
     public bool IsVisible => IsAvailable && root.activeInHierarchy;
 
-    public static GameplayOnboardingBannerView Create(Canvas canvas, TMP_FontAsset font)
+    public TMP_FontAsset Font
+    {
+        get
+        {
+            if (message == null) return null;
+            return message.font;
+        }
+    }
+
+    public float FontSizeMax
+    {
+        get
+        {
+            if (message == null) return 0f;
+            return message.fontSizeMax;
+        }
+    }
+
+    public float FontSizeMin
+    {
+        get
+        {
+            if (message == null) return 0f;
+            return message.fontSizeMin;
+        }
+    }
+
+    public static GameplayOnboardingBannerView Create(Canvas canvas, TMP_FontAsset font, Transform parent = null)
     {
         if (canvas == null) return null;
 
         GameObject root = new GameObject("Gameplay onboarding banner", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
         RectTransform rootRect = root.GetComponent<RectTransform>();
-        rootRect.SetParent(canvas.transform, false);
+        if (parent == null) parent = canvas.transform;
+        rootRect.SetParent(parent, false);
         CanvasGroup canvasGroup = root.GetComponent<CanvasGroup>();
         canvasGroup.blocksRaycasts = false;
         Image background = root.GetComponent<Image>();
@@ -44,6 +72,8 @@ internal sealed class GameplayOnboardingBannerView
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Center;
         text.enableAutoSizing = true;
+        text.textWrappingMode = TextWrappingModes.Normal;
+        text.overflowMode = TextOverflowModes.Overflow;
         text.raycastTarget = false;
 
         return new GameplayOnboardingBannerView(root, text, canvas);
@@ -52,9 +82,24 @@ internal sealed class GameplayOnboardingBannerView
     public void Show(string text)
     {
         if (root == null) return;
-        message.text = text;
+        UpdateText(text);
         RefreshLayout();
         root.SetActive(true);
+    }
+
+    public void UpdateText(string text)
+    {
+        if (message != null) message.text = text;
+    }
+
+    public void SetVisible(bool visible)
+    {
+        if (root != null) root.SetActive(visible);
+    }
+
+    public void SetFont(TMP_FontAsset font)
+    {
+        if (message != null && font != null) message.font = font;
     }
 
     public void Hide()

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -13,24 +12,31 @@ public sealed class CheckpointRequirements : MonoBehaviour
         Cleared
     }
 
-    [SerializeField] private List<RequiredGauntletEnemy> prerequisites = new List<RequiredGauntletEnemy>();
+    public sealed class Shortfall
+    {
+        public string TypeId;
+        public int Count;
+    }
+
+    [SerializeField] private List<Enemy> enemiesBehind = new List<Enemy>();
     [SerializeField, Min(0f)] private float warningRadius = 10f;
 
-    private readonly HashSet<RequiredGauntletEnemy> uniquePrerequisites = new HashSet<RequiredGauntletEnemy>();
+    private readonly HashSet<Enemy> uniqueEnemies = new HashSet<Enemy>();
+    private readonly HashSet<int> enemiesBehindIds = new HashSet<int>();
     private GauntletRequirements validatedOwner;
     private bool configurationValidated;
     private bool configurationValid;
     private bool errorLogged;
 
-    public IReadOnlyList<RequiredGauntletEnemy> Prerequisites => prerequisites;
+    public IReadOnlyList<Enemy> EnemiesBehind => enemiesBehind;
     public float WarningRadius => warningRadius;
 
-    public GateState Evaluate(GauntletRequirements owner, List<RequiredGauntletEnemy> remaining)
+    public GateState Evaluate(GauntletRequirements owner, List<Shortfall> remaining)
     {
         remaining.Clear();
         if (owner == null)
         {
-        ReportConfigurationError("Checkpoint requirements could not find the gauntlet requirements owner.");
+            ReportConfigurationError("Checkpoint requirements could not find the gauntlet requirements owner.");
             return GateState.Misconfigured;
         }
 
@@ -42,24 +48,47 @@ public sealed class CheckpointRequirements : MonoBehaviour
 
         if (!owner.IsInitialized) return GateState.WaitingForInitialization;
 
-        if (validatedOwner != owner)
-        {
-            validatedOwner = owner;
-            configurationValidated = false;
-        }
-
-        if (!configurationValidated)
-        {
-            configurationValidated = true;
-            configurationValid = ValidateConfiguration(owner);
-        }
-
+        Initialize(owner);
         if (!configurationValid) return GateState.Misconfigured;
+        if (owner.RequiredCount == 0) return GateState.Cleared;
 
-        foreach (RequiredGauntletEnemy target in prerequisites)
-            if (!owner.IsDefeated(target.VisitId)) remaining.Add(target);
+        foreach (string typeId in owner.QuotaTypes)
+        {
+            int shortfall = GauntletVisit.CalculateBehindShortfall(
+                owner.GetQuota(typeId),
+                owner.GetDefeatedCount(typeId),
+                owner.GetLivingAheadCount(typeId, enemiesBehindIds));
+            if (shortfall <= 0) continue;
+            remaining.Add(new Shortfall
+            {
+                TypeId = typeId,
+                Count = shortfall
+            });
+        }
 
-        return remaining.Count == 0 ? GateState.Cleared : GateState.RequirementsRemain;
+        if (remaining.Count == 0) return GateState.Cleared;
+        return GateState.RequirementsRemain;
+    }
+
+    public void Initialize(GauntletRequirements owner)
+    {
+        if (owner == null || !owner.IsInitialized) return;
+        if (configurationValidated && validatedOwner == owner) return;
+
+        validatedOwner = owner;
+        configurationValidated = true;
+        configurationValid = ValidateConfiguration(owner, out string error);
+        enemiesBehindIds.Clear();
+        if (!configurationValid)
+        {
+            ReportConfigurationError(error);
+            return;
+        }
+
+        foreach (Enemy enemy in enemiesBehind)
+        {
+            if (owner.TryGetVisitId(enemy, out int visitId)) enemiesBehindIds.Add(visitId);
+        }
     }
 
     public bool ValidateConfiguration(GauntletRequirements owner, out string error)
@@ -76,38 +105,10 @@ public sealed class CheckpointRequirements : MonoBehaviour
             return false;
         }
 
-        if (prerequisites == null || prerequisites.Count == 0)
+        if (enemiesBehind == null)
         {
-            error = "A gated checkpoint must reference at least one required enemy.";
+            error = "A checkpoint has a missing behind-enemy list.";
             return false;
-        }
-
-        uniquePrerequisites.Clear();
-        foreach (RequiredGauntletEnemy target in prerequisites)
-        {
-            if (target == null)
-            {
-                error = "A checkpoint requirement references a missing required enemy.";
-                return false;
-            }
-
-            if (target.gameObject.scene != gameObject.scene)
-            {
-                error = "Checkpoint requirements must reference enemies in the same scene.";
-                return false;
-            }
-
-            if (!uniquePrerequisites.Add(target))
-            {
-                error = "A checkpoint requirement references the same enemy more than once.";
-                return false;
-            }
-
-            if (!owner.Targets.Contains(target))
-            {
-                error = "A checkpoint requirement references an enemy not registered with GauntletRequirements.";
-                return false;
-            }
         }
 
         if (!owner.IsConfigured)
@@ -116,18 +117,39 @@ public sealed class CheckpointRequirements : MonoBehaviour
             return false;
         }
 
+        uniqueEnemies.Clear();
+        foreach (Enemy enemy in enemiesBehind)
+        {
+            if (enemy == null)
+            {
+                error = "A checkpoint references a missing enemy behind it.";
+                return false;
+            }
+
+            if (enemy.gameObject.scene != gameObject.scene)
+            {
+                error = "Checkpoint route assignments must reference enemies in the same scene.";
+                return false;
+            }
+
+            if (!uniqueEnemies.Add(enemy))
+            {
+                error = "A checkpoint references the same enemy behind it more than once.";
+                return false;
+            }
+
+            if (!owner.TryGetVisitId(enemy, out _))
+            {
+                error = "A checkpoint references an enemy not registered with GauntletRequirements.";
+                return false;
+            }
+        }
+
         error = null;
         return true;
     }
 
-    private bool ValidateConfiguration(GauntletRequirements owner)
-    {
-        bool valid = ValidateConfiguration(owner, out string error);
-        if (!valid) ReportConfigurationError(error);
-        return valid;
-    }
-
-    internal void ReportConfigurationError(string message)
+    public void ReportConfigurationError(string message)
     {
         if (errorLogged) return;
         errorLogged = true;

@@ -1,47 +1,80 @@
-using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
-public sealed class GauntletGateNotice : MonoBehaviour
+public static class GauntletGateNotice
 {
-    public static void Show(string message)
+    public static void Show(Scene sourceScene, string message,
+        IReadOnlyList<KeyValuePair<string, int>> enemyRows = null)
     {
-        GauntletGateNotice existing = FindAnyObjectByType<GauntletGateNotice>();
-        if (existing != null) Destroy(existing.gameObject);
-        GameObject root = new GameObject("Gauntlet Gate Notice", typeof(Canvas), typeof(CanvasScaler));
-        Canvas canvas = root.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100;
-        CanvasScaler scaler = root.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
-        GameObject panel = new GameObject("Message", typeof(RectTransform), typeof(Image));
-        RectTransform rect = (RectTransform)panel.transform;
-        rect.SetParent(root.transform, false);
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.8f);
-        rect.sizeDelta = new Vector2(750f, 110f);
-        Image background = panel.GetComponent<Image>();
-        background.color = new Color(0.08f, 0.06f, 0.12f, 0.94f);
-        background.raycastTarget = false;
-        GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-        RectTransform textRect = (RectTransform)textObject.transform;
-        textRect.SetParent(rect, false);
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(16f, 8f);
-        textRect.offsetMax = new Vector2(-16f, -8f);
-        TMP_Text text = textObject.GetComponent<TMP_Text>();
-        text.text = message;
-        text.fontSize = 28f;
-        text.alignment = TextAlignmentOptions.Center;
-        text.raycastTarget = false;
-        root.AddComponent<GauntletGateNotice>().StartCoroutine(Dismiss());
-        IEnumerator Dismiss()
+        if (!TryGetSceneCanvasAndFont(sourceScene, out Canvas canvas, out TMP_FontAsset font,
+            out GauntletRequirementsHud hud)) return;
+        string requestKey = "GauntletGateNotice:" + sourceScene.handle;
+        GameplayBannerToken token = GameplayBannerPresenter.Show(canvas, font, message, 5f, requestKey);
+        if (token == null) return;
+        if (hud != null) GameplayBannerPresenter.SetEnemyRows(token, hud, enemyRows);
+        else GameplayBannerPresenter.ClearEnemyRows(token);
+    }
+
+    private static bool TryGetSceneCanvasAndFont(Scene scene, out Canvas canvas, out TMP_FontAsset font,
+        out GauntletRequirementsHud requirementsHud)
+    {
+        canvas = null;
+        font = null;
+        requirementsHud = null;
+        if (!scene.IsValid() || !scene.isLoaded) return false;
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        foreach (GameObject root in roots)
         {
-            yield return new WaitForSecondsRealtime(5f);
-            if (root != null) Destroy(root);
+            FuryFeedback[] feedback = root.GetComponentsInChildren<FuryFeedback>(true);
+            foreach (FuryFeedback playerFeedback in feedback)
+            {
+                Stats stats = playerFeedback.GetComponent<Stats>();
+                if (stats == null || stats.textDamage == null || stats.textDamage.font == null) continue;
+                font = stats.textDamage.font;
+                break;
+            }
+            if (font != null) break;
         }
+
+        foreach (GameObject root in roots)
+        {
+            GauntletRequirementsHud[] huds = root.GetComponentsInChildren<GauntletRequirementsHud>(true);
+            foreach (GauntletRequirementsHud hud in huds)
+            {
+                if (hud == null || hud.gameObject.scene != scene || hud.RootCanvas == null
+                    || !hud.RootCanvas.isActiveAndEnabled) continue;
+                canvas = hud.RootCanvas;
+                requirementsHud = hud;
+                if (font == null) font = hud.NoticeFont;
+                break;
+            }
+            if (canvas != null) break;
+        }
+
+        if (canvas == null)
+        {
+            foreach (GameObject root in roots)
+            {
+                Canvas[] canvases = root.GetComponentsInChildren<Canvas>(true);
+                foreach (Canvas candidate in canvases)
+                {
+                    if (candidate == null || !candidate.isActiveAndEnabled) continue;
+                    canvas = candidate.rootCanvas;
+                    break;
+                }
+                if (canvas != null) break;
+            }
+        }
+
+        if (canvas == null) return false;
+        if (font == null)
+        {
+            TextMeshProUGUI referenceText = canvas.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (referenceText != null) font = referenceText.font;
+        }
+        return true;
     }
 }

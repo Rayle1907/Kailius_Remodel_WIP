@@ -9,7 +9,6 @@ public sealed class GauntletRequirementsHud : MonoBehaviour
     {
         public string Type;
         public GauntletEnemyRow View;
-        public readonly List<int> EnemyIds = new List<int>();
     }
 
     [SerializeField] private TMP_Text requiredHeading;
@@ -80,19 +79,13 @@ public sealed class GauntletRequirementsHud : MonoBehaviour
         }
 
         requirements = owner;
-        foreach (RequiredGauntletEnemy target in owner.Targets)
+        foreach (string typeId in owner.QuotaTypes)
         {
-            Row row = rows.Find(item => item.Type == target.EnemyType);
-            if (row == null)
-            {
-                GauntletEnemyRow view = Instantiate(rowTemplate, enemyRows, false);
-                view.name = target.EnemyType + " Count";
-                view.SetPortrait(target.Portrait);
-                view.gameObject.SetActive(true);
-                row = new Row { Type = target.EnemyType, View = view };
-                rows.Add(row);
-            }
-            row.EnemyIds.Add(target.VisitId);
+            GauntletEnemyRow view = Instantiate(rowTemplate, enemyRows, false);
+            view.name = typeId + " Count";
+            view.SetPortrait(owner.GetQuotaPortrait(typeId));
+            view.gameObject.SetActive(true);
+            rows.Add(new Row { Type = typeId, View = view });
         }
 
         if (isActiveAndEnabled) Subscribe();
@@ -135,10 +128,10 @@ public sealed class GauntletRequirementsHud : MonoBehaviour
         requiredHeading.text = cleared ? "Gauntlet cleared" : "Required";
         foreach (Row row in rows)
         {
-            int count = 0;
-            foreach (int id in row.EnemyIds)
-                if (cleared || requirements.IsDefeated(id)) count++;
-            row.View.SetCount(count, row.EnemyIds.Count);
+            int quota = requirements.GetQuota(row.Type);
+            int count = Mathf.Min(quota, requirements.GetDefeatedCount(row.Type));
+            if (cleared) count = quota;
+            row.View.SetCount(count, quota);
         }
     }
 

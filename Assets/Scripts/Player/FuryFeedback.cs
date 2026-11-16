@@ -42,17 +42,22 @@ public sealed class FuryFeedback : MonoBehaviour
     private MaterialPropertyBlock swipeProperties;
     private Image bar;
     private Color originalBarColor;
-    private GameplayOnboardingBannerView banner;
+    private GameplayBannerToken bannerToken;
     private IntroductionType activeIntroduction;
     private float furyVisibleSeconds;
     private float fallRecoveryVisibleSeconds;
     private float doubleJumpVisibleSeconds;
-    private bool furyIntroductionRequested;
-    private bool fallRecoveryIntroductionRequested;
-    private bool doubleJumpIntroductionRequested;
+    private bool furyWasReady;
     private bool hintWasReadable;
     private bool applicationPaused;
+    private bool hasStarted;
     private float empoweredUntil;
+    private readonly object furyRequestKey = new object();
+    private readonly object doubleJumpRequestKey = new object();
+    private readonly object fallRecoveryRequestKey = new object();
+    private int furyRequestFrame = -1;
+    private int doubleJumpRequestFrame = -1;
+    private int fallRecoveryRequestFrame = -1;
     private static readonly int MainTexture = Shader.PropertyToID("_MainTex");
     private static readonly int TintColor = Shader.PropertyToID("_TintColor");
     private static readonly int TintStrength = Shader.PropertyToID("_TintStrength");
@@ -126,12 +131,18 @@ public sealed class FuryFeedback : MonoBehaviour
     {
         stats.FuryChargeChanged += OnChargeChanged;
         stats.FuryConsumed += OnConsumed;
+        if (hasStarted && stats.IsFuryReady)
+        {
+            furyWasReady = false;
+            OnChargeChanged(stats.getPower());
+        }
     }
 
     private void Start()
     {
         BindBar();
         OnChargeChanged(stats.getPower());
+        hasStarted = true;
     }
 
     private void OnChargeChanged(int charge)
@@ -139,6 +150,7 @@ public sealed class FuryFeedback : MonoBehaviour
         BindBar();
         if (charge < Stats.FuryChargeLimit)
         {
+            furyWasReady = false;
             if (bar != null) bar.color = originalBarColor;
             if (stats.getHealth() <= 0)
             {
@@ -149,6 +161,8 @@ public sealed class FuryFeedback : MonoBehaviour
             }
             return;
         }
+        if (furyWasReady) return;
+        furyWasReady = true;
         ShowFuryIntroduction();
     }
 
@@ -178,16 +192,13 @@ public sealed class FuryFeedback : MonoBehaviour
         }
         else
         {
-            if (!IntroductionSeen && stats.IsFuryReady)
-            {
-                if (!furyIntroductionRequested && furyVisibleSeconds >= 10f) furyVisibleSeconds = 0f;
-                furyIntroductionRequested = true;
-            }
-            RefreshActiveIntroduction();
-            banner?.RefreshLayoutIfNeeded();
+            if (activeIntroduction != IntroductionType.None && !GameplayBannerPresenter.IsOwner(bannerToken))
+                DiscardActiveIntroduction();
+            GameplayBannerPresenter.RefreshLayoutIfNeeded(bannerToken);
         }
 
-        bool readable = banner != null && banner.IsVisible && activeIntroduction != IntroductionType.None
+        bool readable = bannerToken != null && GameplayBannerPresenter.IsVisible(bannerToken)
+            && activeIntroduction != IntroductionType.None
             && stats.getHealth() > 0 && Application.isFocused && !applicationPaused && Time.timeScale > 0f;
         if (readable && hintWasReadable) AdvanceIntroduction(Time.unscaledDeltaTime);
         hintWasReadable = readable;
@@ -234,72 +245,87 @@ public sealed class FuryFeedback : MonoBehaviour
 
     private void ShowFuryIntroduction()
     {
-        if (IntroductionSeen) return;
-        if (!furyIntroductionRequested && furyVisibleSeconds >= 10f) furyVisibleSeconds = 0f;
-        furyIntroductionRequested = true;
-        RefreshActiveIntroduction();
+        if (IntroductionSeen || stats.getHealth() <= 0) return;
+        RequestIntroduction(IntroductionType.Fury);
     }
 
     public void ShowFallRecoveryIntroduction()
     {
         if (FallIntroductionSeen || stats.getHealth() <= 0) return;
-        if (!fallRecoveryIntroductionRequested) fallRecoveryVisibleSeconds = 0f;
-        fallRecoveryIntroductionRequested = true;
-        RefreshActiveIntroduction();
+        RequestIntroduction(IntroductionType.FallRecovery);
     }
 
     public void ShowDoubleJumpIntroduction()
     {
         if (DoubleJumpIntroductionSeen || stats.getHealth() <= 0) return;
-        if (!doubleJumpIntroductionRequested) doubleJumpVisibleSeconds = 0f;
-        doubleJumpIntroductionRequested = true;
-        RefreshActiveIntroduction();
+        RequestIntroduction(IntroductionType.DoubleJump);
     }
 
-    private void RefreshActiveIntroduction()
+    private void RequestIntroduction(IntroductionType type)
     {
-        IntroductionType next = IntroductionType.None;
-        if (stats.getHealth() > 0)
-        {
-            if (fallRecoveryIntroductionRequested && !FallIntroductionSeen)
-                next = IntroductionType.FallRecovery;
-            else if (doubleJumpIntroductionRequested && !DoubleJumpIntroductionSeen)
-                next = IntroductionType.DoubleJump;
-            else if (furyIntroductionRequested && !IntroductionSeen)
-                next = IntroductionType.Fury;
-        }
-
-        if (next == IntroductionType.None)
-        {
-            if (activeIntroduction != IntroductionType.None)
-            {
-                activeIntroduction = IntroductionType.None;
-                banner?.Hide();
-                hintWasReadable = false;
-            }
-            return;
-        }
-
-        if (next == activeIntroduction && banner != null && banner.IsVisible) return;
-        if (!TryCreateBanner())
-        {
-            activeIntroduction = IntroductionType.None;
-            return;
-        }
-
-        activeIntroduction = next;
-        if (next == IntroductionType.FallRecovery) banner.Show(FallIntroduction);
-        else if (next == IntroductionType.DoubleJump) banner.Show(DoubleJumpIntroduction);
-        else banner.Show(Introduction);
+        if (WasRequestedThisFrame(type)) return;
+        SetRequestFrame(type);
+        if (activeIntroduction == type && GameplayBannerPresenter.IsOwner(bannerToken)) return;
+        DiscardActiveIntroduction();
+        ResetIntroductionTime(type);
+        if (!TryGetBannerCanvas(out Canvas canvas, out TMP_FontAsset font)) return;
+        GameplayBannerToken nextToken = GameplayBannerPresenter.Show(canvas, font,
+            GetIntroductionText(type), 0f, GetRequestKey(type));
+        if (nextToken == null) return;
+        bannerToken = nextToken;
+        activeIntroduction = type;
         hintWasReadable = false;
     }
 
-    private bool TryCreateBanner()
+    private bool WasRequestedThisFrame(IntroductionType type)
     {
-        if (banner != null && banner.IsAvailable) return true;
-        banner?.Dispose();
-        banner = null;
-        Canvas canvas = bar != null ? bar.GetComponentInParent<Canvas>() : null;
+        if (type == IntroductionType.FallRecovery) return fallRecoveryRequestFrame == Time.frameCount;
+        if (type == IntroductionType.DoubleJump) return doubleJumpRequestFrame == Time.frameCount;
+        if (type == IntroductionType.Fury) return furyRequestFrame == Time.frameCount;
+        return false;
+    }
+
+    private void SetRequestFrame(IntroductionType type)
+    {
+        if (type == IntroductionType.FallRecovery) fallRecoveryRequestFrame = Time.frameCount;
+        else if (type == IntroductionType.DoubleJump) doubleJumpRequestFrame = Time.frameCount;
+        else if (type == IntroductionType.Fury) furyRequestFrame = Time.frameCount;
+    }
+
+    private static string GetIntroductionText(IntroductionType type)
+    {
+        if (type == IntroductionType.FallRecovery) return FallIntroduction;
+        if (type == IntroductionType.DoubleJump) return DoubleJumpIntroduction;
+        return Introduction;
+    }
+
+    private object GetRequestKey(IntroductionType type)
+    {
+        if (type == IntroductionType.FallRecovery) return fallRecoveryRequestKey;
+        if (type == IntroductionType.DoubleJump) return doubleJumpRequestKey;
+        return furyRequestKey;
+    }
+
+    private void ResetIntroductionTime(IntroductionType type)
+    {
+        if (type == IntroductionType.FallRecovery) fallRecoveryVisibleSeconds = 0f;
+        else if (type == IntroductionType.DoubleJump) doubleJumpVisibleSeconds = 0f;
+        else if (type == IntroductionType.Fury) furyVisibleSeconds = 0f;
+    }
+
+    private void DiscardActiveIntroduction()
+    {
+        if (activeIntroduction != IntroductionType.None) ResetIntroductionTime(activeIntroduction);
+        if (bannerToken != null) GameplayBannerPresenter.Dismiss(bannerToken);
+        bannerToken = null;
+        activeIntroduction = IntroductionType.None;
+        hintWasReadable = false;
+    }
+
+    private bool TryGetBannerCanvas(out Canvas rootCanvas, out TMP_FontAsset font)
+    {
+        Canvas canvas = null;
+        if (bar != null) canvas = bar.GetComponentInParent<Canvas>();
         if (canvas == null && stats.hearts != null) canvas = stats.hearts.GetComponentInParent<Canvas>();
         if (canvas == null)
         {
@@ -316,17 +342,21 @@ public sealed class FuryFeedback : MonoBehaviour
                 if (canvas != null) break;
             }
         }
-        if (canvas == null || !canvas.isActiveAndEnabled || (bar != null && !bar.gameObject.activeInHierarchy)) return false;
-        Canvas rootCanvas = canvas.rootCanvas;
-        TMP_FontAsset font = null;
+        if (canvas == null || !canvas.isActiveAndEnabled || (bar != null && !bar.gameObject.activeInHierarchy))
+        {
+            rootCanvas = null;
+            font = null;
+            return false;
+        }
+        rootCanvas = canvas.rootCanvas;
+        font = null;
         if (stats.textDamage != null) font = stats.textDamage.font;
         if (font == null)
         {
             TextMeshProUGUI referenceText = rootCanvas.GetComponentInChildren<TextMeshProUGUI>(true);
             if (referenceText != null) font = referenceText.font;
         }
-        banner = GameplayOnboardingBannerView.Create(rootCanvas, font);
-        return banner != null;
+        return true;
     }
 
     private void AdvanceIntroduction(float visibleSeconds)
@@ -337,40 +367,33 @@ public sealed class FuryFeedback : MonoBehaviour
             if (furyVisibleSeconds < 10f) return;
             PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
             PlayerPrefs.SetInt(HintSeenKey, 1);
-            furyIntroductionRequested = false;
         }
         else if (activeIntroduction == IntroductionType.DoubleJump)
         {
             doubleJumpVisibleSeconds += Mathf.Max(0f, visibleSeconds);
             if (doubleJumpVisibleSeconds < 10f) return;
             PlayerPrefs.SetInt(DoubleJumpIntroductionSeenKey, 1);
-            doubleJumpIntroductionRequested = false;
         }
         else if (activeIntroduction == IntroductionType.FallRecovery)
         {
             fallRecoveryVisibleSeconds += Mathf.Max(0f, visibleSeconds);
             if (fallRecoveryVisibleSeconds < 10f) return;
             PlayerPrefs.SetInt(FallIntroductionSeenKey, 1);
-            fallRecoveryIntroductionRequested = false;
         }
         else return;
 
         PlayerPrefs.Save();
+        GameplayBannerPresenter.Dismiss(bannerToken);
+        bannerToken = null;
         activeIntroduction = IntroductionType.None;
-        banner.Hide();
         hintWasReadable = false;
-        RefreshActiveIntroduction();
     }
 
     private void HideIntroductionForDeath()
     {
         fallRecoveryVisibleSeconds = 0f;
         doubleJumpVisibleSeconds = 0f;
-        fallRecoveryIntroductionRequested = false;
-        doubleJumpIntroductionRequested = false;
-        activeIntroduction = IntroductionType.None;
-        banner?.Hide();
-        hintWasReadable = false;
+        DiscardActiveIntroduction();
     }
 
     public static void ResetIntroduction()
@@ -430,16 +453,14 @@ public sealed class FuryFeedback : MonoBehaviour
         if (bar != null) bar.color = originalBarColor;
         if (glow != null) glow.enabled = false;
         if (swipe != null) swipe.enabled = false;
-        if (activeIntroduction == IntroductionType.FallRecovery) fallRecoveryVisibleSeconds = 0f;
-        activeIntroduction = IntroductionType.None;
-        banner?.Hide();
-        hintWasReadable = false;
+        DiscardActiveIntroduction();
+        furyWasReady = false;
         empoweredUntil = 0f;
     }
 
     private void OnDestroy()
     {
-        banner?.Dispose();
+        if (bannerToken != null) GameplayBannerPresenter.Dismiss(bannerToken);
         if (frameMeshes != null)
             foreach (Mesh mesh in frameMeshes) if (mesh != null) Release(mesh);
         if (swipeMeshes != null)
