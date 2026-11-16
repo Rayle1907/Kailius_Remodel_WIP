@@ -26,8 +26,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 203, guid: a7fd548cad8c4fc187495d2cdb092f35, type: 3}
       propertyPath: m_text
-      value: Return to the open world. This attempt's progress will reset. Ember
-        prices for this gauntlet will remain.
+      value: Leave this attempt? Required enemy progress will reset. Ember prices
+        for this gauntlet will remain.
       objectReference: {fileID: 0}
     - target: {fileID: 203, guid: a7fd548cad8c4fc187495d2cdb092f35, type: 3}
       propertyPath: m_fontSize

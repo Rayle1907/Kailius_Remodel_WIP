@@ -216,3 +216,4 @@ MonoBehaviour:
   maxHearts: 3
   maxSwords: 1
   maxShields: 1
+  enemyTypeId: Piranha

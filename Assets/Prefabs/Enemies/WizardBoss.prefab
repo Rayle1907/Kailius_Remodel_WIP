@@ -202,6 +202,7 @@ MonoBehaviour:
   maxHearts: 3
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: WizardBoss
 --- !u!114 &1998675929712663368
 MonoBehaviour:
   m_ObjectHideFlags: 0

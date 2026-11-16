@@ -94,20 +94,119 @@ public static class GauntletProgress
 
 public sealed class GauntletVisit
 {
-    private readonly HashSet<int> required = new HashSet<int>();
+    private readonly Dictionary<int, string> enemyTypeById = new Dictionary<int, string>();
+    private readonly Dictionary<string, int> quotaByType = new Dictionary<string, int>(StringComparer.Ordinal);
     private readonly HashSet<int> defeated = new HashSet<int>();
+    private readonly Dictionary<string, int> defeatedByType = new Dictionary<string, int>(StringComparer.Ordinal);
     public bool IsConfigured { get; private set; }
-    public int DefeatedCount => defeated.Count;
-    public int RequiredCount => required.Count;
-    public bool IsComplete => IsConfigured && required.Count > 0 && defeated.Count == required.Count;
-
-    public GauntletVisit(IEnumerable<int> enemyIds)
+    public int DefeatedCount
     {
-        IsConfigured = true;
-        foreach (int id in enemyIds)
-            if (!required.Add(id)) IsConfigured = false;
+        get
+        {
+            int count = 0;
+            foreach (KeyValuePair<string, int> quota in quotaByType)
+                count += Mathf.Min(quota.Value, GetDefeatedCount(quota.Key));
+            return count;
+        }
+    }
+    public int RequiredCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (int quota in quotaByType.Values) count += quota;
+            return count;
+        }
+    }
+    public bool IsComplete
+    {
+        get
+        {
+            if (!IsConfigured || RequiredCount == 0) return false;
+            foreach (KeyValuePair<string, int> quota in quotaByType)
+                if (GetDefeatedCount(quota.Key) < quota.Value) return false;
+            return true;
+        }
     }
 
-    public bool RecordDefeat(int enemyId) => required.Contains(enemyId) && defeated.Add(enemyId);
+    public GauntletVisit(IEnumerable<KeyValuePair<int, string>> enemies,
+        IEnumerable<KeyValuePair<string, int>> quotas)
+    {
+        IsConfigured = true;
+        foreach (KeyValuePair<int, string> enemy in enemies)
+        {
+            if (enemy.Key < 0 || string.IsNullOrWhiteSpace(enemy.Value)
+                || enemyTypeById.ContainsKey(enemy.Key))
+            {
+                IsConfigured = false;
+                continue;
+            }
+
+            enemyTypeById.Add(enemy.Key, enemy.Value);
+        }
+
+        foreach (KeyValuePair<string, int> quota in quotas)
+        {
+            if (string.IsNullOrWhiteSpace(quota.Key) || quota.Value < 0
+                || quotaByType.ContainsKey(quota.Key))
+            {
+                IsConfigured = false;
+                continue;
+            }
+
+            quotaByType.Add(quota.Key, quota.Value);
+        }
+
+        foreach (KeyValuePair<string, int> quota in quotaByType)
+        {
+            int available = 0;
+            foreach (string enemyType in enemyTypeById.Values)
+                if (enemyType == quota.Key) available++;
+            if (quota.Value > available) IsConfigured = false;
+        }
+    }
+
+    public bool RecordDefeat(int enemyId)
+    {
+        if (!enemyTypeById.TryGetValue(enemyId, out string enemyType) || !defeated.Add(enemyId)) return false;
+        if (!defeatedByType.ContainsKey(enemyType)) defeatedByType.Add(enemyType, 0);
+        defeatedByType[enemyType]++;
+        return true;
+    }
+
     public bool IsDefeated(int enemyId) => defeated.Contains(enemyId);
+    public bool ContainsEnemy(int enemyId) => enemyTypeById.ContainsKey(enemyId);
+    public string GetEnemyType(int enemyId)
+    {
+        if (!enemyTypeById.TryGetValue(enemyId, out string enemyType)) return string.Empty;
+        return enemyType;
+    }
+
+    public int GetQuota(string enemyType)
+    {
+        if (!quotaByType.TryGetValue(enemyType, out int quota)) return 0;
+        return quota;
+    }
+
+    public int GetDefeatedCount(string enemyType)
+    {
+        if (!defeatedByType.TryGetValue(enemyType, out int count)) return 0;
+        return count;
+    }
+
+    public int GetLivingAheadCount(string enemyType, HashSet<int> enemiesBehind)
+    {
+        int count = 0;
+        foreach (KeyValuePair<int, string> enemy in enemyTypeById)
+        {
+            if (enemy.Value == enemyType && !enemiesBehind.Contains(enemy.Key) && !defeated.Contains(enemy.Key))
+                count++;
+        }
+        return count;
+    }
+
+    public static int CalculateBehindShortfall(int quota, int creditedKills, int livingAhead)
+    {
+        return Math.Max(0, quota - creditedKills - livingAhead);
+    }
 }

@@ -19,8 +19,33 @@ public class Enemy : MonoBehaviour {
     public int maxSwords = 2;
     public int maxShields = 2;
     [SerializeField] private string rewardSourceId;
+    [SerializeField] private string enemyTypeId;
     private bool isDying;
     private SpriteHurtFlash hurtFlash;
+    private GauntletRequirements gauntletRequirements;
+    private int gauntletVisitId = -1;
+
+    public string EnemyTypeId
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(enemyTypeId)) return string.Empty;
+            return enemyTypeId.Trim();
+        }
+    }
+    public int GauntletVisitId => gauntletVisitId;
+
+    public void BindGauntletRequirements(GauntletRequirements requirements, int visitId)
+    {
+        gauntletRequirements = requirements;
+        gauntletVisitId = visitId;
+    }
+
+    public void RecordGauntletDefeat()
+    {
+        if (gauntletRequirements != null && gauntletVisitId >= 0)
+            gauntletRequirements.RecordDefeat(gauntletVisitId);
+    }
 
     private void Awake() {
         hurtFlash = GetComponent<SpriteHurtFlash>();
@@ -50,7 +75,7 @@ public class Enemy : MonoBehaviour {
         }
 
         isDying = true;
-        GetComponent<RequiredGauntletEnemy>()?.RecordDefeat();
+        RecordGauntletDefeat();
         Rigidbody2D rb = gameObject.GetComponent<Rigidbody2D>();
         if (rb != null) {
             rb.linearVelocity = Vector2.zero;

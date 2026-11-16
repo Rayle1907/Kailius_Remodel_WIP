@@ -75145,11 +75145,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Slime
   portrait: {fileID: 3225832317793331946, guid: 7e38104f6bce69e4586ecbe2b3758072,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &1383918133
 GameObject:
   m_ObjectHideFlags: 0
@@ -169961,11 +169958,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Slime (1)
   portrait: {fileID: 3225832317793331946, guid: 7e38104f6bce69e4586ecbe2b3758072,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &1729493296
 GameObject:
   m_ObjectHideFlags: 0
@@ -192142,11 +192136,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Knight
   portrait: {fileID: 1509690687825009327, guid: 9aa8afada901fe248bffd9b62a24fc6c,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1001 &2079462424
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -194270,8 +194261,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
-  prerequisites:
-  - {fileID: 1724991227}
+  enemiesBehind:
+  - {fileID: 1724991228}
   warningRadius: 10
 --- !u!4 &2728079664082209864
 Transform:
@@ -214468,3 +214459,15 @@ SceneRoots:
   - {fileID: 910607397}
   - {fileID: 960000011}
   - {fileID: 786543210987654322}
+--- !u!114 &1724991228 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5907864246962054515, guid: 23b11f24d7248f145a06012891f99222,
+    type: 3}
+  m_PrefabInstance: {fileID: 1724991224}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1724991226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

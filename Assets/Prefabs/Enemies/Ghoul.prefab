@@ -229,3 +229,4 @@ MonoBehaviour:
   maxHearts: 2
   maxSwords: 1
   maxShields: 1
+  enemyTypeId: Ghoul

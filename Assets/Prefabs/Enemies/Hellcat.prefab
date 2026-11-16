@@ -199,6 +199,7 @@ MonoBehaviour:
   maxHearts: 2
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: Hellcat
 --- !u!1 &6363950555076316485
 GameObject:
   m_ObjectHideFlags: 0

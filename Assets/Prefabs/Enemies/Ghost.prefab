@@ -192,6 +192,7 @@ MonoBehaviour:
   maxHearts: 2
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: Ghost
 --- !u!70 &3133617829513601525
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

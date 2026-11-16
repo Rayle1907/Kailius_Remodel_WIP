@@ -15168,11 +15168,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Tru (1)
   portrait: {fileID: 9168396658961621293, guid: 84a8bbecf8e8ae449bfa3fe42041c373,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &624877221
 GameObject:
   m_ObjectHideFlags: 0
@@ -33891,11 +33888,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Slime (1)
   portrait: {fileID: 3225832317793331946, guid: 7e38104f6bce69e4586ecbe2b3758072,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!213 &1752316209
 Sprite:
   serializedVersion: 2
@@ -35327,11 +35321,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Knight (1)
   portrait: {fileID: 1509690687825009327, guid: 9aa8afada901fe248bffd9b62a24fc6c,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &1839881757
 GameObject:
   m_ObjectHideFlags: 0
@@ -42254,8 +42245,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
-  prerequisites:
-  - {fileID: 1724991233}
+  enemiesBehind:
+  - {fileID: 1724991226}
   warningRadius: 10
 --- !u!1 &910000000000000041 stripped
 GameObject:
@@ -42275,10 +42266,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
-  prerequisites:
-  - {fileID: 1724991233}
-  - {fileID: 617135190}
-  - {fileID: 1831039101}
+  enemiesBehind:
+  - {fileID: 1724991226}
+  - {fileID: 617135191}
+  - {fileID: 1831039102}
   warningRadius: 10
 --- !u!4 &2728079664082209864
 Transform:
@@ -71698,3 +71689,39 @@ SceneRoots:
   - {fileID: 950000001}
   - {fileID: 540955801}
   - {fileID: 910607397}
+--- !u!114 &617135191 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8676605311916295595, guid: bf30cc82774b4f64a86585367cf9b1bf,
+    type: 3}
+  m_PrefabInstance: {fileID: 617135187}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 617135189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &1724991226 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5907864246962054515, guid: 23b11f24d7248f145a06012891f99222,
+    type: 3}
+  m_PrefabInstance: {fileID: 1724991224}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1497849231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &1831039102 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6917767684542770004, guid: 379b6fc0baecbbb439ff327b1a2724d9,
+    type: 3}
+  m_PrefabInstance: {fileID: 1831039098}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831039100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
