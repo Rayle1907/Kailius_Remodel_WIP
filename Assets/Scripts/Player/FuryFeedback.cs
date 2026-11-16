@@ -13,11 +13,14 @@ public sealed class FuryFeedback : MonoBehaviour
     public const string Introduction = "Land 4 sword hits to charge Fury. Your next hit deals +50% damage.";
     public const string FallIntroductionSeenKey = "fall_recovery_introduction_seen";
     public const string FallIntroduction = "Back at your checkpoint. Falling costs health. You die when your health runs out.";
+    public const string DoubleJumpIntroductionSeenKey = "double_jump_introduction_seen";
+    public const string DoubleJumpIntroduction = "You can double jump! Press jump again while in the air.";
     public static bool IntroductionSeen => PlayerPrefs.GetInt(HintRevisionKey,
         PlayerPrefs.GetInt(HintSeenKey, 0) != 0 ? 1 : 0) >= CurrentIntroductionRevision;
     public static bool FallIntroductionSeen => PlayerPrefs.GetInt(FallIntroductionSeenKey, 0) != 0;
+    public static bool DoubleJumpIntroductionSeen => PlayerPrefs.GetInt(DoubleJumpIntroductionSeenKey, 0) != 0;
 
-    private enum IntroductionType { None, Fury, FallRecovery }
+    private enum IntroductionType { None, Fury, DoubleJump, FallRecovery }
 
     [SerializeField] private Material glowMaterial;
     [SerializeField, Range(0f, 1f)] private float swordTintStrength = 0.65f;
@@ -43,6 +46,10 @@ public sealed class FuryFeedback : MonoBehaviour
     private IntroductionType activeIntroduction;
     private float furyVisibleSeconds;
     private float fallRecoveryVisibleSeconds;
+    private float doubleJumpVisibleSeconds;
+    private bool furyIntroductionRequested;
+    private bool fallRecoveryIntroductionRequested;
+    private bool doubleJumpIntroductionRequested;
     private bool hintWasReadable;
     private bool applicationPaused;
     private float empoweredUntil;
@@ -171,8 +178,12 @@ public sealed class FuryFeedback : MonoBehaviour
         }
         else
         {
-            if (!IntroductionSeen && stats.IsFuryReady && activeIntroduction != IntroductionType.FallRecovery)
-                ShowFuryIntroduction();
+            if (!IntroductionSeen && stats.IsFuryReady)
+            {
+                if (!furyIntroductionRequested && furyVisibleSeconds >= 10f) furyVisibleSeconds = 0f;
+                furyIntroductionRequested = true;
+            }
+            RefreshActiveIntroduction();
             banner?.RefreshLayoutIfNeeded();
         }
 
@@ -223,21 +234,63 @@ public sealed class FuryFeedback : MonoBehaviour
 
     private void ShowFuryIntroduction()
     {
-        if (IntroductionSeen || activeIntroduction == IntroductionType.FallRecovery || !TryCreateBanner()) return;
-        if (activeIntroduction == IntroductionType.Fury && banner.IsVisible) return;
-        if (furyVisibleSeconds >= 10f) furyVisibleSeconds = 0f;
-        activeIntroduction = IntroductionType.Fury;
-        banner.Show(Introduction);
-        hintWasReadable = false;
+        if (IntroductionSeen) return;
+        if (!furyIntroductionRequested && furyVisibleSeconds >= 10f) furyVisibleSeconds = 0f;
+        furyIntroductionRequested = true;
+        RefreshActiveIntroduction();
     }
 
     public void ShowFallRecoveryIntroduction()
     {
-        if (FallIntroductionSeen || stats.getHealth() <= 0 || activeIntroduction == IntroductionType.FallRecovery
-            || !TryCreateBanner()) return;
-        fallRecoveryVisibleSeconds = 0f;
-        activeIntroduction = IntroductionType.FallRecovery;
-        banner.Show(FallIntroduction);
+        if (FallIntroductionSeen || stats.getHealth() <= 0) return;
+        if (!fallRecoveryIntroductionRequested) fallRecoveryVisibleSeconds = 0f;
+        fallRecoveryIntroductionRequested = true;
+        RefreshActiveIntroduction();
+    }
+
+    public void ShowDoubleJumpIntroduction()
+    {
+        if (DoubleJumpIntroductionSeen || stats.getHealth() <= 0) return;
+        if (!doubleJumpIntroductionRequested) doubleJumpVisibleSeconds = 0f;
+        doubleJumpIntroductionRequested = true;
+        RefreshActiveIntroduction();
+    }
+
+    private void RefreshActiveIntroduction()
+    {
+        IntroductionType next = IntroductionType.None;
+        if (stats.getHealth() > 0)
+        {
+            if (fallRecoveryIntroductionRequested && !FallIntroductionSeen)
+                next = IntroductionType.FallRecovery;
+            else if (doubleJumpIntroductionRequested && !DoubleJumpIntroductionSeen)
+                next = IntroductionType.DoubleJump;
+            else if (furyIntroductionRequested && !IntroductionSeen)
+                next = IntroductionType.Fury;
+        }
+
+        if (next == IntroductionType.None)
+        {
+            if (activeIntroduction != IntroductionType.None)
+            {
+                activeIntroduction = IntroductionType.None;
+                banner?.Hide();
+                hintWasReadable = false;
+            }
+            return;
+        }
+
+        if (next == activeIntroduction && banner != null && banner.IsVisible) return;
+        if (!TryCreateBanner())
+        {
+            activeIntroduction = IntroductionType.None;
+            return;
+        }
+
+        activeIntroduction = next;
+        if (next == IntroductionType.FallRecovery) banner.Show(FallIntroduction);
+        else if (next == IntroductionType.DoubleJump) banner.Show(DoubleJumpIntroduction);
+        else banner.Show(Introduction);
         hintWasReadable = false;
     }
 
@@ -264,8 +317,15 @@ public sealed class FuryFeedback : MonoBehaviour
             }
         }
         if (canvas == null || !canvas.isActiveAndEnabled || (bar != null && !bar.gameObject.activeInHierarchy)) return false;
-        banner = GameplayOnboardingBannerView.Create(canvas.rootCanvas,
-            stats.textDamage != null ? stats.textDamage.font : null);
+        Canvas rootCanvas = canvas.rootCanvas;
+        TMP_FontAsset font = null;
+        if (stats.textDamage != null) font = stats.textDamage.font;
+        if (font == null)
+        {
+            TextMeshProUGUI referenceText = rootCanvas.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (referenceText != null) font = referenceText.font;
+        }
+        banner = GameplayOnboardingBannerView.Create(rootCanvas, font);
         return banner != null;
     }
 
@@ -277,27 +337,37 @@ public sealed class FuryFeedback : MonoBehaviour
             if (furyVisibleSeconds < 10f) return;
             PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
             PlayerPrefs.SetInt(HintSeenKey, 1);
+            furyIntroductionRequested = false;
+        }
+        else if (activeIntroduction == IntroductionType.DoubleJump)
+        {
+            doubleJumpVisibleSeconds += Mathf.Max(0f, visibleSeconds);
+            if (doubleJumpVisibleSeconds < 10f) return;
+            PlayerPrefs.SetInt(DoubleJumpIntroductionSeenKey, 1);
+            doubleJumpIntroductionRequested = false;
         }
         else if (activeIntroduction == IntroductionType.FallRecovery)
         {
             fallRecoveryVisibleSeconds += Mathf.Max(0f, visibleSeconds);
             if (fallRecoveryVisibleSeconds < 10f) return;
             PlayerPrefs.SetInt(FallIntroductionSeenKey, 1);
+            fallRecoveryIntroductionRequested = false;
         }
         else return;
 
         PlayerPrefs.Save();
-        IntroductionType completed = activeIntroduction;
         activeIntroduction = IntroductionType.None;
         banner.Hide();
         hintWasReadable = false;
-        if (completed == IntroductionType.FallRecovery && !IntroductionSeen && stats.IsFuryReady)
-            ShowFuryIntroduction();
+        RefreshActiveIntroduction();
     }
 
     private void HideIntroductionForDeath()
     {
-        if (activeIntroduction == IntroductionType.FallRecovery) fallRecoveryVisibleSeconds = 0f;
+        fallRecoveryVisibleSeconds = 0f;
+        doubleJumpVisibleSeconds = 0f;
+        fallRecoveryIntroductionRequested = false;
+        doubleJumpIntroductionRequested = false;
         activeIntroduction = IntroductionType.None;
         banner?.Hide();
         hintWasReadable = false;
@@ -313,6 +383,12 @@ public sealed class FuryFeedback : MonoBehaviour
     public static void ResetFallRecoveryIntroduction()
     {
         PlayerPrefs.DeleteKey(FallIntroductionSeenKey);
+        PlayerPrefs.Save();
+    }
+
+    public static void ResetDoubleJumpIntroduction()
+    {
+        PlayerPrefs.DeleteKey(DoubleJumpIntroductionSeenKey);
         PlayerPrefs.Save();
     }
 

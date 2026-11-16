@@ -66,6 +66,11 @@ public sealed class GauntletRequirements : MonoBehaviour
         IsConfigured &= visit.IsConfigured && visit.RequiredCount > 0;
         configured = IsConfigured;
         initialized = true;
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+        {
+            foreach (CheckpointRequirements checkpoint in root.GetComponentsInChildren<CheckpointRequirements>(true))
+                checkpoint.Initialize(this);
+        }
         if (targets.Count == 0) Debug.LogError("No required enemies configured in " + gameObject.scene.name + ".", this);
         GauntletRequirementsHud hud = null;
         foreach (GameObject root in gameObject.scene.GetRootGameObjects())

@@ -8,20 +8,35 @@ using UnityEngine.SceneManagement;
 
 public static class GauntletRequirementsValidation
 {
+    private static readonly Dictionary<string, int[]> ExpectedCheckpointPrerequisiteCounts =
+        new Dictionary<string, int[]>
+        {
+            { "1_1Gauntlet", new[] { 1 } },
+            { "1_3Gauntlet", new[] { 1, 3 } }
+        };
+
     [MenuItem("Tools/Gauntlets/Validate Scenes")]
     public static void ValidateScenes()
     {
         int sources = 0;
+        var errors = new List<string>();
         foreach (string sceneName in GauntletProgress.RequiredScenes)
         {
             string path = "Assets/Scenes/" + sceneName + ".unity";
-            if (!EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == path))
-                throw new InvalidOperationException(sceneName + " is missing from enabled build scenes.");
-            Scene scene = SceneManager.GetSceneByPath(path);
-            bool opened = !scene.IsValid() || !scene.isLoaded;
-            if (opened) scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+            Scene scene = default;
+            bool opened = false;
             try
             {
+                if (!EditorBuildSettings.scenes.Any(buildScene => buildScene.enabled && buildScene.path == path))
+                    throw new InvalidOperationException(sceneName + " is missing from enabled build scenes.");
+
+                scene = SceneManager.GetSceneByPath(path);
+                if (!scene.IsValid() || !scene.isLoaded)
+                {
+                    scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                    opened = true;
+                }
+
                 var ids = new HashSet<string>();
                 var required = new List<RequiredGauntletEnemy>();
                 var respawns = new List<GameObject>();
@@ -39,15 +54,24 @@ public static class GauntletRequirementsValidation
                     if (string.IsNullOrWhiteSpace(target.EnemyType) || target.Portrait == null)
                         throw new InvalidOperationException(sceneName + " has a required enemy without a type or portrait.");
                 ValidateCheckpointRequirements(sceneName, required, respawns, checkpointGates);
+                ValidateCheckpointPrerequisiteOrder(sceneName, required, checkpointGates);
                 if (required.Count == 0) Debug.LogWarning(sceneName + ": select required enemies by adding RequiredGauntletEnemy components.");
                 sources += ids.Count;
                 Debug.Log(sceneName + ": validated " + ids.Count + " reward IDs and " + required.Count + " required enemies.");
+            }
+            catch (Exception exception)
+            {
+                errors.Add(exception.Message);
             }
             finally
             {
                 if (opened) EditorSceneManager.CloseScene(scene, true);
             }
         }
+
+        if (errors.Count > 0)
+            throw new InvalidOperationException("Gauntlet scene validation failed:\n" + string.Join("\n", errors));
+
         Debug.Log("Gauntlet scene validation passed: " + sources + " unique reward sources.");
     }
 
@@ -96,5 +120,38 @@ public static class GauntletRequirementsValidation
         string id = new SerializedObject(source).FindProperty("rewardSourceId").stringValue;
         if (string.IsNullOrWhiteSpace(id) || !ids.Add(id))
             throw new InvalidOperationException(source.gameObject.scene.name + ": missing or duplicate reward ID on " + source.name);
+    }
+
+    private static void ValidateCheckpointPrerequisiteOrder(string sceneName,
+        List<RequiredGauntletEnemy> required, List<CheckpointRequirements> checkpointGates)
+    {
+        if (!ExpectedCheckpointPrerequisiteCounts.TryGetValue(sceneName, out int[] expectedCounts)) return;
+        if (checkpointGates.Count != expectedCounts.Length)
+            throw new InvalidOperationException(sceneName + " has an unexpected number of gated checkpoints.");
+
+        List<RequiredGauntletEnemy> routeEnemies = required
+            .OrderBy(target => target.transform.position.x)
+            .ToList();
+        List<CheckpointRequirements> routeCheckpoints = checkpointGates
+            .OrderBy(checkpoint => checkpoint.transform.position.x)
+            .ToList();
+
+        for (int i = 0; i < routeCheckpoints.Count; i++)
+        {
+            int expectedCount = expectedCounts[i];
+            if (expectedCount < 0 || expectedCount > routeEnemies.Count)
+                throw new InvalidOperationException(sceneName + " has an invalid audited checkpoint prerequisite count.");
+
+            float checkpointX = routeCheckpoints[i].transform.position.x;
+            if (expectedCount > 0 && routeEnemies[expectedCount - 1].transform.position.x >= checkpointX)
+                throw new InvalidOperationException(sceneName + " has a checkpoint before one of its audited prerequisites.");
+            if (expectedCount < routeEnemies.Count && routeEnemies[expectedCount].transform.position.x <= checkpointX)
+                throw new InvalidOperationException(sceneName + " has an unlisted required enemy behind a checkpoint.");
+
+            var expected = new HashSet<RequiredGauntletEnemy>(routeEnemies.Take(expectedCount));
+            var actual = new HashSet<RequiredGauntletEnemy>(routeCheckpoints[i].Prerequisites);
+            if (!expected.SetEquals(actual))
+                throw new InvalidOperationException(sceneName + " has checkpoint prerequisites that do not match the required enemies behind it.");
+        }
     }
 }
