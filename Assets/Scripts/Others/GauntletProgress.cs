@@ -40,10 +40,12 @@ public static class GauntletProgress
 
     public static bool IsCleared(string sceneName) => Read().clearedGauntlets.Contains(sceneName);
 
-    public static string[] GetUnfinishedScenes()
+    public static string[] GetUnfinishedScenes() => GetUnfinishedScenes(RequiredScenes);
+
+    public static string[] GetUnfinishedScenes(string[] requiredScenes)
     {
         GauntletProgressData data = Read();
-        return Array.FindAll(RequiredScenes, scene => !data.clearedGauntlets.Contains(scene));
+        return Array.FindAll(requiredScenes, scene => !data.clearedGauntlets.Contains(scene));
     }
 
     public static void MarkCleared(string sceneName)

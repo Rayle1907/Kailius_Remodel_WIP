@@ -28,20 +28,31 @@ public static class AnalyticsSegmentExporter
             throw new InvalidOperationException("Segment IDs must be unique, including copied definitions.");
         foreach (var scene in definitions.GroupBy(item => item.gameObject.scene))
         {
-            if (scene.Count(item => item.IsSceneEntry) != 1) throw new InvalidOperationException("Each authored scene needs exactly one entry segment.");
-            if (scene.GroupBy(item => item.StartCheckpoint).Any(group => group.Count() > 1))
-                throw new InvalidOperationException("A checkpoint must have only one outgoing segment.");
-            foreach (var segment in scene)
-                if (segment.TargetCheckpoint != null && !scene.Any(item => item.StartCheckpoint == segment.TargetCheckpoint))
-                    throw new InvalidOperationException("A target checkpoint needs an outgoing segment, including the final segment to its exit.");
-            var visited = new System.Collections.Generic.HashSet<AnalyticsSegmentDefinition>();
-            var route = scene.Single(item => item.IsSceneEntry);
-            while (route != null)
+            var entries = scene.Where(item => item.IsSceneEntry).ToArray();
+            if (entries.Length == 0 || entries.Select(item => item.StartCheckpoint).Distinct().Count() != 1)
+                throw new InvalidOperationException(scene.Key.name + " needs entry segments with one shared start checkpoint.");
+            var outgoing = scene.ToLookup(item => item.StartCheckpoint);
+            var visiting = new HashSet<AnalyticsSegmentDefinition>();
+            var visited = new HashSet<AnalyticsSegmentDefinition>();
+            foreach (var entry in entries) Visit(entry);
+            var unreachable = scene.Where(item => !visited.Contains(item)).Select(item => item.SegmentId).ToArray();
+            if (unreachable.Length > 0)
+                throw new InvalidOperationException(scene.Key.name + " has unreachable segments: " + string.Join(", ", unreachable));
+
+            void Visit(AnalyticsSegmentDefinition segment)
             {
-                if (!visited.Add(route)) throw new InvalidOperationException("The authored route contains a checkpoint cycle.");
-                route = route.TargetCheckpoint == null ? null : scene.Single(item => item.StartCheckpoint == route.TargetCheckpoint);
+                if (visited.Contains(segment)) return;
+                string label = scene.Key.name + "/" + segment.SegmentId;
+                if (!visiting.Add(segment)) throw new InvalidOperationException("Checkpoint cycle at " + label);
+                if (segment.TargetCheckpoint != null)
+                {
+                    if (!outgoing.Contains(segment.TargetCheckpoint))
+                        throw new InvalidOperationException("Missing continuation after " + label);
+                    foreach (var next in outgoing[segment.TargetCheckpoint]) Visit(next);
+                }
+                visiting.Remove(segment);
+                visited.Add(segment);
             }
-            if (visited.Count != scene.Count()) throw new InvalidOperationException("Some segments are disconnected from scene entry.");
         }
         string directory = Path.GetFullPath("Analytics/catalogues");
         Directory.CreateDirectory(directory);

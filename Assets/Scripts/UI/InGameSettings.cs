@@ -144,9 +144,22 @@ public sealed class InGameSettings : MonoBehaviour
             }
         }
         abandonPrompt = GauntletReplayPrompt.ShowAbandon(
-            () => { RestoreSettingsAfterPrompt(); Leave("Scene_1", "abandoned"); },
+            ConfirmAbandon,
             RestoreSettingsAfterPrompt);
         if (abandonPrompt != null) menu.transform.Find("Menu").gameObject.SetActive(false);
+    }
+
+    private void ConfirmAbandon()
+    {
+        RestoreSettingsAfterPrompt();
+        foreach (Portal portal in FindObjectsByType<Portal>(FindObjectsInactive.Include))
+        {
+            if (portal.gameObject.scene != gameObject.scene || !portal.ReturnsToEntryPortal) continue;
+            Leave(portal.nextSceneName, "abandoned");
+            return;
+        }
+
+        Debug.LogError("No return portal is configured for this gauntlet.", this);
     }
 
     private void RestoreSettingsAfterPrompt()

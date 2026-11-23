@@ -60,10 +60,22 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
     private Rect lastSafeArea;
     private Vector2Int lastScreenSize;
     private bool offerWasVisible;
+    private string singlePage;
 
     public void Show(TMP_FontAsset font, RectTransform panel, Action onDismissed)
     {
+        Show(font, panel, null, onDismissed);
+    }
+
+    public void ShowSinglePage(string message, Action onDismissed)
+    {
+        Show(introductionText.font, null, message, onDismissed);
+    }
+
+    private void Show(TMP_FontAsset font, RectTransform panel, string message, Action onDismissed)
+    {
         RestoreOffer();
+        singlePage = message;
         dismissed = onDismissed;
         offerPanel = panel;
         introductionText.font = continuationPrompt.font = font;
@@ -79,7 +91,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
 
     private void BeginPage()
     {
-        introductionText.text = CurrentPage == 0 ? IntroductionPageOne : IntroductionPageTwo;
+        introductionText.text = singlePage ?? (CurrentPage == 0 ? IntroductionPageOne : IntroductionPageTwo);
         introductionText.maxVisibleCharacters = int.MaxValue;
         introductionText.ForceMeshUpdate();
         characterCount = introductionText.textInfo.characterCount;
@@ -122,7 +134,7 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         }
         if (!inputHeld && !inputPressed) inputArmed = true;
         if (!inputArmed || !inputPressed) return;
-        if (CurrentPage == 0)
+        if (singlePage == null && CurrentPage == 0)
         {
             CurrentPage = 1;
             BeginPage();
