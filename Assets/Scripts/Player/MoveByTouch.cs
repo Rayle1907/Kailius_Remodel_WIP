@@ -16,21 +16,12 @@ public class MoveByTouch : MonoBehaviour {
     public Joystick joystick;
     public ParticleSystem dust;
 
-    private SpikeRecovery spikeRecovery;
+    private PlayerController playerController;
 
     private void Awake() {
-        spikeRecovery = GetComponent<SpikeRecovery>();
+        playerController = GetComponent<PlayerController>();
     }
 
-    private bool RecoveryBlocksMovement {
-        get {
-            if (spikeRecovery == null) spikeRecovery = GetComponent<SpikeRecovery>();
-            return spikeRecovery != null && spikeRecovery.IsMovementLocked;
-        }
-    }
-
-    private bool canJump;
-    private bool canDoubleJump;
     public float HorizontalInput => joystick != null ? joystick.Horizontal : 0f;
 
 
@@ -39,31 +30,9 @@ public class MoveByTouch : MonoBehaviour {
         gameObject.AddComponent<InGameSettings>().Initialize(this);
     }
 
-    // Update is called once per frame
-    void Update() {
-        if (Time.timeScale <= 0f || RecoveryBlocksMovement) return;
-        if (ControlesMoviles != null && ControlesMoviles.activeSelf) {
-            canJump = GetComponentInChildren<PlayerControllerUP>().getJump();
-            canDoubleJump = GetComponentInChildren<PlayerControllerUP>().getDoubleJump();
-        }
-    }
-
     public void saltar() {
-        if (Time.timeScale <= 0f || RecoveryBlocksMovement) return;
-        if (ControlesMoviles.activeSelf) {
-            if (canJump) {
-                CreateDust();
-                GetComponent<PlayerController>()?.ReleasePlatformSupport();
-                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(GetComponent<Rigidbody2D>().linearVelocity.x, jumpHeight);
-                GetComponentInChildren<PlayerControllerUP>().setJump(false);
-            } else if (canDoubleJump) {
-                CreateDust();
-                GetComponent<PlayerController>()?.ReleasePlatformSupport();
-                gameObject.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(GetComponent<Rigidbody2D>().linearVelocity.x, jumpHeight);
-                GetComponentInChildren<PlayerControllerUP>().setDoubleJump(false);
-                canDoubleJump = false;
-            }
-        }
+        if (ControlesMoviles != null && ControlesMoviles.activeSelf && playerController.TryJump(jumpHeight))
+            CreateDust();
     }
 
     public void settings() {

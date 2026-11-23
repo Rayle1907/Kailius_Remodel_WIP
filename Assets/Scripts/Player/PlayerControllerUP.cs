@@ -14,7 +14,7 @@ public class PlayerControllerUP : MonoBehaviour {
     private bool canDoubleJump;
     private Animator playerAnimator;
     private PlayerController playerController;
-    private readonly System.Collections.Generic.HashSet<Collider2D> groundContacts = new System.Collections.Generic.HashSet<Collider2D>();
+    private readonly System.Collections.Generic.Dictionary<Collider2D, Vector2> groundContacts = new System.Collections.Generic.Dictionary<Collider2D, Vector2>();
 
     private void Awake() {
         playerAnimator = GetComponentInParent<Animator>();
@@ -44,7 +44,8 @@ public class PlayerControllerUP : MonoBehaviour {
         Collider2D groundCollider = collision.collider;
         if (groundCollider == null || (!groundCollider.CompareTag("Ground") && !groundCollider.CompareTag("Water"))) return;
 
-        if (!HasUpwardContact(collision)) {
+        Vector2 groundNormal = GetGroundNormal(collision);
+        if (groundNormal == Vector2.zero) {
             groundContacts.Remove(groundCollider);
             MovingPlatform sideContactPlatform = groundCollider.GetComponent<MovingPlatform>();
             if (sideContactPlatform != null && playerController != null)
@@ -53,19 +54,35 @@ public class PlayerControllerUP : MonoBehaviour {
             return;
         }
 
-        groundContacts.Add(groundCollider);
+        groundContacts[groundCollider] = groundNormal;
         MovingPlatform platform = groundCollider.GetComponent<MovingPlatform>();
         if (platform != null && playerController != null)
             playerController.SetMovingPlatformSupport(platform);
         RefreshGroundedState();
     }
 
-    private bool HasUpwardContact(Collision2D collision) {
+    private Vector2 GetGroundNormal(Collision2D collision) {
+        Vector2 groundNormal = Vector2.zero;
         for (int i = 0; i < collision.contactCount; i++) {
-            if (collision.GetContact(i).normal.y > 0.5f) return true;
+            Vector2 normal = collision.GetContact(i).normal;
+            if (normal.y > 0.5f && (groundNormal == Vector2.zero || normal.y < groundNormal.y))
+                groundNormal = normal;
         }
 
-        return false;
+        return groundNormal;
+    }
+
+    internal Vector2 GetSlopeNormal(float horizontalVelocity) {
+        Vector2 slopeNormal = Vector2.up;
+        foreach (var contact in groundContacts) {
+            if (contact.Key == null || !contact.Key.isActiveAndEnabled) continue;
+            Vector2 normal = contact.Value;
+            bool uphill = normal.x * horizontalVelocity < 0f;
+            bool selectedUphill = slopeNormal.x * horizontalVelocity < 0f;
+            if ((uphill && !selectedUphill) || (uphill == selectedUphill && normal.y < slopeNormal.y))
+                slopeNormal = normal;
+        }
+        return slopeNormal;
     }
 
     private void RefreshGroundedState() {
@@ -80,25 +97,15 @@ public class PlayerControllerUP : MonoBehaviour {
         if (playerAnimator != null) playerAnimator.SetBool("jumping", true);
     }
 
-    public bool getJump() {
-        if(canJump) 
+    public bool TryConsumeJump() {
+        if (canJump) {
+            canJump = false;
             return true;
-        
-        return false;
-    }
+        }
 
-    public bool getDoubleJump() {
-        if (canDoubleJump)
-            return true;
-
-        return false;
-    }
-
-    public void setJump(bool jump) {
-        this.canJump = jump;
-    }
-    public void setDoubleJump(bool jump) {
-        this.canDoubleJump = jump;
+        if (!canDoubleJump) return false;
+        canDoubleJump = false;
+        return true;
     }
 
 }

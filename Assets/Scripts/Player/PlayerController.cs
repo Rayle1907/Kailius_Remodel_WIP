@@ -24,8 +24,6 @@ public class PlayerController : MonoBehaviour {
     public GameObject controllerMobile;
     public int damagePatrols = 25;
 
-    private bool canJump;
-    private bool canDoubleJump;
     private bool rotacionA = false;
     private bool rotacionD = false;
 
@@ -57,6 +55,9 @@ public class PlayerController : MonoBehaviour {
     private MovingPlatform movingPlatformSupport;
     private float horizontalInput;
     private float horizontalMoveSpeed;
+    private bool walkingOnSlope;
+    private Vector2 jumpWallDirections;
+    private readonly List<ContactPoint2D> jumpContacts = new List<ContactPoint2D>();
 
     void Awake() {
         SpikeRecovery = GetComponent<SpikeRecovery>();
@@ -84,24 +85,7 @@ public class PlayerController : MonoBehaviour {
 
             if (Time.timeScale <= 0f || SpikeRecovery.IsMovementLocked) return;
 
-            canJump = jumpController.getJump();
-            canDoubleJump = jumpController.getDoubleJump();
-
-            if (Input.GetKeyDown(KeyCode.Space)) {
-                if(canJump) {
-                    CreateDust();
-                    ReleasePlatformSupport();
-                    body.linearVelocity = new Vector2(body.linearVelocity.x, jumpHeight);
-                    jumpController.setJump(false);
-                } else if(canDoubleJump) {
-                    CreateDust();
-                    ReleasePlatformSupport();
-                    body.linearVelocity = new Vector2(body.linearVelocity.x, jumpHeight);
-                    jumpController.setDoubleJump(false);
-                    canDoubleJump = false;
-                }
-
-            }
+            if (Input.GetKeyDown(KeyCode.Space) && TryJump(jumpHeight)) CreateDust();
 
             bool moveLeft = Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow);
             bool moveRight = Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow);
@@ -137,6 +121,37 @@ public class PlayerController : MonoBehaviour {
         }
     }
 
+    internal bool TryJump(float speed) {
+        if (dead || Time.timeScale <= 0f || SpikeRecovery.IsMovementLocked) return false;
+        if (!jumpController.TryConsumeJump()) return false;
+
+        ReleasePlatformSupport();
+        RefreshJumpWallDirections();
+        float velocityX = body.linearVelocity.x;
+        if (IsPushingIntoJumpWall(velocityX)) velocityX = 0f;
+        body.linearVelocity = new Vector2(velocityX, speed);
+        return true;
+    }
+
+    private void RefreshJumpWallDirections() {
+        jumpWallDirections = Vector2.zero;
+        body.GetContacts(jumpContacts);
+        foreach (ContactPoint2D contact in jumpContacts) {
+            bool playerIsIncomingCollider = contact.collider.attachedRigidbody == body;
+            Collider2D surface = playerIsIncomingCollider ? contact.otherCollider : contact.collider;
+            if (!surface.CompareTag("Ground") || Mathf.Abs(contact.normal.y) > 0.5f) continue;
+
+            float normalX = playerIsIncomingCollider ? -contact.normal.x : contact.normal.x;
+            if (normalX > 0f) jumpWallDirections.x = 1f;
+            else jumpWallDirections.y = 1f;
+        }
+    }
+
+    private bool IsPushingIntoJumpWall(float velocityX) {
+        return (velocityX < 0f && jumpWallDirections.x != 0f)
+            || (velocityX > 0f && jumpWallDirections.y != 0f);
+    }
+
     private void FixedUpdate() {
         if (dead || Time.timeScale <= 0f || SpikeRecovery.IsMovementLocked) return;
 
@@ -146,8 +161,20 @@ public class PlayerController : MonoBehaviour {
 
         bool moving = Mathf.Abs(horizontalInput) > 0.1f;
         float requestedVelocity = moving ? horizontalInput * horizontalMoveSpeed : 0f;
+        if (body.linearVelocity.y <= 0f) jumpWallDirections = Vector2.zero;
+        else if (jumpWallDirections != Vector2.zero) RefreshJumpWallDirections();
+        if (IsPushingIntoJumpWall(requestedVelocity)) requestedVelocity = 0f;
 
-        if (movingPlatformSupport != null) {
+        Vector2 slopeNormal = requestedVelocity != 0f ? jumpController.GetSlopeNormal(requestedVelocity) : Vector2.up;
+        bool followSlope = Mathf.Abs(slopeNormal.x) > 0.01f;
+        float gravityStep = Physics2D.gravity.y * body.gravityScale * Time.fixedDeltaTime;
+        if (followSlope) {
+            Vector2 alongSlope = new Vector2(slopeNormal.y, -slopeNormal.x) * requestedVelocity;
+            Vector2 platformVelocity = movingPlatformSupport != null ? movingPlatformSupport.Velocity : Vector2.zero;
+            float dampingFactor = 1f + body.linearDamping * Time.fixedDeltaTime;
+            body.linearVelocity = (alongSlope + platformVelocity) * dampingFactor
+                + Vector2.down * gravityStep * 0.9f;
+        } else if (movingPlatformSupport != null) {
             Vector2 platformVelocity = movingPlatformSupport.Velocity;
             float dampingFactor = 1f + body.linearDamping * Time.fixedDeltaTime;
             body.linearVelocity = new Vector2(
@@ -155,14 +182,15 @@ public class PlayerController : MonoBehaviour {
                 body.linearVelocity.y);
 
             if (Mathf.Abs(platformVelocity.y) > 0.001f) {
-                float gravityStep = Physics2D.gravity.y * body.gravityScale * Time.fixedDeltaTime;
                 body.linearVelocity = new Vector2(
                     body.linearVelocity.x,
                     platformVelocity.y * dampingFactor - gravityStep);
             }
-        } else if (moving) {
-            body.linearVelocity = new Vector2(requestedVelocity, body.linearVelocity.y);
+        } else if (moving || walkingOnSlope) {
+            float verticalVelocity = walkingOnSlope ? Mathf.Min(0f, body.linearVelocity.y) : body.linearVelocity.y;
+            body.linearVelocity = new Vector2(requestedVelocity, verticalVelocity);
         }
+        walkingOnSlope = followSlope;
 
         EnforceEnemyHeadSeparation();
     }
@@ -180,6 +208,8 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void ReleasePlatformSupport() {
+        walkingOnSlope = false;
+        jumpWallDirections = Vector2.zero;
         if (movingPlatformSupport != null && body != null)
             body.linearVelocity -= movingPlatformSupport.Velocity;
         jumpController?.ClearGroundedState();
