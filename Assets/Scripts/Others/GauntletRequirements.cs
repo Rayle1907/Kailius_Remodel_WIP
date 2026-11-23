@@ -5,17 +5,60 @@ using UnityEngine.SceneManagement;
 
 public sealed class GauntletRequirements : MonoBehaviour
 {
+    [Serializable]
+    private sealed class EnemyRecord
+    {
+        public Enemy Target;
+        public int VisitId;
+        public string TypeId;
+    }
+
+    [Serializable]
+    private sealed class QuotaRecord
+    {
+        public string TypeId;
+        public int Count;
+        public Sprite Portrait;
+    }
+
     public event Action Changed;
-    public IReadOnlyList<RequiredGauntletEnemy> Targets => targets;
-    public int DefeatedCount => visit == null ? 0 : visit.DefeatedCount;
-    public int RequiredCount => visit == null ? 0 : visit.RequiredCount;
+    public int DefeatedCount
+    {
+        get
+        {
+            if (visit == null) return 0;
+            return visit.DefeatedCount;
+        }
+    }
+    public int RequiredCount
+    {
+        get
+        {
+            if (visit == null) return 0;
+            return visit.RequiredCount;
+        }
+    }
     public bool IsConfigured { get; private set; }
     public bool IsInitialized => initialized;
+    public bool IsCurrentAttemptComplete
+    {
+        get
+        {
+            if (!initialized || !IsConfigured || visit == null || !visit.IsConfigured) return false;
+            if (visit.RequiredCount == 0) return true;
+            return visit.IsComplete;
+        }
+    }
     public bool IsCleared => GauntletProgress.IsCleared(gameObject.scene.name);
-    [SerializeField] private List<RequiredGauntletEnemy> targets = new List<RequiredGauntletEnemy>();
+    public IReadOnlyList<string> QuotaTypes => quotaTypes;
+
+    [SerializeField] private List<EnemyRecord> enemies = new List<EnemyRecord>();
+    [SerializeField] private List<QuotaRecord> quotas = new List<QuotaRecord>();
     [SerializeField] private List<int> defeatedIds = new List<int>();
     [SerializeField] private bool initialized;
     [SerializeField] private bool configured;
+
+    private readonly List<string> quotaTypes = new List<string>();
     private GauntletVisit visit;
     private GauntletRequirementsHud hud;
 
@@ -38,36 +81,73 @@ public sealed class GauntletRequirements : MonoBehaviour
     private void OnEnable()
     {
         if (!initialized) return;
-        var ids = new List<int>();
-        for (int i = 0; i < targets.Count; i++) ids.Add(i);
-        visit = new GauntletVisit(ids);
-        foreach (int id in defeatedIds) visit.RecordDefeat(id);
+        RebuildVisit();
         IsConfigured = configured;
     }
 
     private void Start()
     {
-        var ids = new List<int>();
+        enemies.Clear();
+        quotas.Clear();
+        quotaTypes.Clear();
+        defeatedIds.Clear();
         IsConfigured = true;
+
         foreach (GameObject root in gameObject.scene.GetRootGameObjects())
         {
-            foreach (RequiredGauntletEnemy target in root.GetComponentsInChildren<RequiredGauntletEnemy>(true))
+            foreach (Enemy enemy in root.GetComponentsInChildren<Enemy>(true))
             {
-                targets.Add(target);
-                ids.Add(targets.Count - 1);
-                target.Bind(this, targets.Count - 1);
-                if (string.IsNullOrWhiteSpace(target.EnemyType) || target.Portrait == null)
+                string typeId = enemy.EnemyTypeId;
+                if (string.IsNullOrWhiteSpace(typeId))
                 {
                     IsConfigured = false;
-                    Debug.LogError("Required enemies need an enemy type and HUD portrait.", target);
+                    Debug.LogError("Every gauntlet enemy needs an enemy type ID.", enemy);
+                    continue;
                 }
+
+                int visitId = enemies.Count;
+                enemies.Add(new EnemyRecord { Target = enemy, VisitId = visitId, TypeId = typeId });
+                enemy.BindGauntletRequirements(this, visitId);
+
+                RequiredGauntletEnemy required = enemy.GetComponent<RequiredGauntletEnemy>();
+                if (required == null) continue;
+                if (required.Portrait == null)
+                {
+                    IsConfigured = false;
+                    Debug.LogError("Required enemy quota markers need a HUD portrait.", required);
+                    continue;
+                }
+
+                QuotaRecord quota = FindQuota(typeId);
+                if (quota == null)
+                {
+                    quota = new QuotaRecord { TypeId = typeId, Portrait = required.Portrait };
+                    quotas.Add(quota);
+                    quotaTypes.Add(typeId);
+                }
+                else if (quota.Portrait != required.Portrait)
+                {
+                    IsConfigured = false;
+                    Debug.LogError("Required enemy markers of the same type need the same HUD portrait.", required);
+                }
+
+                quota.Count++;
+                required.Bind(this, visitId);
             }
         }
-        visit = new GauntletVisit(ids);
-        IsConfigured &= visit.IsConfigured && visit.RequiredCount > 0;
+
+        RebuildVisit();
+        IsConfigured &= visit.IsConfigured && enemies.Count > 0;
         configured = IsConfigured;
         initialized = true;
-        if (targets.Count == 0) Debug.LogError("No required enemies configured in " + gameObject.scene.name + ".", this);
+
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects())
+        {
+            foreach (CheckpointRequirements checkpoint in root.GetComponentsInChildren<CheckpointRequirements>(true))
+                checkpoint.Initialize(this);
+        }
+
+        hud = null;
         foreach (GameObject root in gameObject.scene.GetRootGameObjects())
         {
             foreach (GauntletRequirementsHud candidate in root.GetComponentsInChildren<GauntletRequirementsHud>(true))
@@ -88,10 +168,35 @@ public sealed class GauntletRequirements : MonoBehaviour
         hud.Initialize(this);
     }
 
-    public void RecordDefeat(RequiredGauntletEnemy target)
+    private QuotaRecord FindQuota(string typeId)
     {
-        if (visit == null || !targets.Contains(target) || !visit.RecordDefeat(target.VisitId)) return;
-        defeatedIds.Add(target.VisitId);
+        foreach (QuotaRecord quota in quotas)
+            if (quota.TypeId == typeId) return quota;
+        return null;
+    }
+
+    private void RebuildVisit()
+    {
+        var enemyTypes = new List<KeyValuePair<int, string>>(enemies.Count);
+        foreach (EnemyRecord enemy in enemies)
+            enemyTypes.Add(new KeyValuePair<int, string>(enemy.VisitId, enemy.TypeId));
+
+        var quotaCounts = new List<KeyValuePair<string, int>>(quotas.Count);
+        foreach (QuotaRecord quota in quotas)
+            quotaCounts.Add(new KeyValuePair<string, int>(quota.TypeId, quota.Count));
+
+        visit = new GauntletVisit(enemyTypes, quotaCounts);
+        foreach (int id in defeatedIds)
+            visit.RecordDefeat(id);
+
+        foreach (EnemyRecord enemy in enemies)
+            if (enemy.Target != null) enemy.Target.BindGauntletRequirements(this, enemy.VisitId);
+    }
+
+    public void RecordDefeat(int enemyId)
+    {
+        if (visit == null || !visit.RecordDefeat(enemyId)) return;
+        defeatedIds.Add(enemyId);
         if (IsConfigured && visit.IsComplete)
         {
             Scene scene = gameObject.scene;
@@ -102,5 +207,59 @@ public sealed class GauntletRequirements : MonoBehaviour
         Changed?.Invoke();
     }
 
-    public bool IsDefeated(int enemyId) => visit != null && visit.IsDefeated(enemyId);
+    public bool IsDefeated(int enemyId)
+    {
+        return visit != null && visit.IsDefeated(enemyId);
+    }
+
+    public bool ContainsEnemy(int enemyId)
+    {
+        return visit != null && visit.ContainsEnemy(enemyId);
+    }
+
+    public bool TryGetVisitId(Enemy enemy, out int visitId)
+    {
+        visitId = -1;
+        if (enemy == null || enemy.gameObject.scene != gameObject.scene) return false;
+        visitId = enemy.GauntletVisitId;
+        return visit != null && visit.ContainsEnemy(visitId);
+    }
+
+    public int GetQuota(string typeId)
+    {
+        if (visit == null) return 0;
+        return visit.GetQuota(typeId);
+    }
+
+    public int GetDefeatedCount(string typeId)
+    {
+        if (visit == null) return 0;
+        return visit.GetDefeatedCount(typeId);
+    }
+
+    public IReadOnlyList<KeyValuePair<string, int>> GetRemainingQuotaCounts()
+    {
+        List<KeyValuePair<string, int>> remaining = new List<KeyValuePair<string, int>>();
+        if (visit == null) return remaining;
+        foreach (string typeId in quotaTypes)
+        {
+            int quota = visit.GetQuota(typeId);
+            int count = quota - Mathf.Min(quota, visit.GetDefeatedCount(typeId));
+            if (count > 0) remaining.Add(new KeyValuePair<string, int>(typeId, count));
+        }
+        return remaining;
+    }
+
+    public int GetLivingAheadCount(string typeId, HashSet<int> enemiesBehind)
+    {
+        if (visit == null) return 0;
+        return visit.GetLivingAheadCount(typeId, enemiesBehind);
+    }
+
+    public Sprite GetQuotaPortrait(string typeId)
+    {
+        QuotaRecord quota = FindQuota(typeId);
+        if (quota == null) return null;
+        return quota.Portrait;
+    }
 }

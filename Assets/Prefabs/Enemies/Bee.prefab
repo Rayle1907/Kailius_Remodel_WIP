@@ -180,6 +180,7 @@ MonoBehaviour:
   maxHearts: 2
   maxSwords: 1
   maxShields: 1
+  enemyTypeId: Bee
 --- !u!95 &2179999889456107890
 Animator:
   serializedVersion: 3

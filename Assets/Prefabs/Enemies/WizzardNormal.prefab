@@ -184,6 +184,7 @@ MonoBehaviour:
   maxHearts: 3
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: WizzardNormal
 --- !u!114 &9020108510297927834
 MonoBehaviour:
   m_ObjectHideFlags: 0

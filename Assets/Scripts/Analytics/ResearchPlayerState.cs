@@ -48,14 +48,34 @@ public static class ResearchPlayerState
 
     public static int GetGauntletOfferCount(string gauntletId)
     {
-        return Mathf.Max(0, PlayerPrefs.GetInt(OfferCountPrefix + PlaythroughId + "_" + gauntletId, 0));
+        return Mathf.Max(0, PlayerPrefs.GetInt(GetGauntletOfferCountKey(gauntletId), 0));
+    }
+
+    private static string GetGauntletOfferCountKey(string gauntletId)
+    {
+        return OfferCountPrefix + PlaythroughId + "_" + gauntletId;
+    }
+
+    public static bool ResetEmbersAndGauntletOfferCount(string gauntletId)
+    {
+        if (string.IsNullOrWhiteSpace(gauntletId))
+        {
+            return false;
+        }
+
+        PremiumCurrencyBalance = InitialPremiumCurrency;
+        PlayerPrefs.SetInt(BalanceKey, InitialPremiumCurrency);
+        PlayerPrefs.SetInt(GetGauntletOfferCountKey(gauntletId), 0);
+        PlayerPrefs.Save();
+        PremiumCurrencyBalanceChanged?.Invoke(PremiumCurrencyBalance);
+        return true;
     }
 
     public static int AdvanceGauntletOfferCount(string gauntletId)
     {
         int count = GetGauntletOfferCount(gauntletId);
         if (count < int.MaxValue) count++;
-        PlayerPrefs.SetInt(OfferCountPrefix + PlaythroughId + "_" + gauntletId, count);
+        PlayerPrefs.SetInt(GetGauntletOfferCountKey(gauntletId), count);
         PlayerPrefs.Save();
         return count;
     }

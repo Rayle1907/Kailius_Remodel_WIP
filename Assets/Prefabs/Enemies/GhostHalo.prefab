@@ -184,6 +184,7 @@ MonoBehaviour:
   maxHearts: 2
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: GhostHalo
 --- !u!114 &5509035436786960368
 MonoBehaviour:
   m_ObjectHideFlags: 0

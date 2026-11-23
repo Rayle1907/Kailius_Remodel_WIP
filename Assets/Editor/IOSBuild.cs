@@ -18,7 +18,11 @@ public static class IOSBuild
             "Assets/Scenes/Scene_1.unity",
             "Assets/Scenes/1_1Gauntlet.unity",
             "Assets/Scenes/1_2Gauntlet.unity",
-            "Assets/Scenes/1_3Gauntlet.unity"
+            "Assets/Scenes/1_3Gauntlet.unity",
+            "Assets/Scenes/Scene_2.unity",
+            "Assets/Scenes/2_1Gauntlet.unity",
+            "Assets/Scenes/2_2Gauntlet.unity",
+            "Assets/Scenes/2_3Gauntlet.unity"
         };
         foreach (string scene in scenes)
         {
@@ -34,7 +38,6 @@ public static class IOSBuild
         }
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, "com.kailius.gauntlet11");
         PlayerSettings.productName = "Kailius";
-        PlayerSettings.bundleVersion = "2";
         if (!int.TryParse(PlayerSettings.iOS.buildNumber, out int previousBuildNumber) || previousBuildNumber < 0)
         {
             throw new BuildFailedException("The iOS build number must be a non-negative integer.");
@@ -60,8 +63,7 @@ public static class IOSBuild
             locationPathName = outputPath,
             target = BuildTarget.iOS,
             targetGroup = BuildTargetGroup.iOS,
-            options = BuildOptions.CleanBuildCache,
-            extraScriptingDefines = new[] { "KAILIUS_IOS_TESTER" }
+            options = BuildOptions.CleanBuildCache
         });
 
         if (report.summary.result != BuildResult.Succeeded)

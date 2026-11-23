@@ -24,6 +24,13 @@ public sealed class ReviveOfferDebugButton : MonoBehaviour
         Debug.Log("Fall recovery introduction reset. It will appear after the next survived lethal-tilemap hazard.");
     }
 
+    [MenuItem("Tools/Double Jump/Reset Introduction")]
+    public static void ResetDoubleJumpIntroduction()
+    {
+        FuryFeedback.ResetDoubleJumpIntroduction();
+        Debug.Log("Double-jump introduction reset. It will appear when entering its onboarding area.");
+    }
+
     [MenuItem("Tools/Revive/Reset Onboarding")]
     public static void ResetOnboarding()
     {
@@ -100,6 +107,19 @@ public sealed class ReviveOfferDebugButton : MonoBehaviour
         Text furyLabel = furyObject.GetComponentInChildren<Text>();
         furyLabel.text = "FULL FURY";
         furyLabel.raycastTarget = false;
+
+        GameObject resetObject = Instantiate(buttonObject, transform, false);
+        resetObject.name = "Reset Embers and Offers";
+        RectTransform resetRect = resetObject.GetComponent<RectTransform>();
+        resetRect.anchoredPosition = new Vector2(20f, -120f);
+        resetRect.sizeDelta = new Vector2(230f, 40f);
+        Button resetButton = resetObject.GetComponent<Button>();
+        resetButton.onClick = new Button.ButtonClickedEvent();
+        resetButton.onClick.AddListener(ResetEmbersAndOffers);
+        Text resetLabel = resetObject.GetComponentInChildren<Text>();
+        resetLabel.text = "RESET EMBERS + OFFERS";
+        resetLabel.fontSize = 13;
+        resetLabel.raycastTarget = false;
 #endif
     }
 
@@ -126,6 +146,18 @@ public sealed class ReviveOfferDebugButton : MonoBehaviour
             if (fallback == null) fallback = playerStats;
         }
         FillFury(fallback);
+    }
+
+    private static void ResetEmbersAndOffers()
+    {
+        GauntletRunTracker tracker = GauntletRunTracker.Instance;
+        if (tracker == null || !tracker.ResetDebugEmbersAndOffers())
+        {
+            Debug.LogWarning("Embers and offers can only be reset in a gauntlet when no revive offer is pending.");
+            return;
+        }
+
+        Debug.Log("Embers restored to 100 and the current gauntlet's next revive offer reset to number 1.");
     }
 #endif
 

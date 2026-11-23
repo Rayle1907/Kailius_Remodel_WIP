@@ -27,6 +27,11 @@ public class ScoreManager : MonoBehaviour {
         if (GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) return;
 
         foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
+            foreach (TextMeshProUGUI text in root.GetComponentsInChildren<TextMeshProUGUI>(true)) {
+                if (textCoins == null && text.gameObject.name == "Coins Text (TMP)") textCoins = text;
+                if (textGems == null && text.gameObject.name == "Gems Text (TMP)") textGems = text;
+            }
+
             foreach (Coin coin in root.GetComponentsInChildren<Coin>(true)) {
                 if (coin.GetComponentInParent<Chest>(true) != null) continue;
                 if (placedCoins.Add(coin)) sceneCoinsAvailable++;

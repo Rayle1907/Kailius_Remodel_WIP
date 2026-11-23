@@ -86,8 +86,8 @@ public class Chest : MonoBehaviour {
         OptionalLootProgress progress = OptionalLootProgress.ForScene(gameObject.scene);
         Coin coin = reward.GetComponent<Coin>();
         Gem gem = reward.GetComponent<Gem>();
-        if (coin != null) coin.SetChestLootOwner(progress);
-        if (gem != null) gem.SetChestLootOwner(progress);
+        if (coin != null) coin.SetBonusLootOwner(progress);
+        if (gem != null) gem.SetBonusLootOwner(progress);
         RewardMagnet.Attach(reward);
     }
 

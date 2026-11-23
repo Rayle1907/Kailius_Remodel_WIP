@@ -161326,6 +161326,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1523975501}
+    - targetCorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1523975502}
   m_SourcePrefab: {fileID: 100100000, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
 --- !u!4 &369401138 stripped
 Transform:
@@ -221835,11 +221839,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Slime
   portrait: {fileID: 3225832317793331946, guid: 7e38104f6bce69e4586ecbe2b3758072,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &540955800
 GameObject:
   m_ObjectHideFlags: 0
@@ -226002,6 +226003,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1709509983}
+    - targetCorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1709509984}
   m_SourcePrefab: {fileID: 100100000, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
 --- !u!4 &912064283 stripped
 Transform:
@@ -230135,10 +230140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Piranha
   portrait: {fileID: 21300000, guid: 135f7673a259695448063a4da9587ac4, type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!61 &1497502059 stripped
 BoxCollider2D:
   m_CorrespondingSourceObject: {fileID: 6100000, guid: d28feac6a625417aa7183198b3b58d72,
@@ -231438,11 +231440,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Slime (1)
   portrait: {fileID: 3225832317793331946, guid: 7e38104f6bce69e4586ecbe2b3758072,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &1752023752 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
@@ -454137,11 +454136,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Knight
   portrait: {fileID: 1509690687825009327, guid: 9aa8afada901fe248bffd9b62a24fc6c,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1001 &2079462424
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -553425,3 +553421,84 @@ SceneRoots:
   - {fileID: 950000001}
   - {fileID: 540955801}
   - {fileID: 910607397}
+--- !u!114 &1381954595 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5907864246962054515, guid: 23b11f24d7248f145a06012891f99222,
+    type: 3}
+  m_PrefabInstance: {fileID: 1381954594}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308889212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &1473711078 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 871106323238502758, guid: 194152b3bcc65934fae44ddd17751df8,
+    type: 3}
+  m_PrefabInstance: {fileID: 1473711074}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473711076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &1523975502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1523975496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  enemiesBehind:
+  - {fileID: 1724991226}
+  - {fileID: 1381954595}
+  - {fileID: 1473711078}
+  - {fileID: 2016158676}
+  warningRadius: 10
+--- !u!114 &1709509984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1709509978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  enemiesBehind:
+  - {fileID: 1724991226}
+  warningRadius: 10
+--- !u!114 &1724991226 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5907864246962054515, guid: 23b11f24d7248f145a06012891f99222,
+    type: 3}
+  m_PrefabInstance: {fileID: 1724991224}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 557066844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &2016158676 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6917767684542770004, guid: 379b6fc0baecbbb439ff327b1a2724d9,
+    type: 3}
+  m_PrefabInstance: {fileID: 2016158675}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2052727982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

@@ -180,6 +180,7 @@ MonoBehaviour:
   maxHearts: 2
   maxSwords: 1
   maxShields: 1
+  enemyTypeId: Crab
 --- !u!95 &1760109534077875485
 Animator:
   serializedVersion: 3

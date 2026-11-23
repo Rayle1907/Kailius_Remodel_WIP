@@ -250,3 +250,4 @@ MonoBehaviour:
   maxHearts: 3
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: Knight

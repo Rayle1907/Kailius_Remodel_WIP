@@ -1,42 +1,80 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
-public sealed class GauntletGateNotice : MonoBehaviour
+public static class GauntletGateNotice
 {
-    private GameplayOnboardingBannerView banner;
-    private float hideAt;
-
-    public static void Show(string message)
+    public static void Show(Scene sourceScene, string message,
+        IReadOnlyList<KeyValuePair<string, int>> enemyRows = null)
     {
-        GauntletGateNotice notice = FindAnyObjectByType<GauntletGateNotice>();
-        if (notice == null)
-        {
-            GameObject root = new GameObject("Gauntlet Gate Notice", typeof(Canvas), typeof(CanvasScaler));
-            Canvas canvas = root.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
-            MobileDialogLayout.Configure(root);
-
-            PlayerController player = FindAnyObjectByType<PlayerController>();
-            Stats stats = player != null ? player.GetComponent<Stats>() : null;
-            notice = root.AddComponent<GauntletGateNotice>();
-            notice.banner = GameplayOnboardingBannerView.Create(canvas,
-                stats != null && stats.textDamage != null ? stats.textDamage.font : null);
-        }
-
-        notice.banner.Show(message);
-        notice.hideAt = Time.unscaledTime + 5f;
+        if (!TryGetSceneCanvasAndFont(sourceScene, out Canvas canvas, out TMP_FontAsset font,
+            out GauntletRequirementsHud hud)) return;
+        string requestKey = "GauntletGateNotice:" + sourceScene.handle;
+        GameplayBannerToken token = GameplayBannerPresenter.Show(canvas, font, message, 5f, requestKey);
+        if (token == null) return;
+        if (hud != null) GameplayBannerPresenter.SetEnemyRows(token, hud, enemyRows);
+        else GameplayBannerPresenter.ClearEnemyRows(token);
     }
 
-    private void Update()
+    private static bool TryGetSceneCanvasAndFont(Scene scene, out Canvas canvas, out TMP_FontAsset font,
+        out GauntletRequirementsHud requirementsHud)
     {
-        if (Time.unscaledTime >= hideAt)
+        canvas = null;
+        font = null;
+        requirementsHud = null;
+        if (!scene.IsValid() || !scene.isLoaded) return false;
+
+        GameObject[] roots = scene.GetRootGameObjects();
+        foreach (GameObject root in roots)
         {
-            gameObject.SetActive(false);
-            Destroy(gameObject);
-            return;
+            FuryFeedback[] feedback = root.GetComponentsInChildren<FuryFeedback>(true);
+            foreach (FuryFeedback playerFeedback in feedback)
+            {
+                Stats stats = playerFeedback.GetComponent<Stats>();
+                if (stats == null || stats.textDamage == null || stats.textDamage.font == null) continue;
+                font = stats.textDamage.font;
+                break;
+            }
+            if (font != null) break;
         }
 
-        banner.RefreshLayoutIfNeeded();
+        foreach (GameObject root in roots)
+        {
+            GauntletRequirementsHud[] huds = root.GetComponentsInChildren<GauntletRequirementsHud>(true);
+            foreach (GauntletRequirementsHud hud in huds)
+            {
+                if (hud == null || hud.gameObject.scene != scene || hud.RootCanvas == null
+                    || !hud.RootCanvas.isActiveAndEnabled) continue;
+                canvas = hud.RootCanvas;
+                requirementsHud = hud;
+                if (font == null) font = hud.NoticeFont;
+                break;
+            }
+            if (canvas != null) break;
+        }
+
+        if (canvas == null)
+        {
+            foreach (GameObject root in roots)
+            {
+                Canvas[] canvases = root.GetComponentsInChildren<Canvas>(true);
+                foreach (Canvas candidate in canvases)
+                {
+                    if (candidate == null || !candidate.isActiveAndEnabled) continue;
+                    canvas = candidate.rootCanvas;
+                    break;
+                }
+                if (canvas != null) break;
+            }
+        }
+
+        if (canvas == null) return false;
+        if (font == null)
+        {
+            TextMeshProUGUI referenceText = canvas.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (referenceText != null) font = referenceText.font;
+        }
+        return true;
     }
 }

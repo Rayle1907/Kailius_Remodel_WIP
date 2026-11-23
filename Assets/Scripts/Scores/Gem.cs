@@ -5,8 +5,8 @@ public class Gem : MonoBehaviour, IRewardPickup {
     public int scoreValue = 15;
     public GameObject sonido;
 
-    private OptionalLootProgress chestLootOwner;
-    public void SetChestLootOwner(OptionalLootProgress owner) => chestLootOwner = owner;
+    private OptionalLootProgress bonusLootOwner;
+    public void SetBonusLootOwner(OptionalLootProgress owner) => bonusLootOwner = owner;
 
     [SerializeField] private bool collected;
 
@@ -16,7 +16,7 @@ public class Gem : MonoBehaviour, IRewardPickup {
         }
 
         collected = true;
-        if (chestLootOwner != null) chestLootOwner.RecordCollection(0, gemValue);
+        if (bonusLootOwner != null) bonusLootOwner.RecordCollection(0, gemValue);
         ScoreManager.instance.RecordGemCollection(this);
         ScoreManager.instance.ChangeScore(scoreValue);
         ScoreManager.instance.ChangeScoreGem(gemValue);

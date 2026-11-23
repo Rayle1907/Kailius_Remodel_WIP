@@ -199,6 +199,7 @@ MonoBehaviour:
   maxHearts: 1
   maxSwords: 2
   maxShields: 2
+  enemyTypeId: Skeleton
 --- !u!1 &1828136525341311183
 GameObject:
   m_ObjectHideFlags: 0

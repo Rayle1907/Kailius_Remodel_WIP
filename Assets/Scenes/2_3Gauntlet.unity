@@ -24424,6 +24424,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 133606088}
+    - targetCorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 133606089}
   m_SourcePrefab: {fileID: 100100000, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
 --- !u!4 &133606086 stripped
 Transform:
@@ -28620,10 +28624,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Slug
   portrait: {fileID: 21300000, guid: 8c79437e5f3a66348af2e399e6185ab7, type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1001 &625319753
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -30024,6 +30025,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1203870459}
+    - targetCorrespondingSourceObject: {fileID: 5469285553354129130, guid: 847c04dcff0a68cbda7d8a21f29e4fc8,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1203870460}
   m_SourcePrefab: {fileID: 100100000, guid: 847c04dcff0a68cbda7d8a21f29e4fc8, type: 3}
 --- !u!1 &716325451 stripped
 GameObject:
@@ -31678,10 +31683,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Bee
   portrait: {fileID: 21300000, guid: b4b8138cea8a21c4d89da8e5c261174e, type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!114 &820274610 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3368423022651780648, guid: 748e60ad160f8904d935a90f7f343cc1,
@@ -51888,11 +51890,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 325704c62de43b144b258a911bcc5eea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RequiredGauntletEnemy
-  enemyType: Knight
   portrait: {fileID: 1509690687825009327, guid: 9aa8afada901fe248bffd9b62a24fc6c,
     type: 3}
-  <VisitId>k__BackingField: 0
-  requirements: {fileID: 0}
 --- !u!1 &1648633762
 GameObject:
   m_ObjectHideFlags: 0
@@ -57990,3 +57989,59 @@ SceneRoots:
   - {fileID: 1429951519}
   - {fileID: 971033593}
   - {fileID: 1942407426}
+--- !u!114 &85355580 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 871106323238502758, guid: 194152b3bcc65934fae44ddd17751df8,
+    type: 3}
+  m_PrefabInstance: {fileID: 85355578}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &133606089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 133606087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  enemiesBehind:
+  - {fileID: 1613236822}
+  - {fileID: 85355580}
+  warningRadius: 10
+--- !u!114 &1203870460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 716325451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  enemiesBehind:
+  - {fileID: 1613236822}
+  - {fileID: 85355580}
+  warningRadius: 10
+--- !u!114 &1613236822 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2179999889456107891, guid: 1d7c8a3c0f2b4fa43bc327ec5aa3d427,
+    type: 3}
+  m_PrefabInstance: {fileID: 1613236821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 789619901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

@@ -40,7 +40,7 @@ public class PlayerController : MonoBehaviour {
     private readonly HashSet<Collider2D> pendingCheckpointTriggers = new HashSet<Collider2D>();
     private readonly Dictionary<Collider2D, int> enemyHeadSupportDirections = new Dictionary<Collider2D, int>();
     private readonly List<Collider2D> staleEnemyHeadSupportColliders = new List<Collider2D>();
-    private readonly List<RequiredGauntletEnemy> checkpointRequirementsRemaining = new List<RequiredGauntletEnemy>();
+    private readonly List<CheckpointRequirements.Shortfall> checkpointRequirementsRemaining = new List<CheckpointRequirements.Shortfall>();
     private readonly List<CheckpointRequirements> checkpointRequirementCandidates = new List<CheckpointRequirements>();
     private readonly List<CheckpointRequirements> nearbyCheckpointRequirements = new List<CheckpointRequirements>();
     private GauntletRequirements checkpointRequirementsOwner;

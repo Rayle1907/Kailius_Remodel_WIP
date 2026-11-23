@@ -298,6 +298,16 @@ public sealed class GauntletRunTracker : MonoBehaviour
         return GetRevivePrice(ResearchPlayerState.GetGauntletOfferCount(currentGauntletId));
     }
 
+    public bool ResetDebugEmbersAndOffers()
+    {
+        if (!IsCurrentSceneGauntlet || HasPendingOffer)
+        {
+            return false;
+        }
+
+        return ResearchPlayerState.ResetEmbersAndGauntletOfferCount(currentGauntletId);
+    }
+
     public string RecordOfferShown()
     {
         if (!IsCurrentSceneGauntlet || pendingOffer != null && !pendingOffer.Resolved)

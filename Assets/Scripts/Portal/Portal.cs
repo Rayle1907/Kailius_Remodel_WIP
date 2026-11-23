@@ -26,6 +26,7 @@ public class Portal : MonoBehaviour {
     private bool transitioning;
     private GameObject victoryOverlay;
     private float previousTimeScale;
+    private static readonly HashSet<string> loggedUnavailableRequirementScenes = new HashSet<string>();
     private static string entryScenePath;
     private static Vector3 entryPosition;
     private static bool returningToEntry;
@@ -34,6 +35,7 @@ public class Portal : MonoBehaviour {
     private static void Initialize() {
         entryScenePath = null;
         returningToEntry = false;
+        loggedUnavailableRequirementScenes.Clear();
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -111,10 +113,26 @@ public class Portal : MonoBehaviour {
             string[] unfinished = GauntletProgress.GetUnfinishedScenes(requiredGauntlets);
             if (unfinished.Length > 0) {
                 promptedThisVisit = true;
-                GauntletGateNotice.Show("Portal locked. Please defeat the 3 challenges to proceed.");
+                GauntletGateNotice.Show(gameObject.scene, "Portal locked. Please defeat the 3 challenges to proceed.");
                 return;
             }
         }
+        if (GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) {
+            GauntletRequirements requirements = FindSceneRequirements();
+            if (requirements == null || !requirements.IsInitialized || !requirements.IsConfigured) {
+                string sceneName = gameObject.scene.name;
+                if (loggedUnavailableRequirementScenes.Add(sceneName))
+                    Debug.LogError("Gauntlet exit blocked because requirements are missing, uninitialized, or invalid in " + sceneName + ".", this);
+                GauntletGateNotice.Show(gameObject.scene, "Gauntlet requirements are unavailable. You cannot leave yet.");
+                return;
+            }
+            if (!requirements.IsCurrentAttemptComplete) {
+                GauntletGateNotice.Show(gameObject.scene,
+                    "Defeat the remaining required enemies to leave.", requirements.GetRemainingQuotaCounts());
+                return;
+            }
+        }
+
         bool useEntry = returnToEntryPortal && !string.IsNullOrEmpty(entryScenePath);
         string destination = useEntry ? entryScenePath : nextSceneName;
         if (string.IsNullOrEmpty(destination)) {
@@ -124,14 +142,9 @@ public class Portal : MonoBehaviour {
         if (destination == "Scene_2") {
             string[] unfinished = GauntletProgress.GetUnfinishedScenes();
             if (unfinished.Length > 0) {
-                GauntletGateNotice.Show("Scene 2 locked\nClear: " + string.Join(", ", unfinished));
+                GauntletGateNotice.Show(gameObject.scene, "Scene 2 locked\nClear: " + string.Join(", ", unfinished));
                 return;
             }
-#if UNITY_IOS && KAILIUS_IOS_TESTER
-            if (gameObject.scene.name == "Scene_1") {
-                destination = "Menu";
-            }
-#endif
         }
         if (string.IsNullOrEmpty(destination) || !Application.CanStreamedLevelBeLoaded(destination)) {
             Debug.LogError("Portal destination is unavailable: " + destination, this);
@@ -203,6 +216,16 @@ public class Portal : MonoBehaviour {
 
         SceneManager.LoadScene(destination);
     }
-        
+
+    private GauntletRequirements FindSceneRequirements() {
+        GauntletRequirements result = null;
+        foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
+            foreach (GauntletRequirements candidate in root.GetComponentsInChildren<GauntletRequirements>(true)) {
+                if (result != null) return null;
+                result = candidate;
+            }
+        }
+        return result;
+    }
 
 }

@@ -8,12 +8,12 @@ public sealed class EmberBalanceDisplay : MonoBehaviour
     private void Awake()
     {
         ResearchPlayerState.EnsureInitialized();
-        Refresh(ResearchPlayerState.PremiumCurrencyBalance);
     }
 
     private void OnEnable()
     {
         ResearchPlayerState.PremiumCurrencyBalanceChanged += Refresh;
+        Refresh(ResearchPlayerState.PremiumCurrencyBalance);
     }
 
     private void OnDisable()
