@@ -17,12 +17,6 @@ public sealed class RewardMagnet : MonoBehaviour {
     private float nextPlayerSearch;
     private bool homing;
 
-    public static void Attach(GameObject instance, string sourceSceneName) {
-        if (GauntletHealthDropRules.IsGauntletScene(sourceSceneName)) {
-            Attach(instance);
-        }
-    }
-
     public static void Attach(GameObject instance) {
         if (instance == null || instance.GetComponent<IRewardPickup>() == null
             || instance.GetComponent<RewardMagnet>() != null) {
