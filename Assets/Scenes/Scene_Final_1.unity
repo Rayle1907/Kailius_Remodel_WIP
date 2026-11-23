@@ -371,7 +371,7 @@ CanvasRenderer:
   m_CullTransparentMesh: 0
 --- !u!114 &326576789 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3822211213360033303, guid: 66a671814eff4a6c8ffa85e0386bf713,
+  m_CorrespondingSourceObject: {fileID: 3822211213297813942, guid: 66a671814eff4a6c8ffa85e0386bf713,
     type: 3}
   m_PrefabInstance: {fileID: 1763074887}
   m_PrefabAsset: {fileID: 0}
@@ -1017,7 +1017,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &542766350 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6438212626497643793, guid: 66a671814eff4a6c8ffa85e0386bf713,
+  m_CorrespondingSourceObject: {fileID: 6438212626435850928, guid: 66a671814eff4a6c8ffa85e0386bf713,
     type: 3}
   m_PrefabInstance: {fileID: 1763074887}
   m_PrefabAsset: {fileID: 0}
@@ -2718,7 +2718,7 @@ SpriteRenderer:
   m_BlendShapeWeights: []
 --- !u!114 &1078813843 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1995648707492942728, guid: 66a671814eff4a6c8ffa85e0386bf713,
+  m_CorrespondingSourceObject: {fileID: 1995648707573511209, guid: 66a671814eff4a6c8ffa85e0386bf713,
     type: 3}
   m_PrefabInstance: {fileID: 1763074887}
   m_PrefabAsset: {fileID: 0}

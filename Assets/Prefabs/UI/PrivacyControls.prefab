@@ -813,6 +813,7 @@ GameObject:
   - component: {fileID: 3712863936008954598}
   - component: {fileID: 7126154150165143848}
   - component: {fileID: 2805977574661548182}
+  - component: {fileID: 5872959107826814580}
   m_Layer: 0
   m_Name: Explanation
   m_TagString: Untagged
@@ -867,7 +868,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Optional research analytics help understand your play experience.
+  m_text: '<link="privacy-policy"><u>Read the privacy policy</u></link>
+
+
+    Optional research analytics help understand your play experience.
 
     Analytics
     are on by default. You can disable analytics or delete your analytics data here.'
@@ -943,6 +947,19 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5872959107826814580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9212380613572310548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec8b115bb8d421d9dce606cb3ffb8b4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PrivacyPolicyLink
+  policyUrl: https://rayle1907.github.io/kailius-privacy-policy/
 --- !u!114 &2805977574661548182
 MonoBehaviour:
   m_ObjectHideFlags: 0
