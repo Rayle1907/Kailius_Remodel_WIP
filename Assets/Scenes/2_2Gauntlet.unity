@@ -28648,7 +28648,7 @@ PrefabInstance:
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
       propertyPath: typingSpeed
-      value: 0.05
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 3442526987920200451, guid: 3876bcac13172324bbe556cc1205a467,
         type: 3}
@@ -30887,7 +30887,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000001, guid: 3f3454d87bb241449abd43a3e148fe07, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -45.37
+      value: -50.79
       objectReference: {fileID: 0}
     - target: {fileID: 100000001, guid: 3f3454d87bb241449abd43a3e148fe07, type: 3}
       propertyPath: m_LocalPosition.y
@@ -30928,6 +30928,10 @@ PrefabInstance:
     - target: {fileID: 100000003, guid: 3f3454d87bb241449abd43a3e148fe07, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000004, guid: 3f3454d87bb241449abd43a3e148fe07, type: 3}
+      propertyPath: playerController
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 100000004, guid: 3f3454d87bb241449abd43a3e148fe07, type: 3}
       propertyPath: activationCheckpoint
@@ -32580,6 +32584,21 @@ MonoBehaviour:
         height: 100
       death_wall_speed: 4
       death_wall_head_start: 8
+--- !u!114 &366235270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 366235268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  enemiesBehind:
+  - {fileID: 1613236822}
+  warningRadius: 10
 --- !u!1 &368630007
 GameObject:
   m_ObjectHideFlags: 0
@@ -34927,6 +34946,21 @@ MonoBehaviour:
         height: 100
       death_wall_speed: 4
       death_wall_head_start: 8
+--- !u!114 &466785183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466785181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
+  enemiesBehind:
+  - {fileID: 1613236822}
+  warningRadius: 10
 --- !u!1001 &476326357
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39146,12 +39180,12 @@ PrefabInstance:
     - target: {fileID: 7010314627387084066, guid: 7492e0df0c48005a79fb9cf4981789c5,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -25.66
+      value: -50.85
       objectReference: {fileID: 0}
     - target: {fileID: 7010314627387084066, guid: 7492e0df0c48005a79fb9cf4981789c5,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.34
+      value: 8.54
       objectReference: {fileID: 0}
     - target: {fileID: 7010314627387084066, guid: 7492e0df0c48005a79fb9cf4981789c5,
         type: 3}
@@ -75068,6 +75102,18 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1d7c8a3c0f2b4fa43bc327ec5aa3d427, type: 3}
+--- !u!114 &1613236822 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2179999889456107891, guid: 1d7c8a3c0f2b4fa43bc327ec5aa3d427,
+    type: 3}
+  m_PrefabInstance: {fileID: 1613236821}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1617705434
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -81980,45 +82026,3 @@ SceneRoots:
   - {fileID: 1429951519}
   - {fileID: 971033593}
   - {fileID: 1942407426}
---- !u!114 &366235270
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 366235268}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
-  enemiesBehind:
-  - {fileID: 1613236822}
-  warningRadius: 10
---- !u!114 &466785183
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 466785181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ac9f7b082b63428ba27da8e0ee281fd4, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CheckpointRequirements
-  enemiesBehind:
-  - {fileID: 1613236822}
-  warningRadius: 10
---- !u!114 &1613236822 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2179999889456107891, guid: 1d7c8a3c0f2b4fa43bc327ec5aa3d427,
-    type: 3}
-  m_PrefabInstance: {fileID: 1613236821}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 048bf8f079acf9547a80968dd36be690, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
