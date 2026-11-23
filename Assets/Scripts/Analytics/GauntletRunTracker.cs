@@ -167,8 +167,15 @@ public sealed class GauntletRunTracker : MonoBehaviour
         if (attemptCoordinator.ReachCheckpoint(checkpoint, Time.frameCount))
         {
             RecordPostDecisionOutcome("next_checkpoint_reached");
-            if (!string.IsNullOrEmpty(attemptCoordinator.SegmentId)) SetSegment(attemptCoordinator.SegmentId);
+            SetSegment(attemptCoordinator.SegmentId ?? currentSceneName);
         }
+    }
+
+    public void ChooseAttemptRoute(PlayerController player, AnalyticsSegmentDefinition segment)
+    {
+        if (IsCurrentSceneGauntlet && !string.IsNullOrEmpty(CurrentRunId)
+            && attemptCoordinator.ChooseRoute(player, segment, Time.frameCount))
+            SetSegment(attemptCoordinator.SegmentId);
     }
 
     public void BeginAttemptAfterRespawn(string reason)
@@ -524,9 +531,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
             if (candidate.gameObject.scene == player.gameObject.scene) playerRequirements = candidate;
         AnalyticsSegmentDefinition[] sceneDefinitions = Array.FindAll(FindObjectsByType<AnalyticsSegmentDefinition>(),
             item => item.gameObject.scene == player.gameObject.scene);
-        attemptCoordinator.Bind(player, playerStats, playerRequirements, sceneDefinitions, IsCurrentSceneGauntlet);
+        if (!attemptCoordinator.Bind(player, playerStats, playerRequirements, sceneDefinitions, IsCurrentSceneGauntlet)) return;
         if (!string.IsNullOrEmpty(attemptCoordinator.SegmentId)) SetSegment(attemptCoordinator.SegmentId);
-        if (attemptCoordinator.SegmentId == null && IsCurrentSceneGauntlet)
+        if (attemptCoordinator.SegmentId == null && IsCurrentSceneGauntlet && !attemptCoordinator.AwaitingRoute)
             Debug.LogWarning("Checkpoint attempt telemetry needs a baked AnalyticsSegmentDefinition entry route in " + currentSceneName);
     }
 

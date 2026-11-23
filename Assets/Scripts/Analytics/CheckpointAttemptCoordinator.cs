@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 internal sealed class CheckpointAttemptCoordinator
@@ -9,6 +10,8 @@ internal sealed class CheckpointAttemptCoordinator
     private AnalyticsSegmentDefinition[] definitions = Array.Empty<AnalyticsSegmentDefinition>();
     private AnalyticsSegmentDefinition definition;
     private SegmentSnapshot snapshot;
+    private AnalyticsSegmentDefinition[] routeChoices = Array.Empty<AnalyticsSegmentDefinition>();
+    private string routeStartReason;
     private PlayerController player;
     private Stats stats;
     private GauntletRequirements requirements;
@@ -23,6 +26,7 @@ internal sealed class CheckpointAttemptCoordinator
     public string AttemptId => state.AttemptId;
     public string TelemetryAttemptId => attemptTelemetryRecorded && !attemptTelemetrySuppressed ? state.AttemptId : null;
     public string SegmentId => snapshot == null ? null : snapshot.segment_id;
+    public bool AwaitingRoute => routeChoices.Length > 1;
 
     public CheckpointAttemptCoordinator(Func<SegmentAttemptStartedEvent, bool> recordStarted = null,
         Action<SegmentAttemptEndedEvent> recordEnded = null)
@@ -39,8 +43,7 @@ internal sealed class CheckpointAttemptCoordinator
         stats = boundStats;
         requirements = boundRequirements;
         definitions = sceneDefinitions ?? Array.Empty<AnalyticsSegmentDefinition>();
-        definition = Array.Find(definitions, item => item != null && item.IsSceneEntry);
-        snapshot = definition == null ? null : definition.BakedSnapshot;
+        SetContinuations(item => item.IsSceneEntry, "scene_entry");
         if (snapshot != null && stats != null && stats.health > 0 && Time.timeScale > 0f)
             Start("scene_entry", isGauntlet,
                 GauntletRunTracker.Instance == null ? null : GauntletRunTracker.Instance.CurrentRunId);
@@ -51,7 +54,7 @@ internal sealed class CheckpointAttemptCoordinator
 
     public void Schedule(string reason, int startFrame)
     {
-        if (state.AttemptId != null) return;
+        if (state.AttemptId != null || snapshot == null) return;
         pendingStart = true;
         pendingReason = reason;
         resumeFrame = startFrame;
@@ -70,10 +73,29 @@ internal sealed class CheckpointAttemptCoordinator
     {
         if (definition == null || definition.TargetCheckpoint != checkpoint) return false;
         End("success", "next_checkpoint_reached");
-        definition = Array.Find(definitions, item => item != null && item.StartCheckpoint == checkpoint);
-        snapshot = definition == null ? null : definition.BakedSnapshot;
-        if (snapshot != null) Schedule("checkpoint_reached", frame + 1);
+        SetContinuations(item => item.StartCheckpoint == checkpoint, "checkpoint_reached");
+        Schedule("checkpoint_reached", frame + 1);
         return true;
+    }
+
+    public bool ChooseRoute(PlayerController enteringPlayer, AnalyticsSegmentDefinition segment, int frame)
+    {
+        if (player != enteringPlayer || stats == null || stats.health <= 0 || !AwaitingRoute
+            || segment == null || segment.BakedSnapshot == null || !routeChoices.Contains(segment)) return false;
+        definition = segment;
+        snapshot = segment.BakedSnapshot;
+        routeChoices = Array.Empty<AnalyticsSegmentDefinition>();
+        Schedule(routeStartReason, frame);
+        return true;
+    }
+
+    private void SetContinuations(Func<AnalyticsSegmentDefinition, bool> matches, string reason)
+    {
+        CancelPendingStart();
+        routeChoices = definitions.Where(item => item != null && matches(item)).ToArray();
+        definition = routeChoices.Length == 1 ? routeChoices[0] : null;
+        snapshot = definition == null ? null : definition.BakedSnapshot;
+        routeStartReason = reason;
     }
 
     public bool ReachExit(Portal exit)
@@ -122,6 +144,8 @@ internal sealed class CheckpointAttemptCoordinator
         stats = null;
         requirements = null;
         definitions = Array.Empty<AnalyticsSegmentDefinition>();
+        routeChoices = Array.Empty<AnalyticsSegmentDefinition>();
+        routeStartReason = null;
         definition = null;
         snapshot = null;
         pendingStart = false;
