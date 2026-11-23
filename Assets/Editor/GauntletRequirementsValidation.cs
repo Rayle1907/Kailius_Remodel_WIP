@@ -151,17 +151,16 @@ public static class GauntletRequirementsValidation
             if (quota.Value > enemiesByType[quota.Key])
                 throw new InvalidOperationException(sceneName + " requires more " + quota.Key + " kills than there are eligible enemies.");
 
-        ValidateSources(sceneName, enemies, scene);
+        ValidateSources(sceneName, scene);
         ValidateCheckpointRoutes(sceneName, enemies, respawns, checkpointGates);
         Debug.Log(sceneName + ": validated " + enemies.Count + " eligible enemies and " + required.Count + " quota markers.");
     }
 
-    private static void ValidateSources(string sceneName, List<Enemy> enemies, Scene scene)
+    private static void ValidateSources(string sceneName, Scene scene)
     {
         if (Array.IndexOf(GauntletProgress.RequiredScenes, sceneName) < 0) return;
 
         var ids = new HashSet<string>();
-        foreach (Enemy enemy in enemies) ValidateSource(enemy, ids);
         foreach (GameObject root in scene.GetRootGameObjects())
             foreach (Chest chest in root.GetComponentsInChildren<Chest>(true)) ValidateSource(chest, ids);
     }

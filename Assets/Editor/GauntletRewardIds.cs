@@ -17,7 +17,6 @@ public static class GauntletRewardIds
             var used = new HashSet<string>();
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                foreach (Enemy enemy in root.GetComponentsInChildren<Enemy>(true)) Assign(enemy, used);
                 foreach (Chest chest in root.GetComponentsInChildren<Chest>(true)) Assign(chest, used);
             }
         }

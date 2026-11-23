@@ -11,14 +11,9 @@ public class Enemy : MonoBehaviour {
 
     public GameObject coins;
     public GameObject hearts;
-    public GameObject sword;
-    public GameObject shield;
 
     public int maxCoins = 5;
     public int maxHearts = 3;
-    public int maxSwords = 2;
-    public int maxShields = 2;
-    [SerializeField] private string rewardSourceId;
     [SerializeField] private string enemyTypeId;
     private bool isDying;
     private SpriteHurtFlash hurtFlash;
@@ -113,9 +108,6 @@ public class Enemy : MonoBehaviour {
         int numHearts = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
             ? 0
             : Random.Range(0, maxHearts);
-        bool canDropUpgrades = GauntletProgress.TrySpendUpgrade(gameObject.scene.name, rewardSourceId);
-        int numSwords = canDropUpgrades ? Random.Range(0, maxSwords) : 0;
-        int numShields = canDropUpgrades ? Random.Range(0, maxShields) : 0;
 
         for (int i = 0; i < numCoins; i++) {
             SpawnReward(coins, new Vector3(gameObject.transform.position.x - 1.0f, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
@@ -123,14 +115,6 @@ public class Enemy : MonoBehaviour {
 
         for (int i = 0; hearts != null && i < numHearts; i++) {
             SpawnReward(hearts, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
-        }
-
-        for (int i = 0; i < numSwords; i++) {
-            SpawnReward(sword, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
-        }
-
-        for (int i = 0; i < numShields; i++) {
-            SpawnReward(shield, new Vector3(gameObject.transform.position.x, gameObject.transform.position.y + 2.0f, gameObject.transform.position.z), Quaternion.identity);
         }
     }
 
@@ -142,7 +126,7 @@ public class Enemy : MonoBehaviour {
         Gem gem = reward.GetComponent<Gem>();
         if (coin != null) coin.SetBonusLootOwner(progress);
         if (gem != null) gem.SetBonusLootOwner(progress);
-        RewardMagnet.Attach(reward, gameObject.scene.name);
+        RewardMagnet.Attach(reward);
     }
 
     private bool HasAnimatorParameter(string parameterName, AnimatorControllerParameterType parameterType) {
