@@ -89,7 +89,11 @@ public static class CodexAndroidBuild
             "Assets/Scenes/Scene_2.unity",
             "Assets/Scenes/2_1Gauntlet.unity",
             "Assets/Scenes/2_2Gauntlet.unity",
-            "Assets/Scenes/2_3Gauntlet.unity"
+            "Assets/Scenes/2_3Gauntlet.unity",
+            "Assets/Scenes/Scene_3.unity",
+            "Assets/Scenes/3_1Gauntlet.unity",
+            "Assets/Scenes/3_2Gauntlet.unity",
+            "Assets/Scenes/3_3Gauntlet.unity"
         };
 
         if (!PlayerSettings.Android.useCustomKeystore ||
@@ -97,7 +101,7 @@ public static class CodexAndroidBuild
             !File.Exists(PlayerSettings.Android.keystoreName) ||
             string.IsNullOrWhiteSpace(PlayerSettings.Android.keyaliasName))
         {
-            throw new Exception("Scene 1 release build stopped: configure a permanent keystore and alias in Publishing Settings.");
+            throw new Exception("Kailius playtest build stopped: configure a permanent keystore and alias in Publishing Settings.");
         }
 
         Directory.CreateDirectory(outputDir);
@@ -125,7 +129,7 @@ public static class CodexAndroidBuild
         var report = BuildPipeline.BuildPlayer(options);
         if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
         {
-            throw new Exception("Scene 1 Android build failed: " + report.summary.result);
+            throw new Exception("Kailius playtest Android build failed: " + report.summary.result);
         }
     }
 
