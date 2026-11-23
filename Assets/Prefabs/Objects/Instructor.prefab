@@ -129,7 +129,7 @@ MonoBehaviour:
     - "Take care, knight!"
   dialoguePanel: {fileID: 0}
   displayText: {fileID: 0}
-  typingSpeed: 0.05
+  typingSpeed: 0.1
 --- !u!70 &3442526987920200448
 CapsuleCollider2D:
   m_ObjectHideFlags: 0

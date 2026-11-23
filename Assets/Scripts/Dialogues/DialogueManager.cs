@@ -8,7 +8,7 @@ public class DialogueManager : MonoBehaviour {
     public Dialogue dialogue;
     public GameObject dialoguePanel;
     public TextMeshProUGUI displayText;
-    public float typingSpeed = 0.05f;
+    public float typingSpeed = 0.1f;
     [Min(0.1f)]
     public float interactionRadius = 5f;
     [Tooltip("World-space offset from the top of the instructor to the bottom of the bubble.")]
