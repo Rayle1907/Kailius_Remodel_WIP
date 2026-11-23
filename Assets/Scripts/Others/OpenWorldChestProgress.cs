@@ -7,6 +7,15 @@ public sealed class OpenWorldChestProgressData
 {
     public int version = 1;
     public List<string> openedChests = new List<string>();
+    public List<OpenWorldBonusLoot> bonusLoot = new List<OpenWorldBonusLoot>();
+}
+
+[Serializable]
+public sealed class OpenWorldBonusLoot
+{
+    public string scenePath;
+    public int coins;
+    public int gems;
 }
 
 public static class OpenWorldChestProgress
@@ -30,9 +39,36 @@ public static class OpenWorldChestProgress
         OpenWorldChestProgressData data = Read();
         if (data.openedChests.Contains(key)) return false;
         data.openedChests.Add(key);
+        Save(data);
+        return true;
+    }
+
+    public static (int coins, int gems) GetBonusLoot(string scenePath)
+    {
+        OpenWorldBonusLoot loot = Read().bonusLoot?.Find(entry => entry.scenePath == scenePath);
+        return (loot?.coins ?? 0, loot?.gems ?? 0);
+    }
+
+    public static (int coins, int gems) RecordBonusLoot(string scenePath, int coins, int gems)
+    {
+        OpenWorldChestProgressData data = Read();
+        data.bonusLoot ??= new List<OpenWorldBonusLoot>();
+        OpenWorldBonusLoot loot = data.bonusLoot.Find(entry => entry.scenePath == scenePath);
+        if (loot == null)
+        {
+            loot = new OpenWorldBonusLoot { scenePath = scenePath };
+            data.bonusLoot.Add(loot);
+        }
+        loot.coins += coins;
+        loot.gems += gems;
+        Save(data);
+        return (loot.coins, loot.gems);
+    }
+
+    private static void Save(OpenWorldChestProgressData data)
+    {
         PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(data));
         PlayerPrefs.Save();
-        return true;
     }
 
     public static void Reset()

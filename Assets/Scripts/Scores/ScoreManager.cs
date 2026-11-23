@@ -15,26 +15,25 @@ public class ScoreManager : MonoBehaviour {
     private int scoreCoins;
     private int scoreGems;
     private int scoreStars;
-    private static int sceneCoinsCollected;
+    private int sceneCoinsCollected;
+    private bool sceneStarCollected;
     private int sceneCoinsAvailable;
-    private static int sceneGemsCollected;
+    private int sceneGemsCollected;
     private int sceneGemsAvailable;
-    private readonly Dictionary<Coin, int> placedCoins = new Dictionary<Coin, int>();
-    private readonly Dictionary<Gem, int> placedGems = new Dictionary<Gem, int>();
+    private readonly HashSet<Coin> placedCoins = new HashSet<Coin>();
+    private readonly HashSet<Gem> placedGems = new HashSet<Gem>();
 
     private void Awake() {
         if (GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)) return;
 
         foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
             foreach (Coin coin in root.GetComponentsInChildren<Coin>(true)) {
-                int value = Mathf.Max(0, coin.coinValue);
-                placedCoins.Add(coin, value);
-                sceneCoinsAvailable += value;
+                if (coin.GetComponentInParent<Chest>(true) != null) continue;
+                if (placedCoins.Add(coin)) sceneCoinsAvailable++;
             }
             foreach (Gem gem in root.GetComponentsInChildren<Gem>(true)) {
-                int value = Mathf.Max(0, gem.gemValue);
-                placedGems.Add(gem, value);
-                sceneGemsAvailable += value;
+                if (gem.GetComponentInParent<Chest>(true) != null) continue;
+                if (placedGems.Add(gem)) sceneGemsAvailable++;
             }
         }
     }
@@ -63,16 +62,14 @@ public class ScoreManager : MonoBehaviour {
     }
 
     public void RecordCoinCollection(Coin coin) {
-        if (coin == null || !placedCoins.TryGetValue(coin, out int value)) return;
-        placedCoins.Remove(coin);
-        sceneCoinsCollected += value;
+        if (coin == null || !placedCoins.Remove(coin)) return;
+        sceneCoinsCollected++;
         UpdateScoreText();
     }
 
     public void RecordGemCollection(Gem gem) {
-        if (gem == null || !placedGems.TryGetValue(gem, out int value)) return;
-        placedGems.Remove(gem);
-        sceneGemsCollected += value;
+        if (gem == null || !placedGems.Remove(gem)) return;
+        sceneGemsCollected++;
         UpdateScoreText();
     }
 
@@ -96,6 +93,7 @@ public class ScoreManager : MonoBehaviour {
     }
 
     public void ChangeScoreStar(int starsValue) {
+        sceneStarCollected = true;
         scoreStars += starsValue;
         UpdateScoreText();
         PlayerPrefs.SetInt("ScoreStars", scoreStars);
@@ -115,7 +113,9 @@ public class ScoreManager : MonoBehaviour {
             textGems.text = sceneGemsCollected + "/" + sceneGemsAvailable;
         }
         if (textStars != null) {
-            textStars.text = scoreStars + "/3";
+            textStars.text = GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
+                ? scoreStars + "/3"
+                : sceneStarCollected ? "1/1" : "0/1";
         }
     }
 

@@ -7,11 +7,17 @@ public class Star : MonoBehaviour {
     public int scoreValue = 50;
     public GameObject sonido;
 
+    private bool collected;
+
     public void OnTriggerEnter2D(Collider2D collision) {
-        if (collision.gameObject.CompareTag("Player")) {
-            ScoreManager.instance.ChangeScore(scoreValue);
-            ScoreManager.instance.ChangeScoreStar(starValue);
-            OneShotAudioPool.Play(sonido, transform.position);
+        ScoreManager scoreManager = ScoreManager.instance;
+        if (collected || !collision.gameObject.CompareTag("Player") || scoreManager == null) {
+            return;
         }
+
+        collected = true;
+        scoreManager.ChangeScore(scoreValue);
+        scoreManager.ChangeScoreStar(starValue);
+        OneShotAudioPool.Play(sonido, transform.position);
     }
 }

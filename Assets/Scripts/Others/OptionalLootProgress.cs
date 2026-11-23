@@ -22,6 +22,9 @@ public sealed class OptionalLootProgress : MonoBehaviour
     {
         if (initialized) return;
         initialized = true;
+        if (OpenWorldChestProgress.IsOpenWorldScene(gameObject.scene.name))
+            (Coins, Gems) = OpenWorldChestProgress.GetBonusLoot(gameObject.scene.path);
+
         foreach (GameObject root in gameObject.scene.GetRootGameObjects())
         foreach (Chest chest in root.GetComponentsInChildren<Chest>(true))
         {
@@ -45,8 +48,17 @@ public sealed class OptionalLootProgress : MonoBehaviour
 
     public void RecordCollection(int coins, int gems)
     {
-        Coins += Mathf.Max(0, coins);
-        Gems += Mathf.Max(0, gems);
+        coins = Mathf.Max(0, coins);
+        gems = Mathf.Max(0, gems);
+        if (OpenWorldChestProgress.IsOpenWorldScene(gameObject.scene.name))
+        {
+            (Coins, Gems) = OpenWorldChestProgress.RecordBonusLoot(gameObject.scene.path, coins, gems);
+        }
+        else
+        {
+            Coins += coins;
+            Gems += gems;
+        }
         Changed?.Invoke();
     }
 

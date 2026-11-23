@@ -67,7 +67,7 @@ public class Stats : MonoBehaviour {
 
     // Start is called before the first frame update
     void Start() {
-        BindHealthDisplay();
+        BindHudDisplays();
         if(instance == null) {
             instance = this;
         }
@@ -120,16 +120,30 @@ public class Stats : MonoBehaviour {
 
     }
 
-    private void BindHealthDisplay() {
-        if (hearts != null) return;
+    private void BindHudDisplays() {
+        if (hearts != null && textDamage != null && textDefense != null) return;
 
         foreach (GameObject root in gameObject.scene.GetRootGameObjects()) {
             if (root.name != "Estadisticas" && root.name != "OpenWorldHud") continue;
 
-            foreach (Image image in root.GetComponentsInChildren<Image>(true)) {
-                if (image.name != "Health") continue;
-                hearts = image;
-                return;
+            if (hearts == null) {
+                foreach (Image image in root.GetComponentsInChildren<Image>(true)) {
+                    if (image.name != "Health") continue;
+                    hearts = image;
+                    break;
+                }
+            }
+
+            if (textDamage != null && textDefense != null) continue;
+
+            Transform statRow = root.transform.Find("Mobile Safe Area/Stats/Stat Row");
+            if (statRow == null) continue;
+
+            if (textDamage == null) {
+                textDamage = statRow.Find("Damage Text (TMP)")?.GetComponent<TextMeshProUGUI>();
+            }
+            if (textDefense == null) {
+                textDefense = statRow.Find("Defense Text (TMP)")?.GetComponent<TextMeshProUGUI>();
             }
         }
     }
