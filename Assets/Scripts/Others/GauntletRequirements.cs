@@ -17,6 +17,7 @@ public sealed class GauntletRequirements : MonoBehaviour
     [SerializeField] private bool initialized;
     [SerializeField] private bool configured;
     private GauntletVisit visit;
+    private GauntletRequirementsHud hud;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
@@ -67,7 +68,6 @@ public sealed class GauntletRequirements : MonoBehaviour
         configured = IsConfigured;
         initialized = true;
         if (targets.Count == 0) Debug.LogError("No required enemies configured in " + gameObject.scene.name + ".", this);
-        GauntletRequirementsHud hud = null;
         foreach (GameObject root in gameObject.scene.GetRootGameObjects())
         {
             foreach (GauntletRequirementsHud candidate in root.GetComponentsInChildren<GauntletRequirementsHud>(true))
@@ -92,7 +92,13 @@ public sealed class GauntletRequirements : MonoBehaviour
     {
         if (visit == null || !targets.Contains(target) || !visit.RecordDefeat(target.VisitId)) return;
         defeatedIds.Add(target.VisitId);
-        if (IsConfigured && visit.IsComplete) GauntletProgress.MarkCleared(gameObject.scene.name);
+        if (IsConfigured && visit.IsComplete)
+        {
+            Scene scene = gameObject.scene;
+            GauntletProgress.MarkCleared(scene.name);
+            if (scene.name == "1_1Gauntlet" && hud != null)
+                ResearchSurvey.QueueClearInvitation(scene, hud.NoticeFont);
+        }
         Changed?.Invoke();
     }
 

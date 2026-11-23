@@ -1,12 +1,19 @@
 ﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Portal : MonoBehaviour {
 
     public string nextSceneName;
+    [SerializeField] private string[] requiredGauntlets;
+    [SerializeField] private ReviveOnboardingPresenter victoryDialoguePrefab;
+    [SerializeField, TextArea] private string victoryMessage;
+    [SerializeField] private bool surveyOnWorldExit;
     [SerializeField, Tooltip("Return to the entrance used for this gauntlet visit. Uses Next Scene Name if no entrance was recorded.")]
     private bool returnToEntryPortal;
+    public bool ReturnsToEntryPortal => returnToEntryPortal;
     [SerializeField, Tooltip("Safe arrival position outside this entrance's trigger when returning from a gauntlet.")]
     private Transform returnPoint;
     [SerializeField] private bool confirmReplayWhenCleared;
@@ -17,6 +24,8 @@ public class Portal : MonoBehaviour {
     private GauntletReplayPrompt replayPrompt;
     private bool promptedThisVisit;
     private bool transitioning;
+    private GameObject victoryOverlay;
+    private float previousTimeScale;
     private static string entryScenePath;
     private static Vector3 entryPosition;
     private static bool returningToEntry;
@@ -59,7 +68,7 @@ public class Portal : MonoBehaviour {
         playerOverlaps.RemoveWhere(item => item == null || !item.enabled || !item.gameObject.activeInHierarchy);
         if (playerOverlaps.Count == 0) promptedThisVisit = false;
         playerOverlaps.Add(plyr);
-        if (transitioning || promptedThisVisit) return;
+        if (transitioning || promptedThisVisit || ResearchSurveyPrompt.IsOpen) return;
         if (confirmReplayWhenCleared && GauntletProgress.IsCleared(nextSceneName)) {
             if (Time.timeAsDouble < nextReplayPromptTime) {
                 promptedThisVisit = true;
@@ -86,6 +95,10 @@ public class Portal : MonoBehaviour {
     }
 
     private void OnDisable() {
+        if (victoryOverlay is not null) {
+            CloseVictoryDialogue();
+            transitioning = false;
+        }
         if (replayPrompt != null) replayPrompt.Dismiss();
         replayPrompt = null;
         playerOverlaps.Clear();
@@ -94,6 +107,14 @@ public class Portal : MonoBehaviour {
 
     private void Transition() {
         if (transitioning) return;
+        if (requiredGauntlets != null && requiredGauntlets.Length > 0) {
+            string[] unfinished = GauntletProgress.GetUnfinishedScenes(requiredGauntlets);
+            if (unfinished.Length > 0) {
+                promptedThisVisit = true;
+                GauntletGateNotice.Show("Portal locked. Please defeat the 3 challenges to proceed.");
+                return;
+            }
+        }
         bool useEntry = returnToEntryPortal && !string.IsNullOrEmpty(entryScenePath);
         string destination = useEntry ? entryScenePath : nextSceneName;
         if (string.IsNullOrEmpty(destination)) {
@@ -117,6 +138,50 @@ public class Portal : MonoBehaviour {
             return;
         }
         transitioning = true;
+        if (!string.IsNullOrEmpty(victoryMessage)) {
+            if (victoryDialoguePrefab != null && victoryDialoguePrefab.IsConfigured) {
+                previousTimeScale = Time.timeScale;
+                victoryOverlay = new GameObject("Victory Dialogue", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                SceneManager.MoveGameObjectToScene(victoryOverlay, gameObject.scene);
+                Canvas canvas = victoryOverlay.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = 200;
+                MobileDialogLayout.Configure(victoryOverlay);
+                ReviveOnboardingPresenter dialogue = Instantiate(victoryDialoguePrefab, victoryOverlay.transform, false);
+                Time.timeScale = 0f;
+                dialogue.ShowSinglePage(victoryMessage, () => {
+                    CloseVictoryDialogue();
+                    ContinueTransition(destination, useEntry);
+                });
+                return;
+            }
+            Debug.LogError("Portal victory dialogue needs a configured onboarding prefab.", this);
+        }
+        ContinueTransition(destination, useEntry);
+    }
+
+    private void ContinueTransition(string destination, bool useEntry) {
+        if (surveyOnWorldExit) {
+            PlayerController player = Object.FindAnyObjectByType<PlayerController>();
+            Stats stats = player != null ? player.GetComponent<Stats>() : null;
+            TMP_FontAsset font = stats != null && stats.textDamage != null
+                ? stats.textDamage.font
+                : TMP_Settings.defaultFontAsset;
+            if (ResearchSurvey.TryShowWorldExitInvitation(() => LoadDestination(destination, useEntry), font)) return;
+        }
+        LoadDestination(destination, useEntry);
+    }
+
+    private void CloseVictoryDialogue() {
+        Time.timeScale = previousTimeScale;
+        if (victoryOverlay != null) {
+            victoryOverlay.SetActive(false);
+            Destroy(victoryOverlay);
+        }
+        victoryOverlay = null;
+    }
+
+    private void LoadDestination(string destination, bool useEntry) {
         if (useEntry) {
             returningToEntry = true;
         } else if (!GauntletHealthDropRules.IsGauntletScene(gameObject.scene.name)
