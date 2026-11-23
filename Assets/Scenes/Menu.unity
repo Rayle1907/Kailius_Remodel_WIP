@@ -625,6 +625,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.99794537
+      objectReference: {fileID: 0}
+    - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.0757813
+      objectReference: {fileID: 0}
+    - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -21.783997
       objectReference: {fileID: 0}
@@ -791,21 +801,36 @@ PrefabInstance:
     - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_text
-      value: '
+      value: '<link="privacy-policy"><u>Read the privacy policy here</u></link>
 
-        Kailius is part of a university study. If you allow analytics,
-        Unity Analytics receives a random player ID and gameplay data such as progress,
-        deaths, session times, revive decisions, and Ember balances.
+        Kailius
+        is part of a university study. If you allow analytics, Unity Analytics receives
+        a random player ID and gameplay data such as progress, deaths, session times,
+        revive decisions, and Ember balances.
 
 
-        Participation
-        is optional. Change your choice or request data deletion through Privacy
-        settings.'
+        Participation is optional.
+        Change your choice or request data deletion through Privacy settings. '
       objectReference: {fileID: 0}
     - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_fontSize
       value: 39.85
+      objectReference: {fileID: 0}
+    - target: {fileID: 8583642221525407176, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8583642221525407176, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8583642221525407176, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
