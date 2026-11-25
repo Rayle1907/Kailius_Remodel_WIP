@@ -140,9 +140,11 @@ public static class ResearchPlayerState
         PremiumCurrencyBalance = PlayerPrefs.GetInt(BalanceKey, InitialPremiumCurrency);
     }
 
+    public static int TotalDeaths => PlayerPrefs.GetInt(TotalDeathsKey, 0);
+
     public static int IncrementTotalDeaths()
     {
-        int total = PlayerPrefs.GetInt(TotalDeathsKey, 0) + 1;
+        int total = TotalDeaths + 1;
         PlayerPrefs.SetInt(TotalDeathsKey, total);
         PlayerPrefs.Save();
         return total;
