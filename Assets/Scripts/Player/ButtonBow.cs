@@ -10,6 +10,10 @@ public class ButtonBow : MonoBehaviour, IPointerDownHandler {
         gameObject.SetActive(false);
     }
 
+    private void OnEnable() {
+        gameObject.SetActive(false);
+    }
+
     public void OnPointerDown(PointerEventData eventData) {
     }
 }
