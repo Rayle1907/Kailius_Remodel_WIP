@@ -198,12 +198,7 @@ public sealed class GauntletRequirements : MonoBehaviour
         if (visit == null || !visit.RecordDefeat(enemyId)) return;
         defeatedIds.Add(enemyId);
         if (IsConfigured && visit.IsComplete)
-        {
-            Scene scene = gameObject.scene;
-            GauntletProgress.MarkCleared(scene.name);
-            if (scene.name == "1_1Gauntlet" && hud != null)
-                ResearchSurvey.QueueClearInvitation(scene, hud.NoticeFont);
-        }
+            GauntletProgress.MarkCleared(gameObject.scene.name);
         Changed?.Invoke();
     }
 
