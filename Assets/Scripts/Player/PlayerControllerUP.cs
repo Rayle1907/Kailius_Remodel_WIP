@@ -2,6 +2,8 @@
 
 public class PlayerControllerUP : MonoBehaviour {
 
+    private const float GroundJumpGracePeriod = 0.1f;
+
     public float moveSpeed;
     public float jumpHeight;
     public float groundCheckRadius;
@@ -9,9 +11,9 @@ public class PlayerControllerUP : MonoBehaviour {
     public LayerMask whatIsGround;
     public Vector3 Movimiento;
     
-    private bool grounded;
     private bool canJump;
     private bool canDoubleJump;
+    private float groundJumpGraceUntil = float.NegativeInfinity;
     private Animator playerAnimator;
     private PlayerController playerController;
     private readonly System.Collections.Generic.Dictionary<Collider2D, Vector2> groundContacts = new System.Collections.Generic.Dictionary<Collider2D, Vector2>();
@@ -86,20 +88,28 @@ public class PlayerControllerUP : MonoBehaviour {
     }
 
     private void RefreshGroundedState() {
+        bool wasGrounded = canJump;
         canJump = groundContacts.Count > 0;
-        if (canJump) canDoubleJump = true;
+        if (canJump) {
+            canDoubleJump = true;
+            groundJumpGraceUntil = float.NegativeInfinity;
+        } else if (wasGrounded) {
+            groundJumpGraceUntil = Time.fixedTime + GroundJumpGracePeriod;
+        }
         if (playerAnimator != null) playerAnimator.SetBool("jumping", !canJump);
     }
 
     public void ClearGroundedState() {
         groundContacts.Clear();
         canJump = false;
+        groundJumpGraceUntil = float.NegativeInfinity;
         if (playerAnimator != null) playerAnimator.SetBool("jumping", true);
     }
 
     public bool TryConsumeJump() {
-        if (canJump) {
+        if (canJump || Time.time <= groundJumpGraceUntil) {
             canJump = false;
+            groundJumpGraceUntil = float.NegativeInfinity;
             return true;
         }
 
