@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -22,6 +23,8 @@ public class Menu : MonoBehaviour {
     }
 
     public void QuitGame () {
+        if (ResearchSurveyPrompt.IsOpen) return;
+        if (ResearchSurvey.TryShowGameQuitInvitation(() => Application.Quit(), TMP_Settings.defaultFontAsset)) return;
         Application.Quit();
     }
 
