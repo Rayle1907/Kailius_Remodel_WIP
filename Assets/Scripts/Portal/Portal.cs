@@ -180,7 +180,7 @@ public class Portal : MonoBehaviour {
             TMP_FontAsset font = stats != null && stats.textDamage != null
                 ? stats.textDamage.font
                 : TMP_Settings.defaultFontAsset;
-            if (ResearchSurvey.TryShowWorldExitInvitation(() => LoadDestination(destination, useEntry), font)) return;
+            if (ResearchSurvey.TryShowPortalExitInvitation(gameObject.scene, () => LoadDestination(destination, useEntry), font)) return;
         }
         LoadDestination(destination, useEntry);
     }

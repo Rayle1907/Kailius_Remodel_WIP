@@ -22,6 +22,8 @@ public class Menu : MonoBehaviour {
     }
 
     public void QuitGame () {
+        if (ResearchSurveyPrompt.IsOpen) return;
+        if (ResearchSurvey.TryShowRunExitInvitation(() => Application.Quit(), TMPro.TMP_Settings.defaultFontAsset)) return;
         Application.Quit();
     }
 

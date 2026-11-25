@@ -155,7 +155,7 @@ public sealed class InGameSettings : MonoBehaviour
         foreach (Portal portal in FindObjectsByType<Portal>(FindObjectsInactive.Include))
         {
             if (portal.gameObject.scene != gameObject.scene || !portal.ReturnsToEntryPortal) continue;
-            Leave(portal.nextSceneName, "abandoned");
+            OfferSurveyThenLeave(portal.nextSceneName, "abandoned");
             return;
         }
 
@@ -173,26 +173,26 @@ public sealed class InGameSettings : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        if (transitioning || ResearchSurveyPrompt.IsOpen) return;
-        if (Application.CanStreamedLevelBeLoaded("Menu") && GauntletRunTracker.Instance != null
-            && GauntletRunTracker.Instance.IsCurrentSceneGauntlet)
-        {
-            GauntletRunTracker.Instance.RecordPostDecisionOutcome("returned_to_menu");
-            GauntletRunTracker.Instance.EndCurrentRun("returned_to_menu");
-        }
-        if (ResearchSurvey.TryShowInvitation(() => Leave("Menu", "returned_to_menu"),
-            resume.GetComponentInChildren<TMP_Text>(true).font)) return;
-        Leave("Menu", "returned_to_menu");
+        OfferSurveyThenLeave("Menu", "returned_to_menu");
     }
 
-    private void Leave(string destination, string reason)
+    private void OfferSurveyThenLeave(string destination, string reason)
     {
-        if (transitioning) return;
+        if (transitioning || ResearchSurveyPrompt.IsOpen) return;
         if (!Application.CanStreamedLevelBeLoaded(destination))
         {
             Debug.LogError("Settings destination is unavailable: " + destination, this);
             return;
         }
+
+        if (ResearchSurvey.TryShowRunExitInvitation(() => Leave(destination, reason),
+            resume.GetComponentInChildren<TMP_Text>(true).font)) return;
+        Leave(destination, reason);
+    }
+
+    private void Leave(string destination, string reason)
+    {
+        if (transitioning) return;
         transitioning = true;
         if (GauntletRunTracker.Instance != null && GauntletRunTracker.Instance.IsCurrentSceneGauntlet)
         {

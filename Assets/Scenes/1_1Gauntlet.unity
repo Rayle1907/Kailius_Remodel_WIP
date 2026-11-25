@@ -2066,6 +2066,11 @@ PrefabInstance:
       propertyPath: returnToEntryPortal
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6132865271515353127, guid: 9f1b3d5e7a9c2b4d6f8e0a1c3b5d7f9e,
+        type: 3}
+      propertyPath: surveyOnWorldExit
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7344303397969823528, guid: 9f1b3d5e7a9c2b4d6f8e0a1c3b5d7f9e,
         type: 3}
       propertyPath: m_LocalPosition.x
