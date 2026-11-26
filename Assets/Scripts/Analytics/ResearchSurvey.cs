@@ -11,6 +11,7 @@ public sealed class ResearchSurvey : MonoBehaviour
     private const string InvitationHistoryKey = "research_survey_invitation_history_v1";
     private const string FirstClearMilestone = "first_clear";
     private const string MenuExitMilestone = "gauntlet_menu_exit";
+    private const string GameQuitMilestone = "game_quit";
     private static ResearchSurveyResponse activeResponse;
     private bool applicationPaused;
 
@@ -39,16 +40,19 @@ public sealed class ResearchSurvey : MonoBehaviour
     public static bool TryShowPortalExitInvitation(Scene scene, Action onContinue, TMP_FontAsset font) =>
         TryShowInvitation(scene.name == "1_1Gauntlet" ? FirstClearMilestone : scene.name, onContinue, font, false);
 
-    private static bool TryShowInvitation(string milestone, Action onClose, TMP_FontAsset font, bool requiresRunEligibility)
+    public static bool TryShowGameQuitInvitation(Action onQuit, TMP_FontAsset font) =>
+        TryShowInvitation(GameQuitMilestone, onQuit, font, false);
+
+    private static bool TryShowInvitation(string milestone, Action onClose, TMP_FontAsset font, bool worldExit)
     {
         if (ResearchSurveyPrompt.IsOpen) return false;
         if (!ResearchAnalyticsBootstrap.HasAnalyticsConsent || !ResearchAnalyticsBootstrap.IsReady
             || ResearchAnalyticsBootstrap.IsShuttingDown) return false;
         GauntletRunTracker tracker = GauntletRunTracker.Instance;
         bool inGauntlet = tracker != null && tracker.IsCurrentSceneGauntlet;
+        if (!worldExit && milestone != GameQuitMilestone && !inGauntlet) return false;
         string playthroughId = ResearchPlayerState.PlaythroughId;
-        if (PlayerPrefs.GetString(SubmittedKey) == playthroughId
-            || (requiresRunEligibility && !inGauntlet && PlayerPrefs.GetString(EligibleKey) != playthroughId)) return false;
+        if (PlayerPrefs.GetString(SubmittedKey) == playthroughId) return false;
 
         string history = PlayerPrefs.GetString(InvitationHistoryKey);
         string[] entries = history.Split('|');
@@ -64,7 +68,8 @@ public sealed class ResearchSurvey : MonoBehaviour
         ResearchSurveyResponse response = new ResearchSurveyResponse(playthroughId,
             SceneManager.GetActiveScene().name, ResearchPlayerState.OfferVariant,
             GauntletRunTracker.ExperimentVersion, ResearchPlayerState.PlayerId,
-            inGauntlet ? tracker.CurrentRunId : null, inGauntlet ? tracker.CurrentGauntletSessionId : null);
+            !worldExit && inGauntlet ? tracker.CurrentRunId : null,
+            !worldExit && inGauntlet ? tracker.CurrentGauntletSessionId : null);
         if (!ResearchSurveyPrompt.Show(response, onClose, font)) return false;
         activeResponse = response;
         PlayerPrefs.SetString(InvitationHistoryKey, history + "|" + milestone);

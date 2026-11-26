@@ -28,7 +28,6 @@ public sealed class GauntletRunTracker : MonoBehaviour
     private int deathsInRun;
     private int deathsInGauntletSession;
     private int acceptedRevives;
-    private int lastDeathTotal;
     // These survive scene object recreation while the application remains in
     // the same gauntlet session.
     private static string persistentGauntletSessionId;
@@ -215,10 +214,11 @@ public sealed class GauntletRunTracker : MonoBehaviour
             ? now - runStartedAt
             : now - lastDeathAt;
         lastDeathAt = now;
-        lastDeathTotal = totalDeaths;
-
-        deathsInGauntletSession++;
-        persistentGauntletDeaths = deathsInGauntletSession;
+        if (IsCurrentSceneGauntlet)
+        {
+            deathsInGauntletSession++;
+            persistentGauntletDeaths = deathsInGauntletSession;
+        }
         bool offerEligible = IsCurrentSceneGauntlet && ShouldShowOffer(deathsInGauntletSession);
 
         PlayerDeathEvent deathEvent = new PlayerDeathEvent(CaptureTelemetryContext(CurrentRunId))
@@ -250,7 +250,9 @@ public sealed class GauntletRunTracker : MonoBehaviour
 
     public void RecordPlayerFailure(string failureReason, int healthBeforeFailure, int healthAfterFailure, bool endsAttempt = true)
     {
-        if (!IsCurrentSceneGauntlet) return;
+        if (!IsCurrentSceneGauntlet
+            && currentSceneName != "Scene_1" && currentSceneName != "Scene_2" && currentSceneName != "Scene_3")
+            return;
 
         string failedAttemptId = attemptCoordinator.TelemetryAttemptId ?? string.Empty;
         if (endsAttempt) EndActiveAttempt("failure", string.IsNullOrWhiteSpace(failureReason) ? "forced_reset" : failureReason);
@@ -261,7 +263,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
         ResearchAnalytics.RecordFailure(new PlayerFailureEvent(CaptureTelemetryContext(CurrentRunId))
         {
             SegmentId = CurrentSegmentId,
-            DeathTotal = lastDeathTotal,
+            DeathTotal = ResearchPlayerState.TotalDeaths,
             DeathInSegment = deathsInSegment,
             DeathInGauntletSession = deathsInGauntletSession,
             FailureReason = string.IsNullOrWhiteSpace(failureReason) ? "unknown" : failureReason,
@@ -579,7 +581,7 @@ public sealed class GauntletRunTracker : MonoBehaviour
             {
                 OfferId = pendingOffer.OfferId,
                 SegmentId = CurrentSegmentId,
-                DeathTotal = lastDeathTotal,
+                DeathTotal = ResearchPlayerState.TotalDeaths,
                 DeathInSegment = deathsInSegment,
                 Balance = pendingOffer.BalanceBefore,
                 RevivePrice = pendingOffer.Price,
