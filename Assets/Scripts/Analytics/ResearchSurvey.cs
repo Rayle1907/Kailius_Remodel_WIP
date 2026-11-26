@@ -12,33 +12,13 @@ public sealed class ResearchSurvey : MonoBehaviour
     private const string FirstClearMilestone = "first_clear";
     private const string MenuExitMilestone = "gauntlet_menu_exit";
     private static ResearchSurveyResponse activeResponse;
-    private static Scene pendingClearScene;
-    private static TMP_FontAsset pendingClearFont;
-    private static int clearFrame;
     private bool applicationPaused;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetSession()
-    {
-        activeResponse = null;
-        pendingClearScene = default;
-        pendingClearFont = null;
-    }
-
-    public static void QueueClearInvitation(Scene scene, TMP_FontAsset font)
-    {
-        pendingClearScene = scene;
-        pendingClearFont = font;
-        clearFrame = Time.frameCount;
-    }
+    private static void ResetSession() => activeResponse = null;
 
     private void Update()
     {
-        if (pendingClearScene.IsValid() && pendingClearScene != SceneManager.GetActiveScene())
-        {
-            pendingClearScene = default;
-            pendingClearFont = null;
-        }
         if (applicationPaused || Time.timeScale <= 0f || ResearchSurveyPrompt.IsOpen) return;
         GauntletRunTracker tracker = GauntletRunTracker.Instance;
         if (tracker == null || !tracker.IsCurrentSceneGauntlet) return;
@@ -49,32 +29,26 @@ public sealed class ResearchSurvey : MonoBehaviour
             PlayerPrefs.SetString(EligibleKey, playthroughId);
             PlayerPrefs.Save();
         }
-
-        if (!pendingClearScene.IsValid() || Time.frameCount == clearFrame) return;
-        TMP_FontAsset font = pendingClearFont;
-        pendingClearScene = default;
-        pendingClearFont = null;
-        TryShowInvitation(FirstClearMilestone, null, font, false);
     }
 
     private void OnApplicationPause(bool paused) => applicationPaused = paused;
 
-    public static bool TryShowInvitation(Action onQuit, TMP_FontAsset font) =>
-        TryShowInvitation(MenuExitMilestone, onQuit, font, false);
+    public static bool TryShowRunExitInvitation(Action onLeave, TMP_FontAsset font) =>
+        TryShowInvitation(MenuExitMilestone, onLeave, font, true);
 
-    public static bool TryShowWorldExitInvitation(Action onContinue, TMP_FontAsset font) =>
-        TryShowInvitation(SceneManager.GetActiveScene().name, onContinue, font, true);
+    public static bool TryShowPortalExitInvitation(Scene scene, Action onContinue, TMP_FontAsset font) =>
+        TryShowInvitation(scene.name == "1_1Gauntlet" ? FirstClearMilestone : scene.name, onContinue, font, false);
 
-    private static bool TryShowInvitation(string milestone, Action onClose, TMP_FontAsset font, bool worldExit)
+    private static bool TryShowInvitation(string milestone, Action onClose, TMP_FontAsset font, bool requiresRunEligibility)
     {
         if (ResearchSurveyPrompt.IsOpen) return false;
         if (!ResearchAnalyticsBootstrap.HasAnalyticsConsent || !ResearchAnalyticsBootstrap.IsReady
             || ResearchAnalyticsBootstrap.IsShuttingDown) return false;
         GauntletRunTracker tracker = GauntletRunTracker.Instance;
-        if (!worldExit && (tracker == null || !tracker.IsCurrentSceneGauntlet)) return false;
+        bool inGauntlet = tracker != null && tracker.IsCurrentSceneGauntlet;
         string playthroughId = ResearchPlayerState.PlaythroughId;
         if (PlayerPrefs.GetString(SubmittedKey) == playthroughId
-            || (!worldExit && PlayerPrefs.GetString(EligibleKey) != playthroughId)) return false;
+            || (requiresRunEligibility && !inGauntlet && PlayerPrefs.GetString(EligibleKey) != playthroughId)) return false;
 
         string history = PlayerPrefs.GetString(InvitationHistoryKey);
         string[] entries = history.Split('|');
@@ -90,11 +64,10 @@ public sealed class ResearchSurvey : MonoBehaviour
         ResearchSurveyResponse response = new ResearchSurveyResponse(playthroughId,
             SceneManager.GetActiveScene().name, ResearchPlayerState.OfferVariant,
             GauntletRunTracker.ExperimentVersion, ResearchPlayerState.PlayerId,
-            worldExit ? null : tracker.CurrentRunId, worldExit ? null : tracker.CurrentGauntletSessionId);
+            inGauntlet ? tracker.CurrentRunId : null, inGauntlet ? tracker.CurrentGauntletSessionId : null);
         if (!ResearchSurveyPrompt.Show(response, onClose, font)) return false;
         activeResponse = response;
         PlayerPrefs.SetString(InvitationHistoryKey, history + "|" + milestone);
-        PlayerPrefs.DeleteKey(EligibleKey);
         PlayerPrefs.Save();
         ResearchAnalytics.RecordSurveyInvitationShown(new SurveyInvitationShownEvent(response));
         return true;
