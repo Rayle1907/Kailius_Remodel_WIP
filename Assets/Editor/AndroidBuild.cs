@@ -3,7 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
+#if UNITY_ANDROID
 using UnityEditor.Android;
+#endif
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -163,7 +165,11 @@ public static class CodexAndroidBuild
                 throw new Exception("The Android build succeeded but the APK was not found at " + apkPath + ".");
             }
 
+#if UNITY_ANDROID
             string sdkPath = AndroidExternalToolsSettings.sdkRootPath;
+#else
+            string sdkPath = Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT");
+#endif
             if (string.IsNullOrWhiteSpace(sdkPath))
             {
                 sdkPath = Path.Combine(EditorApplication.applicationContentsPath, "PlaybackEngines", "AndroidPlayer", "SDK");
