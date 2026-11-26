@@ -7,6 +7,8 @@ using UnityEngine.UI;
 public sealed class MobilePrivacyControls : MonoBehaviour
 {
     private const string SeenKey = "research_privacy_prompt_seen_v1";
+    private const float WideLayoutAspect = 16f / 9f;
+    private const float MinimumTextScale = 0.8f;
     [SerializeField] private Button entryButton;
     [SerializeField] private GameObject overlay;
     [SerializeField] private TMP_Text status;
@@ -20,6 +22,8 @@ public sealed class MobilePrivacyControls : MonoBehaviour
     private float previousTimeScale;
     private Rect lastSafeArea;
     private Vector2Int lastScreenSize;
+    private TMP_Text[] overlayText;
+    private float[] overlayFontSizes;
     public static bool IsOpen => active != null;
     public bool HasRequiredReferences => entryButton != null && overlay != null && status != null
         && allowButton != null && disableButton != null && deleteButton != null
@@ -39,6 +43,10 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         overlay.SetActive(false);
         overlay.transform.SetParent(null, false);
         MobileDialogLayout.Configure(overlay);
+        overlayText = overlay.GetComponentsInChildren<TMP_Text>(true);
+        overlayFontSizes = new float[overlayText.Length];
+        for (int i = 0; i < overlayText.Length; i++)
+            overlayFontSizes[i] = overlayText[i].fontSize;
         Canvas parentCanvas = transform.parent != null ? transform.parent.GetComponentInParent<Canvas>() : null;
         if (parentCanvas != null)
         {
@@ -55,7 +63,7 @@ public sealed class MobilePrivacyControls : MonoBehaviour
 
     private void Start()
     {
-        UpdateEntrySafeArea();
+        UpdateScreenLayout();
         if (gameObject.scene.name == "Menu") StartCoroutine(ShowFirstLaunch());
     }
 
@@ -68,12 +76,12 @@ public sealed class MobilePrivacyControls : MonoBehaviour
 
     private void Update()
     {
-        UpdateEntrySafeArea();
+        UpdateScreenLayout();
         entryArea.gameObject.SetActive(!ResearchSurveyPrompt.IsOpen && !GauntletReplayPrompt.BlocksSettings);
-        if (active == this && Input.GetKeyDown(KeyCode.Escape)) Close();
+        if (active == this && GameplayKeyboard.GetKeyDown(KeyCode.Escape)) Close();
     }
 
-    private void UpdateEntrySafeArea()
+    private void UpdateScreenLayout()
     {
         if (entryArea == null || Screen.width <= 0 || Screen.height <= 0) return;
         if (lastScreenSize.x == Screen.width && lastScreenSize.y == Screen.height && lastSafeArea == Screen.safeArea) return;
@@ -82,6 +90,11 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         entryArea.anchorMin = new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height);
         entryArea.anchorMax = new Vector2(lastSafeArea.xMax / Screen.width, lastSafeArea.yMax / Screen.height);
         entryArea.offsetMin = entryArea.offsetMax = Vector2.zero;
+
+        float textScale = Mathf.Clamp(lastSafeArea.width / (Mathf.Max(1f, lastSafeArea.height) * WideLayoutAspect),
+            MinimumTextScale, 1f);
+        for (int i = 0; i < overlayText.Length; i++)
+            overlayText[i].fontSize = overlayFontSizes[i] * textScale;
     }
 
     private void Open()
@@ -91,6 +104,7 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         active = this;
         previousSelection = EventSystem.current.currentSelectedGameObject;
         previousTimeScale = Time.timeScale;
+        UpdateScreenLayout();
         RefreshStatus();
         overlay.SetActive(true);
         Time.timeScale = 0f;
