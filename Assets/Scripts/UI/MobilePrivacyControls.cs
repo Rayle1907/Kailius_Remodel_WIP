@@ -78,7 +78,7 @@ public sealed class MobilePrivacyControls : MonoBehaviour
     {
         UpdateScreenLayout();
         entryArea.gameObject.SetActive(!ResearchSurveyPrompt.IsOpen && !GauntletReplayPrompt.BlocksSettings);
-        if (active == this && GameplayKeyboard.GetKeyDown(KeyCode.Escape)) Close();
+        if (active == this && Input.GetKeyDown(KeyCode.Escape)) Close();
     }
 
     private void UpdateScreenLayout()

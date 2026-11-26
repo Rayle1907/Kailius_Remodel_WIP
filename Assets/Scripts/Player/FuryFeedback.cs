@@ -274,6 +274,8 @@ public sealed class FuryFeedback : MonoBehaviour
         if (nextToken == null) return;
         bannerToken = nextToken;
         activeIntroduction = type;
+        // Persist on first presentation; death, replacement, or scene changes must not replay it.
+        MarkIntroductionSeen(type);
         hintWasReadable = false;
     }
 
@@ -365,28 +367,39 @@ public sealed class FuryFeedback : MonoBehaviour
         {
             furyVisibleSeconds += Mathf.Max(0f, visibleSeconds);
             if (furyVisibleSeconds < 10f) return;
-            PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
-            PlayerPrefs.SetInt(HintSeenKey, 1);
         }
         else if (activeIntroduction == IntroductionType.DoubleJump)
         {
             doubleJumpVisibleSeconds += Mathf.Max(0f, visibleSeconds);
             if (doubleJumpVisibleSeconds < 10f) return;
-            PlayerPrefs.SetInt(DoubleJumpIntroductionSeenKey, 1);
         }
         else if (activeIntroduction == IntroductionType.FallRecovery)
         {
             fallRecoveryVisibleSeconds += Mathf.Max(0f, visibleSeconds);
             if (fallRecoveryVisibleSeconds < 10f) return;
-            PlayerPrefs.SetInt(FallIntroductionSeenKey, 1);
         }
         else return;
 
-        PlayerPrefs.Save();
         GameplayBannerPresenter.Dismiss(bannerToken);
         bannerToken = null;
         activeIntroduction = IntroductionType.None;
         hintWasReadable = false;
+    }
+
+    private static void MarkIntroductionSeen(IntroductionType type)
+    {
+        if (type == IntroductionType.Fury)
+        {
+            PlayerPrefs.SetInt(HintRevisionKey, CurrentIntroductionRevision);
+            PlayerPrefs.SetInt(HintSeenKey, 1);
+        }
+        else if (type == IntroductionType.DoubleJump)
+            PlayerPrefs.SetInt(DoubleJumpIntroductionSeenKey, 1);
+        else if (type == IntroductionType.FallRecovery)
+            PlayerPrefs.SetInt(FallIntroductionSeenKey, 1);
+        else return;
+
+        PlayerPrefs.Save();
     }
 
     private void HideIntroductionForDeath()
