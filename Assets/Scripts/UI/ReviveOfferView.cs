@@ -28,6 +28,12 @@ public sealed class ReviveOfferView : MonoBehaviour
         Fit();
     }
 
+    private void Awake()
+    {
+        foreach (TMP_Text text in GetComponentsInChildren<TMP_Text>(true))
+            MobileDialogLayout.FitText(text, text.fontSize);
+    }
+
     private void OnEnable() => Fit();
     private void LateUpdate() => Fit();
 

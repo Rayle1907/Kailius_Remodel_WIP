@@ -121,17 +121,26 @@ internal sealed class MobileDialogLayout : MonoBehaviour
         text.raycastTarget = false;
     }
 
+    internal static void FitText(TMP_Text text, float maxSize)
+    {
+        text.fontSizeMax = maxSize;
+        text.fontSizeMin = maxSize * 0.5f;
+        text.enableAutoSizing = true;
+        text.overflowMode = TextOverflowModes.Ellipsis;
+    }
+
     internal static void Button(Button button, Vector2 min, Vector2 max)
     {
         Place((RectTransform)button.transform, min, max);
         TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
         Text(label, ButtonSize);
+        FitText(label, ButtonSize);
         Place(label.rectTransform, Vector2.zero, Vector2.one);
         label.rectTransform.offsetMin = new Vector2(24f, 8f);
         label.rectTransform.offsetMax = new Vector2(-24f, -8f);
     }
 
-    internal static ScrollRect ReadingArea(TMP_Text text, Transform parent, Vector2 min, Vector2 max)
+    internal static ScrollRect ReadingArea(TMP_Text text, Transform parent, Vector2 min, Vector2 max, float size)
     {
         GameObject root = new GameObject(text.name + " Reading Area", typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
         root.transform.SetParent(parent, false);
@@ -144,7 +153,7 @@ internal sealed class MobileDialogLayout : MonoBehaviour
         ContentSizeFitter fitter = text.GetComponent<ContentSizeFitter>();
         if (fitter == null) fitter = text.gameObject.AddComponent<ContentSizeFitter>();
         fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        Text(text, BodySize);
+        Text(text, size);
         text.raycastTarget = true;
         ScrollRect scroll = root.GetComponent<ScrollRect>();
         scroll.viewport = viewport;

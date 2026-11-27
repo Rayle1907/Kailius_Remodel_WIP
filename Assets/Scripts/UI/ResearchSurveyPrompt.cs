@@ -88,7 +88,7 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
         Text("Survey invitation", "Would you like to answer a short survey?",
             new Vector2(0.08f, 0.72f), new Vector2(0.92f, 0.94f), MobileDialogLayout.HeadingSize);
         Text("Survey description", "15 questions about your experience. About 3-5 minutes.\nYou may leave questions unanswered and submit the answers you have given.",
-            new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.69f), MobileDialogLayout.BodySize);
+            new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.69f), MobileDialogLayout.BodySize, scrollable: true);
         Button accept = Button("Answer survey", new Vector2(0.08f, 0.12f), new Vector2(0.48f, 0.29f), () => ResolveInvitation(true));
         Button("No thanks", new Vector2(0.52f, 0.12f), new Vector2(0.92f, 0.29f), () => ResolveInvitation(false));
         ConfigureNavigation(buttons);
@@ -242,7 +242,7 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
 
     private void OnDisable() => Release();
 
-    private TMP_Text Text(string name, string value, Vector2 min, Vector2 max, float size)
+    private TMP_Text Text(string name, string value, Vector2 min, Vector2 max, float size, bool scrollable = false)
     {
         GameObject root = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         root.transform.SetParent(content, false);
@@ -252,13 +252,15 @@ public sealed class ResearchSurveyPrompt : MonoBehaviour
         text.text = value;
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Center;
-        MobileDialogLayout.Text(text, size);
-        if (name != "Label")
+        if (scrollable)
         {
-            MobileDialogLayout.ReadingArea(text, content, min, max);
-            MobileDialogLayout.Text(text, size);
+            MobileDialogLayout.ReadingArea(text, content, min, max, size);
         }
-        text.raycastTarget = false;
+        else
+        {
+            MobileDialogLayout.Text(text, size);
+            MobileDialogLayout.FitText(text, size);
+        }
         return text;
     }
 

@@ -8,11 +8,23 @@ public sealed class ConfirmationPopupView : MonoBehaviour
     [SerializeField] private LayeredButton confirmButton;
     [SerializeField] private LayeredButton cancelButton;
     [SerializeField, Min(0f)] private float screenPadding = 48f;
+    [SerializeField] private bool fitTextOnAwake = true;
+    [SerializeField] private bool fitToParent = true;
 
     public LayeredButton ConfirmButton => confirmButton;
     public LayeredButton CancelButton => cancelButton;
 
-    private void LateUpdate() => Fit();
+    private void Awake()
+    {
+        if (!fitTextOnAwake) return;
+        foreach (TMP_Text text in GetComponentsInChildren<TMP_Text>(true))
+            MobileDialogLayout.FitText(text, text.fontSize);
+    }
+
+    private void LateUpdate()
+    {
+        if (fitToParent) Fit();
+    }
 
     private void Fit()
     {

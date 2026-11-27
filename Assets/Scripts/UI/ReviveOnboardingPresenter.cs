@@ -185,9 +185,11 @@ public sealed class ReviveOnboardingPresenter : MonoBehaviour
         MobileDialogLayout.Place(instructor.rectTransform, new Vector2(0f, 0.12f), new Vector2(0.22f, 0.58f));
         instructor.preserveAspect = true;
         MobileDialogLayout.Text(introductionText, MobileDialogLayout.BodySize);
+        MobileDialogLayout.FitText(introductionText, MobileDialogLayout.BodySize);
         introductionText.alignment = TextAlignmentOptions.TopLeft;
         MobileDialogLayout.Place(introductionText.rectTransform, new Vector2(0.1f, 0.2f), new Vector2(0.9f, 0.88f));
         MobileDialogLayout.Text(continuationPrompt, MobileDialogLayout.SecondarySize);
+        MobileDialogLayout.FitText(continuationPrompt, MobileDialogLayout.SecondarySize);
         continuationPrompt.transform.SetParent(content, false);
         continuationPrompt.color = Color.white;
         continuationPrompt.alignment = TextAlignmentOptions.Center;
