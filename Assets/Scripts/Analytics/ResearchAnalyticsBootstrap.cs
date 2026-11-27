@@ -3,6 +3,7 @@ using Unity.Services.Analytics;
 using Unity.Services.Core;
 using Unity.Services.Core.Environments;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UnityConsent;
 using System.Threading.Tasks;
 
@@ -145,6 +146,12 @@ public sealed class ResearchAnalyticsBootstrap : MonoBehaviour
 
     private void Update()
     {
+        if (!HasAnalyticsConsent && SceneManager.GetActiveScene().name != "Menu")
+        {
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("Menu");
+            return;
+        }
         if (!IsReady || !HasAnalyticsConsent || ResearchAnalytics.PendingEventCount == 0
             || Time.realtimeSinceStartupAsDouble < nextPendingFlushAt)
         {

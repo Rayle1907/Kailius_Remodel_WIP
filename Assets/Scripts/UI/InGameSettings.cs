@@ -9,6 +9,8 @@ public sealed class InGameSettings : MonoBehaviour
 {
     private MoveByTouch movement;
     private GameObject menu;
+    private Canvas controlsCanvas;
+    private RectTransform menuButton;
     private Slider volume;
     private Button resume;
     private bool isOpen;
@@ -68,9 +70,16 @@ public sealed class InGameSettings : MonoBehaviour
         volume.SetValueWithoutNotify(VolumenController.Volume);
         volume.onValueChanged.AddListener(VolumenController.ApplyVolume);
 
+        controlsCanvas = owner.ControlesMoviles.GetComponent<Canvas>();
         foreach (Button button in owner.ControlesMoviles.GetComponentsInChildren<Button>(true))
         {
-            if (button.name == "ButtonSettings") Bind(button, Toggle);
+            if (button.name != "ButtonSettings") continue;
+            Bind(button, Toggle);
+            menuButton = (RectTransform)button.transform;
+            menuButton.pivot = new Vector2(0.5f, 1f);
+            menuButton.anchoredPosition = new Vector2(0f, -16f);
+            RefreshMenuButtonPosition();
+            break;
         }
 
         menu.GetComponent<Canvas>().sortingOrder = 100;
@@ -90,8 +99,22 @@ public sealed class InGameSettings : MonoBehaviour
 
     private void Update()
     {
+        RefreshMenuButtonPosition();
         if (ResearchSurveyPrompt.IsOpen || MobilePrivacyControls.IsOpen) return;
         if (!GauntletReplayPrompt.BlocksSettings && menu != null && Input.GetKeyDown(KeyCode.Escape)) Toggle();
+    }
+
+    private void RefreshMenuButtonPosition()
+    {
+        if (menuButton == null || controlsCanvas == null) return;
+        Rect viewport = controlsCanvas.pixelRect;
+        if (viewport.width <= 0f || viewport.height <= 0f) return;
+
+        Vector2 anchor = new Vector2(
+            (Screen.width * 0.5f - viewport.xMin) / viewport.width,
+            Mathf.Clamp01((Screen.safeArea.yMax - viewport.yMin) / viewport.height));
+        if (menuButton.anchorMin == anchor && menuButton.anchorMax == anchor) return;
+        menuButton.anchorMin = menuButton.anchorMax = anchor;
     }
 
     public void Toggle()

@@ -21,6 +21,7 @@ public sealed class LayeredButton : Button
     [SerializeField] private Image outlineImage;
     [SerializeField] private TextMeshProUGUI label;
     [SerializeField] private CanvasGroup visualGroup;
+    [SerializeField] private bool raiseDecorationsAboveUI = true;
     [SerializeField] private SpriteSet normalSprites;
     [SerializeField] private SpriteSet pressedSprites;
     [SerializeField] private Color focusLabelColor = new Color(1f, 0.82f, 0.35f, 1f);
@@ -39,8 +40,9 @@ public sealed class LayeredButton : Button
     {
         base.OnEnable();
 
-        SetOverlaySorting(outlineImage, short.MaxValue - 1);
-        SetOverlaySorting(grassImage, short.MaxValue);
+        if (!raiseDecorationsAboveUI) return;
+        SetOverlaySorting(outlineImage, 1);
+        SetOverlaySorting(grassImage, 2);
     }
 
     private static void SetOverlaySorting(Image image, int sortingOrder)
@@ -50,6 +52,13 @@ public sealed class LayeredButton : Button
             return;
         }
 
+        for (Transform parent = image.transform.parent; parent != null; parent = parent.parent)
+        {
+            Canvas parentCanvas = parent.GetComponent<Canvas>();
+            if (parentCanvas == null || (!parentCanvas.overrideSorting && !parentCanvas.isRootCanvas)) continue;
+            sortingOrder += parentCanvas.sortingOrder;
+            break;
+        }
         Canvas overlayCanvas = image.GetComponent<Canvas>();
         if (overlayCanvas == null)
         {

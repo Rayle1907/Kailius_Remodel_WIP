@@ -613,85 +613,133 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2331855030926991882, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -13
+      objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -131.88
+      value: -130
       objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -46.274
+      value: -42.5
       objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.99794537
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.0757813
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -21.783997
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 2628134374688495309, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 23.137024
+      value: 23.75
       objectReference: {fileID: 0}
     - target: {fileID: 2719060926319023155, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -131.88
+      value: -130
       objectReference: {fileID: 0}
     - target: {fileID: 2719060926319023155, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -25.4503
+      value: -45
+      objectReference: {fileID: 0}
+    - target: {fileID: 2719060926319023155, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2719060926319023155, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -21.784
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 2719060926319023155, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 12.72515
+      value: -12.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2791814379993791549, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2791814379993791549, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 2791814379993791549, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 2.175171
+      value: -16
       objectReference: {fileID: 0}
     - target: {fileID: 2791814379993791549, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 258.87
+      value: 156
+      objectReference: {fileID: 0}
+    - target: {fileID: 2926791496745321943, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_text
+      value: '
+
+
+        Delete analytics data?'
+      objectReference: {fileID: 0}
+    - target: {fileID: 2926791496745321943, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 36
+      objectReference: {fileID: 0}
+    - target: {fileID: 2926791496745321943, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_fontSizeMax
+      value: 36
+      objectReference: {fileID: 0}
+    - target: {fileID: 2926791496745321943, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_fontSizeMin
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 2926791496745321943, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     - target: {fileID: 3001867856935728954, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -131.88
+      value: -130
       objectReference: {fileID: 0}
     - target: {fileID: 3001867856935728954, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -25.45
+      value: -43.5
       objectReference: {fileID: 0}
     - target: {fileID: 3001867856935728954, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -21.783997
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 3001867856935728954, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 12.725098
+      value: -13.25
       objectReference: {fileID: 0}
     - target: {fileID: 3027204226135973241, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
@@ -743,6 +791,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -48.5873
       objectReference: {fileID: 0}
+    - target: {fileID: 3040111383618556306, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3172043641451378144, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_PresetInfoIsWorld
@@ -760,13 +813,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -1.1494141
       objectReference: {fileID: 0}
     - target: {fileID: 3904975214015914243, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -93.80345
+      value: -118
+      objectReference: {fileID: 0}
+    - target: {fileID: 4688348333146598771, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_text
+      value: "Analytics must be enabled to play. \n\nSelect Allow Analytics to unlock
+        the game."
+      objectReference: {fileID: 0}
+    - target: {fileID: 4688348333146598771, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_margin.x
+      value: 230.04196
+      objectReference: {fileID: 0}
+    - target: {fileID: 4688348333146598771, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_margin.z
+      value: 212.78812
       objectReference: {fileID: 0}
     - target: {fileID: 5662946952595231238, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
@@ -778,44 +857,78 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5942124850213340699, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 5942124850213340699, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 6275767033896573542, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 48
+      objectReference: {fileID: 0}
+    - target: {fileID: 6275767033896573542, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_fontSizeMax
+      value: 48
+      objectReference: {fileID: 0}
     - target: {fileID: 7041492753150934604, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -131.88
+      value: -130
       objectReference: {fileID: 0}
     - target: {fileID: 7041492753150934604, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -46.2735
+      value: -47.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7041492753150934604, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7041492753150934604, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -21.784
+      value: -20
       objectReference: {fileID: 0}
     - target: {fileID: 7041492753150934604, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 23.1367
+      value: 21.25
       objectReference: {fileID: 0}
     - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_text
-      value: '<link="privacy-policy"><u>Read the privacy policy here</u></link>
-
-        Kailius
-        is part of a university study. If you allow analytics, Unity Analytics receives
-        a random player ID and gameplay data such as progress, deaths, session times,
-        revive decisions, and Ember balances.
-
-
-        Participation is optional.
-        Change your choice or request data deletion through Privacy settings. '
+      value: "\n\nKailius is part of a university study. If you allow analytics,
+        Unity Analytics receives a random player ID and gameplay data such as progress,
+        deaths, session times, revive decisions, and Ember balances. \n<link=\"privacy-policy\"><u>Read
+        the privacy policy here</u></link> "
       objectReference: {fileID: 0}
     - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
       propertyPath: m_fontSize
       value: 39.85
+      objectReference: {fileID: 0}
+    - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_margin.w
+      value: -148.5909
+      objectReference: {fileID: 0}
+    - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_margin.x
+      value: -346.4696
+      objectReference: {fileID: 0}
+    - target: {fileID: 7126154150165143848, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_margin.z
+      value: -356.72955
       objectReference: {fileID: 0}
     - target: {fileID: 8583642221525407176, guid: 2bd866946e331544796636f728a63fe2,
         type: 3}
@@ -831,6 +944,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 9108899497683983843, guid: 2bd866946e331544796636f728a63fe2,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.825
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

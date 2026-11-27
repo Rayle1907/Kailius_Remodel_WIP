@@ -7,8 +7,6 @@ using UnityEngine.UI;
 public sealed class MobilePrivacyControls : MonoBehaviour
 {
     private const string SeenKey = "research_privacy_prompt_seen_v1";
-    private const float WideLayoutAspect = 16f / 9f;
-    private const float MinimumTextScale = 0.8f;
     [SerializeField] private Button entryButton;
     [SerializeField] private GameObject overlay;
     [SerializeField] private TMP_Text status;
@@ -17,17 +15,26 @@ public sealed class MobilePrivacyControls : MonoBehaviour
     [SerializeField] private Button deleteButton;
     [SerializeField] private Button closeButton;
     [SerializeField] private RectTransform entryArea;
+    [SerializeField] private CanvasGroup privacyPanelInteraction;
+    [SerializeField] private GameObject deletionConfirmationOverlay;
+    [SerializeField] private ConfirmationPopupView deletionConfirmation;
+    [SerializeField] private Button initialSelection;
+    [SerializeField, TextArea] private string analyticsEnabledText;
+    [SerializeField, TextArea] private string analyticsDisabledText;
+    [SerializeField, TextArea] private string deletionPendingText;
     private static MobilePrivacyControls active;
     private GameObject previousSelection;
     private float previousTimeScale;
     private Rect lastSafeArea;
     private Vector2Int lastScreenSize;
-    private TMP_Text[] overlayText;
-    private float[] overlayFontSizes;
+    private bool deletionConfirmationOpen;
+    private int confirmationClosedFrame = -1;
     public static bool IsOpen => active != null;
     public bool HasRequiredReferences => entryButton != null && overlay != null && status != null
         && allowButton != null && disableButton != null && deleteButton != null
-        && closeButton != null && entryArea != null;
+        && closeButton != null && entryArea != null && privacyPanelInteraction != null
+        && deletionConfirmationOverlay != null && deletionConfirmation != null
+        && deletionConfirmation.ConfirmButton != null && deletionConfirmation.CancelButton != null;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetState() => active = null;
@@ -41,12 +48,8 @@ public sealed class MobilePrivacyControls : MonoBehaviour
             return;
         }
         overlay.SetActive(false);
+        deletionConfirmationOverlay.SetActive(false);
         overlay.transform.SetParent(null, false);
-        MobileDialogLayout.Configure(overlay);
-        overlayText = overlay.GetComponentsInChildren<TMP_Text>(true);
-        overlayFontSizes = new float[overlayText.Length];
-        for (int i = 0; i < overlayText.Length; i++)
-            overlayFontSizes[i] = overlayText[i].fontSize;
         Canvas parentCanvas = transform.parent != null ? transform.parent.GetComponentInParent<Canvas>() : null;
         if (parentCanvas != null)
         {
@@ -59,29 +62,38 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         disableButton.onClick.AddListener(DisableAnalytics);
         deleteButton.onClick.AddListener(DeleteAnalytics);
         closeButton.onClick.AddListener(Close);
+        deletionConfirmation.ConfirmButton.onClick.AddListener(ConfirmDeletion);
+        deletionConfirmation.CancelButton.onClick.AddListener(CancelDeletion);
     }
 
     private void Start()
     {
-        UpdateScreenLayout();
-        if (gameObject.scene.name == "Menu") StartCoroutine(ShowFirstLaunch());
+        UpdateSafeAreaLayout();
+        StartCoroutine(ShowFirstLaunch());
     }
 
     private IEnumerator ShowFirstLaunch()
     {
         yield return null;
         while (EventSystem.current == null) yield return null;
-        if (!PlayerPrefs.HasKey(SeenKey)) Open();
+        if (!ResearchAnalyticsBootstrap.HasAnalyticsConsent ||
+            (gameObject.scene.name == "Menu" && !PlayerPrefs.HasKey(SeenKey))) Open();
+    }
+
+    public static void ShowRequiredConsent()
+    {
+        MobilePrivacyControls controls = FindAnyObjectByType<MobilePrivacyControls>();
+        if (controls != null) controls.Open();
     }
 
     private void Update()
     {
-        UpdateScreenLayout();
+        UpdateSafeAreaLayout();
         entryArea.gameObject.SetActive(!ResearchSurveyPrompt.IsOpen && !GauntletReplayPrompt.BlocksSettings);
         if (active == this && Input.GetKeyDown(KeyCode.Escape)) Close();
     }
 
-    private void UpdateScreenLayout()
+    private void UpdateSafeAreaLayout()
     {
         if (entryArea == null || Screen.width <= 0 || Screen.height <= 0) return;
         if (lastScreenSize.x == Screen.width && lastScreenSize.y == Screen.height && lastSafeArea == Screen.safeArea) return;
@@ -90,11 +102,6 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         entryArea.anchorMin = new Vector2(lastSafeArea.xMin / Screen.width, lastSafeArea.yMin / Screen.height);
         entryArea.anchorMax = new Vector2(lastSafeArea.xMax / Screen.width, lastSafeArea.yMax / Screen.height);
         entryArea.offsetMin = entryArea.offsetMax = Vector2.zero;
-
-        float textScale = Mathf.Clamp(lastSafeArea.width / (Mathf.Max(1f, lastSafeArea.height) * WideLayoutAspect),
-            MinimumTextScale, 1f);
-        for (int i = 0; i < overlayText.Length; i++)
-            overlayText[i].fontSize = overlayFontSizes[i] * textScale;
     }
 
     private void Open()
@@ -104,24 +111,61 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         active = this;
         previousSelection = EventSystem.current.currentSelectedGameObject;
         previousTimeScale = Time.timeScale;
-        UpdateScreenLayout();
         RefreshStatus();
         overlay.SetActive(true);
         Time.timeScale = 0f;
-        EventSystem.current.SetSelectedGameObject(closeButton.gameObject);
+        EventSystem.current.SetSelectedGameObject(initialSelection != null
+            ? initialSelection.gameObject : closeButton.gameObject);
     }
 
     private void AllowAnalytics()
     {
+        if (deletionConfirmationOpen) return;
         SetConsent(true);
         if (ResearchAnalyticsBootstrap.HasAnalyticsConsent) Close();
     }
-    private void DisableAnalytics() => SetConsent(false);
+    private void DisableAnalytics()
+    {
+        if (!deletionConfirmationOpen) SetConsent(false);
+    }
 
     private void DeleteAnalytics()
     {
+        if (active != this || deletionConfirmationOpen || confirmationClosedFrame == Time.frameCount
+            || EventSystem.current == null) return;
+        deletionConfirmationOpen = true;
+        privacyPanelInteraction.interactable = false;
+        privacyPanelInteraction.blocksRaycasts = false;
+        deletionConfirmationOverlay.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(deletionConfirmation.CancelButton.gameObject);
+    }
+
+    private void ConfirmDeletion()
+    {
+        if (active != this || !deletionConfirmationOpen) return;
+        CancelDeletion();
         ResearchAnalyticsBootstrap.RequestPlayerDataDeletion();
         RefreshStatus();
+    }
+
+    private void CancelDeletion()
+    {
+        if (!deletionConfirmationOpen) return;
+        ResetDeletionConfirmation();
+        confirmationClosedFrame = Time.frameCount;
+        if (active == this && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(deleteButton.gameObject);
+    }
+
+    private void ResetDeletionConfirmation()
+    {
+        deletionConfirmationOpen = false;
+        if (deletionConfirmationOverlay != null) deletionConfirmationOverlay.SetActive(false);
+        if (privacyPanelInteraction != null)
+        {
+            privacyPanelInteraction.interactable = true;
+            privacyPanelInteraction.blocksRaycasts = true;
+        }
     }
 
     private void SetConsent(bool granted)
@@ -140,11 +184,20 @@ public sealed class MobilePrivacyControls : MonoBehaviour
     private void RefreshStatus()
     {
         status.text = ResearchAnalyticsBootstrap.HasAnalyticsConsent
-            ? "Research analytics: ON" : "Research analytics: OFF";
+            ? analyticsEnabledText
+            : ResearchAnalyticsBootstrap.HasPendingDeletion
+                ? deletionPendingText
+                : analyticsDisabledText;
     }
 
     private void Close()
     {
+        if (deletionConfirmationOpen)
+        {
+            CancelDeletion();
+            return;
+        }
+        if (confirmationClosedFrame == Time.frameCount) return;
         MarkSeen();
         Release();
     }
@@ -153,6 +206,7 @@ public sealed class MobilePrivacyControls : MonoBehaviour
 
     private void Release()
     {
+        ResetDeletionConfirmation();
         if (active != this) return;
         active = null;
         if (overlay != null) overlay.SetActive(false);
@@ -169,6 +223,13 @@ public sealed class MobilePrivacyControls : MonoBehaviour
         if (disableButton != null) disableButton.onClick.RemoveListener(DisableAnalytics);
         if (deleteButton != null) deleteButton.onClick.RemoveListener(DeleteAnalytics);
         if (closeButton != null) closeButton.onClick.RemoveListener(Close);
+        if (deletionConfirmation != null)
+        {
+            if (deletionConfirmation.ConfirmButton != null)
+                deletionConfirmation.ConfirmButton.onClick.RemoveListener(ConfirmDeletion);
+            if (deletionConfirmation.CancelButton != null)
+                deletionConfirmation.CancelButton.onClick.RemoveListener(CancelDeletion);
+        }
         if (overlay != null && overlay.transform.parent == null) Destroy(overlay);
     }
 }

@@ -7,6 +7,10 @@ using UnityEngine.SceneManagement;
 public class Menu : MonoBehaviour {
 
     public void PlayGame () {
+        if (!ResearchAnalyticsBootstrap.HasAnalyticsConsent) {
+            MobilePrivacyControls.ShowRequiredConsent();
+            return;
+        }
         GauntletProgress.StartNewGame();
         Debug.Log("Menu.PlayGame loading Scene_1");
         PlayerPrefs.SetInt("AttackDamage", 0);
@@ -25,8 +29,6 @@ public class Menu : MonoBehaviour {
     public void QuitGame () {
         if (ResearchSurveyPrompt.IsOpen) return;
         if (ResearchSurvey.TryShowGameQuitInvitation(() => Application.Quit(), TMP_Settings.defaultFontAsset)) return;
-        if (ResearchSurveyPrompt.IsOpen) return;
-        if (ResearchSurvey.TryShowRunExitInvitation(() => Application.Quit(), TMPro.TMP_Settings.defaultFontAsset)) return;
         Application.Quit();
     }
 
