@@ -38,7 +38,8 @@ public sealed class ResearchSurvey : MonoBehaviour
         TryShowInvitation(MenuExitMilestone, onLeave, font, true);
 
     public static bool TryShowPortalExitInvitation(Scene scene, Action onContinue, TMP_FontAsset font) =>
-        TryShowInvitation(scene.name == "1_1Gauntlet" ? FirstClearMilestone : scene.name, onContinue, font, false);
+        scene.IsValid() && scene == SceneManager.GetActiveScene()
+        && TryShowInvitation(scene.name == "1_1Gauntlet" ? FirstClearMilestone : scene.name, onContinue, font, false);
 
     public static bool TryShowGameQuitInvitation(Action onQuit, TMP_FontAsset font) =>
         TryShowInvitation(GameQuitMilestone, onQuit, font, false);
